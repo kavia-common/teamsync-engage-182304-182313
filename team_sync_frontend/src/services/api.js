@@ -62,10 +62,10 @@ const api = {
   },
 
   // PUBLIC_INTERFACE
-  async giveFeedback(activityId, value) {
+  async giveFeedback(activityId, value, activityTitle = '', comment = '', rating = 0) {
     try {
       // expect backend endpoint: POST /api/feedback -> { ok: true }
-      const data = await postJson('/api/feedback', { activityId, value });
+      const data = await postJson('/api/feedback', { activityId, value, activityTitle, comment, rating });
       if (!data || data.ok !== true) throw new Error('Invalid response');
       return data;
     } catch (e) {

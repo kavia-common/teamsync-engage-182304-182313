@@ -6,3 +6,4 @@ State shape:
 - feedback: { id, activityId, activityTitle, value, comment?, rating? }[]
 
 Actions: setTeam, setQuiz, saveRecommendation, giveFeedback.
+Note: giveFeedback accepts payload with { activityId, value, activityTitle?, comment?, rating? } and stores it in feedback.

@@ -165,7 +165,7 @@ export default function Recommendations() {
         <p className="muted">
           Based on your team profile and quiz results — handpicked just for you.
         </p>
-        <div id="sr-live" aria-live="polite" className="sr-only" style={{ position: 'absolute', left: -9999 }} />
+        <div id="sr-live" aria-live="polite" className="sr-only" />
       </div>
 
       {loading && <Card aria-busy="true">Loading recommendations…</Card>}
