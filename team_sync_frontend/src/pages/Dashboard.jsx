@@ -421,324 +421,340 @@ export default function Dashboard() {
   };
 
   return (
-    <Container>
-      <div className="mb-4">
-        {/* Heading row with editable team name */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          {!editing ? (
-            <>
-              <h1 className="h1" style={{ marginBottom: 6, marginRight: 6 }}>
-                {`Welcome, ${effectiveTeamName}!`}
-              </h1>
-              <button
-                ref={editButtonRef}
-                type="button"
-                className="btn secondary"
-                aria-label="Edit team name"
-                onClick={() => { setEditing(true); setStatusMsg(''); }}
-                title="Edit team name"
-              >
-                ✏️ Edit
-              </button>
-              <button
-                type="button"
-                className="btn"
-                aria-label="Edit team details"
-                title="Edit Team Details"
-                onClick={() => {
-                  // Navigate to Profile where team details can be edited (reuse existing logic)
-                  window.location.hash = '#/profile#/team';
-                  const live = document.getElementById('sr-live-dashboard');
-                  if (live) {
-                    live.textContent = 'Opening team details.';
-                    setTimeout(() => { if (live) live.textContent = ''; }, 900);
-                  }
-                }}
-              >
-                Edit Team Details
-              </button>
-            </>
-          ) : (
-            <div
-              role="group"
-              aria-label="Edit team name"
-              style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
-            >
-              <label htmlFor="team-name-input" className="sr-only">Team name</label>
-              <input
-                id="team-name-input"
-                ref={inputRef}
-                className="input"
-                style={{ maxWidth: 320 }}
-                value={teamInput}
-                onChange={(e) => setTeamInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                aria-invalid={!!error}
-                aria-describedby={error ? 'team-name-error' : undefined}
-                placeholder="Enter team name"
-              />
-              <button
-                type="button"
-                className="btn"
-                onClick={saveTeamName}
-                aria-label="Save team name"
-                title="Save"
-              >
-                Save
-              </button>
-              <button
-                type="button"
-                className="btn secondary"
-                onClick={cancelEdit}
-                aria-label="Cancel"
-                title="Cancel"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-        </div>
-        {error && (
-          <div id="team-name-error" role="alert" className="muted" style={{ color: 'var(--ts-error)', marginTop: 6 }}>
-            {error}
-          </div>
-        )}
-        {statusMsg && !error && (
-          <div className="muted" style={{ color: 'var(--ts-secondary, #F59E0B)', marginTop: 6 }}>
-            {statusMsg}
-          </div>
-        )}
-        <p className="muted" style={{ marginTop: 6 }}>
-          {userName ? `Signed in as ${userName}.` : 'Signed in.'} Here’s your team summary and recent engagement.
-        </p>
-        <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-          Tip: Use “✏️ Edit” to rename your team inline or “Edit Team Details” to manage it from your profile.
-        </div>
-        <div id="sr-live-dashboard" aria-live="polite" className="sr-only" />
-      </div>
-
-      {/* Persona card and Advanced Analytics */}
-      <div className="ts-row cols-2">
-        <Card>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <h2 className="h2">Team Culture Persona</h2>
-            <span className={`btn ${isPro ? 'warning' : 'secondary'}`} title={isPro ? 'AI‑powered' : 'Preview'}>
-              {isPro ? 'AI‑Powered' : 'Preview'}
-            </span>
-          </div>
-          {loadingPersona ? (
-            <p className="muted">Generating persona…</p>
-          ) : !personaBlock || !personaBlock.persona ? (
-            <p className="muted">No persona available yet. Share feedback or complete onboarding to unlock insights.</p>
-          ) : (
-            <>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <strong>{personaBlock.persona?.name || 'Team Persona'}</strong>
-                <span className="btn ghost" aria-hidden>🧭 Tone: {(personaBlock.persona?.tone || []).join(', ') || 'playful'}</span>
-              </div>
-              <p className="muted mt-2">{personaBlock.persona?.summary || '—'}</p>
-              {/* Hero alignment breakdown (badges) */}
-              <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} aria-label="Hero alignment breakdown">
-                {(personaBlock.breakdown || []).slice(0, 4).map(h => (
-                  <span key={h.hero} className="btn secondary" title="Hero alignment share">
-                    🛡 {h.hero}: {Math.round((h.pct || 0) * 100)}%
-                  </span>
-                ))}
-              </div>
-              {/* Microcopy */}
-              <div className="mt-2 muted">
-                Witty microcopy: Leaning {personaBlock.breakdown?.[0]?.hero || 'Ally'} — “assemble and thrive.”
-              </div>
-            </>
-          )}
-        </Card>
-
-        <Card>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <h2 className="h2">Advanced Analytics</h2>
-            <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-              {!isPro ? <span className="btn secondary" title="Premium feature">Premium</span> : <span className="btn warning">Included</span>}
-              <TimeRange />
-            </div>
-          </div>
-          {PremiumBanner}
-          {loadingAnalytics ? (
-            <p className="muted">Loading analytics…</p>
-          ) : !analytics ? (
-            <p className="muted">Analytics unavailable. We’ll show local estimates once feedback is added.</p>
-          ) : (
-            <>
-              {/* Metric hints (aria-describedby) */}
-              <div className="sr-only" id={HINT_IDS.completion}>
-                Completion rate is the share of saved activities that received a rating.
-              </div>
-              <div className="sr-only" id={HINT_IDS.likeRatio}>
-                Like ratio is likes divided by likes plus dislikes.
-              </div>
-              <div className="sr-only" id={HINT_IDS.avgRating}>
-                Average rating is the mean of provided ratings, or an estimate from reactions when ratings are missing.
-              </div>
-
-              <div className="mt-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 12 }}>
-                <div>
-                  <div className="muted">Completion rate</div>
-                  <div
-                    style={{ fontWeight: 800, fontSize: 20 }}
-                    aria-describedby={HINT_IDS.completion}
-                    title="Rated feedback vs saved activities"
+    <div className="teal-page-bg">
+      <Container>
+        <section className="glass-section">
+          <div className="mb-4">
+            {/* Heading row with editable team name */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              {!editing ? (
+                <>
+                  <h1 className="h1" style={{ marginBottom: 6, marginRight: 6 }}>
+                    {`Welcome, ${effectiveTeamName}!`}
+                  </h1>
+                  <button
+                    ref={editButtonRef}
+                    type="button"
+                    className="btn secondary"
+                    aria-label="Edit team name"
+                    onClick={() => { setEditing(true); setStatusMsg(''); }}
+                    title="Edit team name"
                   >
-                    {Math.round((analytics.success?.completionRate || 0) * 100)}%
-                  </div>
-                </div>
-                <div>
-                  <div className="muted">Like ratio</div>
-                  <div
-                    style={{ fontWeight: 800, fontSize: 20 }}
-                    aria-describedby={HINT_IDS.likeRatio}
-                    title="Likes ÷ (Likes + Dislikes)"
+                    ✏️ Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    aria-label="Edit team details"
+                    title="Edit Team Details"
+                    onClick={() => {
+                      // Navigate to Profile where team details can be edited (reuse existing logic)
+                      window.location.hash = '#/profile#/team';
+                      const live = document.getElementById('sr-live-dashboard');
+                      if (live) {
+                        live.textContent = 'Opening team details.';
+                        setTimeout(() => { if (live) live.textContent = ''; }, 900);
+                      }
+                    }}
                   >
-                    {Math.round((analytics.success?.likeRatio || 0) * 100)}%
-                  </div>
-                </div>
-                <div>
-                  <div className="muted">Avg rating</div>
-                  <div
-                    style={{ fontWeight: 800, fontSize: 20 }}
-                    aria-describedby={HINT_IDS.avgRating}
-                    title="Mean rating; estimated if missing"
+                    Edit Team Details
+                  </button>
+                </>
+              ) : (
+                <div
+                  role="group"
+                  aria-label="Edit team name"
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
+                >
+                  <label htmlFor="team-name-input" className="sr-only">Team name</label>
+                  <input
+                    id="team-name-input"
+                    ref={inputRef}
+                    className="input"
+                    style={{ maxWidth: 320 }}
+                    value={teamInput}
+                    onChange={(e) => setTeamInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'team-name-error' : undefined}
+                    placeholder="Enter team name"
+                  />
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={saveTeamName}
+                    aria-label="Save team name"
+                    title="Save"
                   >
-                    {(analytics.success?.avgRating || 0).toFixed(1)}/5
-                  </div>
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={cancelEdit}
+                    aria-label="Cancel"
+                    title="Cancel"
+                  >
+                    Cancel
+                  </button>
                 </div>
-                <div>
-                  <div className="muted">Sentiment</div>
-                  <div>
-                    <SentimentChip score={analytics.sentiment?.sentimentScore || 0} label={analytics.sentiment?.label || 'mixed'} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-2 muted" aria-live="polite" aria-atomic="true">
-                {analytics.success?.totals?.likes || 0} likes • {analytics.success?.totals?.dislikes || 0} dislikes • {analytics.success?.totals?.feedback || 0} total feedback
-              </div>
-              <TrendChart />
-              <TopTagTrend />
-            </>
-          )}
-        </Card>
-      </div>
-
-      {/* Team Summary & Saved combined - simplified to avoid parallel small cards */}
-      <div className="mt-4">
-        <Card>
-          <div className="ts-row cols-2">
-            <div>
-              <h2 className="h2">Team summary</h2>
-              <p className="muted">{teamSummary}</p>
-              <TrendChart />
-              <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <Button onClick={handleGenerateNew} disabled={generating} aria-label="Generate new recommendations now">
-                  {generating ? 'Generating…' : 'Generate New Recommendations'}
-                </Button>
-                <Button variant="secondary" onClick={() => (window.location.hash = '#/recommendations')} aria-label="Go to recommendations">
-                  View Recommendations
-                </Button>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="h2">Saved activities</h2>
-              <div className="muted" style={{ fontSize: 12 }}>
-                {state.team?.department ? `Department: ${state.team.department}` : 'Department: —'}
-              </div>
-              {saved.length === 0 && (
-                <p className="muted" title="Save picks from the recommendations">
-                  Nothing saved yet — future you will thank present you 😉
-                </p>
               )}
-              <ul aria-label="Saved activities list">
-                {saved.map((s) => (
-                  <li key={s.id} className="mt-2">
-                    <strong>{s.title}</strong> — {s.duration}m • {s.budget} • {s.suggestedSize}
-                    {s._heroAlignment ? (
-                      <span title="Hero alignment" className="btn ghost" style={{ marginLeft: 8 }}>
-                        🛡 {s._heroAlignment}
-                      </span>
-                    ) : null}
-                    {s.departmentExclusive ? (
-                      <span title="Department exclusive" className="btn warning" style={{ marginLeft: 8 }}>
-                        Dept‒Exclusive
-                      </span>
-                    ) : null}
-                    {Array.isArray(s.departmentScope) && s.departmentScope.length > 0 && !s.departmentExclusive ? (
-                      <span title="Relevant departments" className="btn secondary" style={{ marginLeft: 8 }}>
-                        🏷 {s.departmentScope.join(', ')}
-                      </span>
-                    ) : null}
-                    {s._savedDept ? (
-                      <span title="Saved under department" className="btn secondary" style={{ marginLeft: 8 }}>
-                        Dept: {s._savedDept}
-                      </span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-4">
-                <Button onClick={() => (window.location.hash = '#/recommendations')}>Find more</Button>
+            </div>
+            {error && (
+              <div id="team-name-error" role="alert" className="muted" style={{ color: 'var(--ts-error)', marginTop: 6 }}>
+                {error}
               </div>
+            )}
+            {statusMsg && !error && (
+              <div className="muted" style={{ color: 'var(--ts-secondary, #F59E0B)', marginTop: 6 }}>
+                {statusMsg}
+              </div>
+            )}
+            <p className="muted" style={{ marginTop: 6 }}>
+              {userName ? `Signed in as ${userName}.` : 'Signed in.'} Here’s your team summary and recent engagement.
+            </p>
+            <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+              Tip: Use “✏️ Edit” to rename your team inline or “Edit Team Details” to manage it from your profile.
             </div>
+            <div id="sr-live-dashboard" aria-live="polite" className="sr-only" />
           </div>
-        </Card>
-      </div>
 
-      {/* Gamification section only - remove adjacent small card */}
-      <div className="mt-4">
-        <Card>
-          <GamificationPanel teamId={teamId} />
-        </Card>
-      </div>
+          {/* Persona card and Advanced Analytics */}
+          <div className="ts-row cols-2">
+            <Card>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <h2 className="h2">Team Culture Persona</h2>
+                <span className={`btn ${isPro ? 'warning' : 'secondary'}`} title={isPro ? 'AI‑powered' : 'Preview'}>
+                  {isPro ? 'AI‑Powered' : 'Preview'}
+                </span>
+              </div>
+              {loadingPersona ? (
+                <p className="muted">Generating persona…</p>
+              ) : !personaBlock || !personaBlock.persona ? (
+                <p className="muted">No persona available yet. Share feedback or complete onboarding to unlock insights.</p>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <strong>{personaBlock.persona?.name || 'Team Persona'}</strong>
+                    <span className="btn ghost" aria-hidden>🧭 Tone: {(personaBlock.persona?.tone || []).join(', ') || 'playful'}</span>
+                  </div>
+                  <p className="muted mt-2">{personaBlock.persona?.summary || '—'}</p>
+                  {/* Hero alignment breakdown (badges) */}
+                  <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} aria-label="Hero alignment breakdown">
+                    {(personaBlock.breakdown || []).slice(0, 4).map(h => (
+                      <span key={h.hero} className="btn secondary" title="Hero alignment share">
+                        🛡 {h.hero}: {Math.round((h.pct || 0) * 100)}%
+                      </span>
+                    ))}
+                  </div>
+                  {/* Microcopy */}
+                  <div className="mt-2 muted">
+                    Witty microcopy: Leaning {personaBlock.breakdown?.[0]?.hero || 'Ally'} — “assemble and thrive.”
+                  </div>
+                </>
+              )}
+            </Card>
 
-      {/* Feedback form - single column to avoid empty gaps */}
-      <div className="mt-4">
-        <Card>
-          <h2 className="h2">Share feedback</h2>
-          <form onSubmit={handleFeedbackSubmit}>
-            <div>
-              <label htmlFor="rating" className="label">Rating (1–5)</label>
-              <input
-                id="rating"
-                type="range"
-                min={1}
-                max={5}
-                step={1}
-                value={rating}
-                onChange={(e) => setRating(Number(e.target.value))}
-                className="input"
-                aria-valuemin={1}
-                aria-valuemax={5}
-                aria-valuenow={rating}
-              />
-              <div className="muted">Current: {rating}</div>
-            </div>
-            <div className="mt-3">
-              <label htmlFor="comment" className="label">Comments</label>
-              <textarea
-                id="comment"
-                className="textarea"
-                rows={4}
-                placeholder="What worked well? What could be better?"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-              />
-            </div>
-            <div className="mt-4" style={{ display: 'flex', gap: 12 }}>
-              <Button type="submit" disabled={submitting}>{submitting ? 'Submitting…' : 'Submit feedback'}</Button>
-              <Button type="button" variant="secondary" onClick={() => { setComment(''); setRating(4); }}>Clear</Button>
-            </div>
-          </form>
-        </Card>
-      </div>
-    </Container>
+            <Card>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <h2 className="h2">Advanced Analytics</h2>
+                <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+                  {!isPro ? <span className="btn secondary" title="Premium feature">Premium</span> : <span className="btn warning">Included</span>}
+                  <TimeRange />
+                </div>
+              </div>
+              {(!isPro) ? (
+                <div role="note" aria-label="Premium analytics banner" className="mt-2" style={{ padding: 12, border: '1px dashed var(--ts-border)', borderRadius: 12, background: 'rgba(125,131,255,0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <div>
+                      <strong>AI Analytics Preview</strong>
+                      <div className="muted">Upgrade to unlock AI‑powered insights, sentiment models, and deeper trends.</div>
+                    </div>
+                    <Button className="warning" onClick={() => { window.location.hash = '#/'; setTimeout(() => { const el = document.querySelector('[aria-label="Pro plan"]'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 0); }}>
+                      Upgrade
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+              {loadingAnalytics ? (
+                <p className="muted">Loading analytics…</p>
+              ) : !analytics ? (
+                <p className="muted">Analytics unavailable. We’ll show local estimates once feedback is added.</p>
+              ) : (
+                <>
+                  {/* Metric hints (aria-describedby) */}
+                  <div className="sr-only" id={HINT_IDS.completion}>
+                    Completion rate is the share of saved activities that received a rating.
+                  </div>
+                  <div className="sr-only" id={HINT_IDS.likeRatio}>
+                    Like ratio is likes divided by likes plus dislikes.
+                  </div>
+                  <div className="sr-only" id={HINT_IDS.avgRating}>
+                    Average rating is the mean of provided ratings, or an estimate from reactions when ratings are missing.
+                  </div>
+
+                  <div className="mt-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 12 }}>
+                    <div>
+                      <div className="muted">Completion rate</div>
+                      <div
+                        style={{ fontWeight: 800, fontSize: 20 }}
+                        aria-describedby={HINT_IDS.completion}
+                        title="Rated feedback vs saved activities"
+                      >
+                        {Math.round((analytics.success?.completionRate || 0) * 100)}%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="muted">Like ratio</div>
+                      <div
+                        style={{ fontWeight: 800, fontSize: 20 }}
+                        aria-describedby={HINT_IDS.likeRatio}
+                        title="Likes ÷ (Likes + Dislikes)"
+                      >
+                        {Math.round((analytics.success?.likeRatio || 0) * 100)}%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="muted">Avg rating</div>
+                      <div
+                        style={{ fontWeight: 800, fontSize: 20 }}
+                        aria-describedby={HINT_IDS.avgRating}
+                        title="Mean rating; estimated if missing"
+                      >
+                        {(analytics.success?.avgRating || 0).toFixed(1)}/5
+                      </div>
+                    </div>
+                    <div>
+                      <div className="muted">Sentiment</div>
+                      <div>
+                        <SentimentChip score={analytics.sentiment?.sentimentScore || 0} label={analytics.sentiment?.label || 'mixed'} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 muted" aria-live="polite" aria-atomic="true">
+                    {analytics.success?.totals?.likes || 0} likes • {analytics.success?.totals?.dislikes || 0} dislikes • {analytics.success?.totals?.feedback || 0} total feedback
+                  </div>
+                  <TrendChart />
+                  <TopTagTrend />
+                </>
+              )}
+            </Card>
+          </div>
+
+          {/* Team Summary & Saved combined - simplified to avoid parallel small cards */}
+          <div className="mt-4">
+            <Card>
+              <div className="ts-row cols-2">
+                <div>
+                  <h2 className="h2">Team summary</h2>
+                  <p className="muted">{teamSummary}</p>
+                  <TrendChart />
+                  <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    <Button onClick={handleGenerateNew} disabled={generating} aria-label="Generate new recommendations now">
+                      {generating ? 'Generating…' : 'Generate New Recommendations'}
+                    </Button>
+                    <Button variant="secondary" onClick={() => (window.location.hash = '#/recommendations')} aria-label="Go to recommendations">
+                      View Recommendations
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <h2 className="h2">Saved activities</h2>
+                  <div className="muted" style={{ fontSize: 12 }}>
+                    {state.team?.department ? `Department: ${state.team.department}` : 'Department: —'}
+                  </div>
+                  {saved.length === 0 && (
+                    <p className="muted" title="Save picks from the recommendations">
+                      Nothing saved yet — future you will thank present you 😉
+                    </p>
+                  )}
+                  <ul aria-label="Saved activities list">
+                    {saved.map((s) => (
+                      <li key={s.id} className="mt-2">
+                        <strong>{s.title}</strong> — {s.duration}m • {s.budget} • {s.suggestedSize}
+                        {s._heroAlignment ? (
+                          <span title="Hero alignment" className="btn ghost" style={{ marginLeft: 8 }}>
+                            🛡 {s._heroAlignment}
+                          </span>
+                        ) : null}
+                        {s.departmentExclusive ? (
+                          <span title="Department exclusive" className="btn warning" style={{ marginLeft: 8 }}>
+                            Dept‑Exclusive
+                          </span>
+                        ) : null}
+                        {Array.isArray(s.departmentScope) && s.departmentScope.length > 0 && !s.departmentExclusive ? (
+                          <span title="Relevant departments" className="btn secondary" style={{ marginLeft: 8 }}>
+                            🏷 {s.departmentScope.join(', ')}
+                          </span>
+                        ) : null}
+                        {s._savedDept ? (
+                          <span title="Saved under department" className="btn secondary" style={{ marginLeft: 8 }}>
+                            Dept: {s._savedDept}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4">
+                    <Button onClick={() => (window.location.hash = '#/recommendations')}>Find more</Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Gamification section only - remove adjacent small card */}
+          <div className="mt-4">
+            <Card>
+              <GamificationPanel teamId={teamId} />
+            </Card>
+          </div>
+
+          {/* Feedback form - single column to avoid empty gaps */}
+          <div className="mt-4">
+            <Card>
+              <h2 className="h2">Share feedback</h2>
+              <form onSubmit={handleFeedbackSubmit}>
+                <div>
+                  <label htmlFor="rating" className="label">Rating (1–5)</label>
+                  <input
+                    id="rating"
+                    type="range"
+                    min={1}
+                    max={5}
+                    step={1}
+                    value={rating}
+                    onChange={(e) => setRating(Number(e.target.value))}
+                    className="input"
+                    aria-valuemin={1}
+                    aria-valuemax={5}
+                    aria-valuenow={rating}
+                  />
+                  <div className="muted">Current: {rating}</div>
+                </div>
+                <div className="mt-3">
+                  <label htmlFor="comment" className="label">Comments</label>
+                  <textarea
+                    id="comment"
+                    className="textarea"
+                    rows={4}
+                    placeholder="What worked well? What could be better?"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                  />
+                </div>
+                <div className="mt-4" style={{ display: 'flex', gap: 12 }}>
+                  <Button type="submit" disabled={submitting}>{submitting ? 'Submitting…' : 'Submit feedback'}</Button>
+                  <Button type="button" variant="secondary" onClick={() => { setComment(''); setRating(4); }}>Clear</Button>
+                </div>
+              </form>
+            </Card>
+          </div>
+        </section>
+      </Container>
+    </div>
   );
 }
 

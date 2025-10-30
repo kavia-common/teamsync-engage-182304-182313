@@ -103,96 +103,100 @@ export default function Onboarding({ params = {} }) {
   };
 
   return (
-    <Container>
-      <div className="mb-4">
-        <h1 className="h1">Onboarding</h1>
-        <p className="muted">Tell us about your team so we can tailor the experience.</p>
-        {isDemo && <div className="mt-2"><span className="btn warning">Demo mode</span></div>}
-      </div>
-      <Card as="form" onSubmit={handleNext} noValidate>
-        <Progress value={25} label="Onboarding progress" />
-        <div className="ts-row cols-2 mt-4">
-          <div>
-            <label className="label" htmlFor="team-name">Team name</label>
-            <input
-              id="team-name"
-              className="input"
-              placeholder="e.g., Growth Guild"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={() => setTouched((t) => ({ ...t, name: true }))}
-              aria-invalid={touched.name && !!errors.name}
-              aria-describedby={touched.name && errors.name ? 'team-name-error' : undefined}
-              required
-            />
-            {touched.name && errors.name && (
-              <div id="team-name-error" role="alert" className="muted" style={{ color: 'var(--ts-error)' }}>
-                {errors.name}
+    <div className="teal-page-bg">
+      <Container>
+        <section className="glass-section">
+          <div className="mb-4">
+            <h1 className="h1">Onboarding</h1>
+            <p className="muted">Tell us about your team so we can tailor the experience.</p>
+            {isDemo && <div className="mt-2"><span className="btn warning">Demo mode</span></div>}
+          </div>
+          <Card as="form" onSubmit={handleNext} noValidate>
+            <Progress value={25} label="Onboarding progress" />
+            <div className="ts-row cols-2 mt-4">
+              <div>
+                <label className="label" htmlFor="team-name">Team name</label>
+                <input
+                  id="team-name"
+                  className="input"
+                  placeholder="e.g., Growth Guild"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={() => setTouched((t) => ({ ...t, name: true }))}
+                  aria-invalid={touched.name && !!errors.name}
+                  aria-describedby={touched.name && errors.name ? 'team-name-error' : undefined}
+                  required
+                />
+                {touched.name && errors.name && (
+                  <div id="team-name-error" role="alert" className="muted" style={{ color: 'var(--ts-error)' }}>
+                    {errors.name}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div>
-            <label className="label" htmlFor="team-size">Team size</label>
-            <input
-              id="team-size"
-              className="input"
-              type="number"
-              min={1}
-              inputMode="numeric"
-              value={size}
-              onChange={(e) => setSize(e.target.value)}
-              onBlur={() => setTouched((t) => ({ ...t, size: true }))}
-              aria-invalid={touched.size && !!errors.size}
-              aria-describedby={touched.size && errors.size ? 'team-size-error' : undefined}
-              required
-            />
-            {touched.size && errors.size && (
-              <div id="team-size-error" role="alert" className="muted" style={{ color: 'var(--ts-error)' }}>
-                {errors.size}
+              <div>
+                <label className="label" htmlFor="team-size">Team size</label>
+                <input
+                  id="team-size"
+                  className="input"
+                  type="number"
+                  min={1}
+                  inputMode="numeric"
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  onBlur={() => setTouched((t) => ({ ...t, size: true }))}
+                  aria-invalid={touched.size && !!errors.size}
+                  aria-describedby={touched.size && errors.size ? 'team-size-error' : undefined}
+                  required
+                />
+                {touched.size && errors.size && (
+                  <div id="team-size-error" role="alert" className="muted" style={{ color: 'var(--ts-error)' }}>
+                    {errors.size}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div>
-            <label className="label" htmlFor="team-dept">Department</label>
-            <select
-              id="team-dept"
-              className="select"
-              value={department}
-              onChange={(e) => setDepartment(e.target.value)}
-              aria-label="Select your department"
-            >
-              <option value="">Select department</option>
-              <option value="Leadership">Leadership</option>
-              <option value="Sales">Sales</option>
-              <option value="Operations">Operations</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Development">Development</option>
-              <option value="QA">QA</option>
-            </select>
-          </div>
-          <div>
-            <label className="label" htmlFor="team-mode">Work mode</label>
-            <select
-              id="team-mode"
-              className="select"
-              value={mode}
-              onChange={(e) => setMode(e.target.value)}
-              aria-invalid={!!errors.mode}
-              required
-            >
-              <option value="in_person">In-person</option>
-              <option value="remote">Remote</option>
-              <option value="hybrid">Hybrid</option>
-            </select>
-          </div>
-        </div>
-        <div className="mt-4" style={{ display: 'flex', gap: 12 }}>
-          <Button type="button" variant="secondary" onClick={() => (window.location.hash = '#/')}>Back</Button>
-          <Button type="submit" onClick={handleNext} aria-label="Next, take quiz" disabled={!canContinue || saving}>
-            {saving ? 'Saving…' : (isDemo ? 'Continuing Demo…' : 'Next → Take Quiz')}
-          </Button>
-        </div>
-      </Card>
-    </Container>
+              <div>
+                <label className="label" htmlFor="team-dept">Department</label>
+                <select
+                  id="team-dept"
+                  className="select"
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  aria-label="Select your department"
+                >
+                  <option value="">Select department</option>
+                  <option value="Leadership">Leadership</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Operations">Operations</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Development">Development</option>
+                  <option value="QA">QA</option>
+                </select>
+              </div>
+              <div>
+                <label className="label" htmlFor="team-mode">Work mode</label>
+                <select
+                  id="team-mode"
+                  className="select"
+                  value={mode}
+                  onChange={(e) => setMode(e.target.value)}
+                  aria-invalid={!!errors.mode}
+                  required
+                >
+                  <option value="in_person">In-person</option>
+                  <option value="remote">Remote</option>
+                  <option value="hybrid">Hybrid</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-4" style={{ display: 'flex', gap: 12 }}>
+              <Button type="button" variant="secondary" onClick={() => (window.location.hash = '#/')}>Back</Button>
+              <Button type="submit" onClick={handleNext} aria-label="Next, take quiz" disabled={!canContinue || saving}>
+                {saving ? 'Saving…' : (isDemo ? 'Continuing Demo…' : 'Next → Take Quiz')}
+              </Button>
+            </div>
+          </Card>
+        </section>
+      </Container>
+    </div>
   );
 }

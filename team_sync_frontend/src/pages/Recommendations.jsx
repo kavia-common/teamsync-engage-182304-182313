@@ -411,200 +411,203 @@ export default function Recommendations() {
   );
 
   return (
-    <Container>
-      <div className="mb-4">
-        <h1 className="h1">Recommendations</h1>
-        <p className="muted">
-          Based on your team profile and quiz results — handpicked just for you.
-        </p>
-        <SegmentControl />
-        <div id="sr-live" aria-live="polite" className="sr-only" />
-        <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Button onClick={generateAI} disabled={aiLoading} title="Use AI to generate tailored ideas">
-            {aiLoading ? 'Generating…' : 'AI Generate'}
-          </Button>
-          <Button variant="ghost" onClick={() => setDebugOverlay((v) => !v)} title="Toggle debug overlay">
-            {debugOverlay ? 'Hide Debug' : 'Show Debug'}
-          </Button>
-          {ai?.source && (
-            <span className="muted">
-              Source: {ai.source} {ai.model ? `(${ai.model})` : ''}{' '}
-              {ai.usage?.latency_ms ? `· ${ai.usage.latency_ms}ms` : ''}
-            </span>
-          )}
-        </div>
-        {debugOverlay && ai?.source && (
-          <div className="mt-2" style={{ fontSize: 12, background: 'var(--ts-surface)', border: '1px solid var(--ts-border)', padding: 12, borderRadius: 12, boxShadow: 'var(--ts-shadow-sm)', color: 'var(--ts-text)' }}>
-            <div><strong>AI Debug</strong></div>
-            <div>source: {ai.source} | model: {ai.model || '(n/a)'} | ideas: {Array.isArray(ai.ideas) ? ai.ideas.length : 0}</div>
-            {Array.isArray(ai.ideas) && ai.ideas.slice(0, 5).map((x, idx) => {
-              const fsNum = Number(x.fit_score ?? x._ai?.fit_score ?? 0);
-              const fitDisp = Number.isFinite(fsNum)
-                ? (fsNum > 1 ? (fsNum / 100).toFixed(2) : fsNum.toFixed(2))
-                : '—';
-              const scope = Array.isArray(x.departmentScope) ? x.departmentScope : [];
-              return (
-                <div key={idx} style={{ marginTop: 4 }}>
-                  #{idx + 1} · fit={fitDisp}
-                  {' '}title="{String(x.title || '').slice(0, 60)}"
-                  {' '}deptScope={[...scope].join(',')}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {loading && <Card aria-busy="true">Loading recommendations…</Card>}
-      {error && <Card style={{ borderColor: 'var(--ts-error)' }}>{error}</Card>}
-
-      {!loading && !error && filtered.length === 0 && (
-        <Card className="confetti" aria-live="polite">
-          <h2 className="h2">We’re warming up the idea engine 🔧</h2>
-          <p className="muted">
-            No picks yet. Try tweaking your quiz choices or generate another set.
-          </p>
-          <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Button onClick={() => (window.location.hash = '#/quiz')} title="Retake the quiz for fresh ideas">
-              Adjust Quiz
-            </Button>
-            <Button variant="secondary" onClick={() => (window.location.hash = '#/onboarding')} title="Update team basics">
-              Edit Team
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {!loading && !error && filtered.length > 0 && (
-        <div className="card-grid">
-          {filtered.map((rec) => (
-            <Card key={rec.id} aria-busy={!!rec.placeholder}>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-                <h3 className="h2" style={{ marginRight: 8 }}>{rec.title}</h3>
-                {/* Department-exclusive badge */}
-                {rec.departmentExclusive && (
-                  <span className="btn warning" aria-label="Department exclusive" title="Exclusive for your department">
-                    Dept‑Exclusive
-                  </span>
-                )}
-              </div>
-
-              {/* Hero alignment label and microcopy */}
-              <div className="mt-2" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span className="btn ghost" title="Hero alignment" aria-label={`Hero alignment ${rec.heroAlignment || 'Ally'}`}>
-                  🛡 {rec.heroAlignment || 'Ally'}
+    <div className="teal-page-bg">
+      <Container>
+        <section className="glass-section">
+          <div className="mb-4">
+            <h1 className="h1">Recommendations</h1>
+            <p className="muted">
+              Based on your team profile and quiz results — handpicked just for you.
+            </p>
+            <SegmentControl />
+            <div id="sr-live" aria-live="polite" className="sr-only" />
+            <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Button onClick={generateAI} disabled={aiLoading} title="Use AI to generate tailored ideas">
+                {aiLoading ? 'Generating…' : 'AI Generate'}
+              </Button>
+              <Button variant="ghost" onClick={() => setDebugOverlay((v) => !v)} title="Toggle debug overlay">
+                {debugOverlay ? 'Hide Debug' : 'Show Debug'}
+              </Button>
+              {ai?.source && (
+                <span className="muted">
+                  Source: {ai.source} {ai.model ? `(${ai.model})` : ''}{' '}
+                  {ai.usage?.latency_ms ? `· ${ai.usage.latency_ms}ms` : ''}
                 </span>
-                {/* Source badge for mock-ai */}
-                {rec._ai?.source && (
-                  <span
-                    className="btn ghost"
-                    title={`AI Source: ${rec._ai.source}`}
-                    style={{
-                      background: rec._ai.source === 'mock-ai' ? 'color-mix(in srgb, var(--ts-secondary), transparent 80%)' : undefined,
-                      color: 'var(--ts-text)'
-                    }}
-                  >
-                    🤖 {rec._ai.source}
-                  </span>
-                )}
-              </div>
-
-              <p className="muted mt-2">{rec.description}</p>
-
-              {/* AI badges and fit score + reasoning */}
-              {rec._ai && (
-                <div className="mt-2" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span className="btn ghost" title="AI Fit score (0 to 1)">🎯 {Number(rec._ai.fit_score).toFixed(2)}</span>
-                  {rec._ai.reasoning && (
-                    <button
-                      className="btn secondary"
-                      onClick={() => setShowReasoning((m) => ({ ...m, [rec.id]: !m[rec.id] }))}
-                      aria-expanded={!!showReasoning[rec.id]}
-                      aria-controls={`rsn-${rec.id}`}
-                    >
-                      {showReasoning[rec.id] ? 'Hide Why' : 'Why this?'}
-                    </button>
-                  )}
-                </div>
               )}
-              {rec._ai?.reasoning && showReasoning[rec.id] && (
-                <div id={`rsn-${rec.id}`} className="mt-2" style={{ background: 'var(--ts-surface)', border: '1px solid var(--ts-border)', padding: 12, borderRadius: 12, boxShadow: 'var(--ts-shadow-sm)' }}>
-                  <p className="muted" style={{ margin: 0, color: 'var(--ts-text-muted)' }}>{rec._ai.reasoning}</p>
-                </div>
-              )}
-
-              {/* Meta row */}
-              <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <span className="btn secondary" aria-hidden title="Duration">⏱ {rec.duration}m</span>
-                <span className="btn secondary" aria-hidden title="Suggested team size">👥 {rec.suggestedSize}</span>
-                <span className="btn secondary" aria-hidden title="Budget level">💸 {rec.budget}</span>
-                {/* Show department scope when present and not exclusive */}
-                {(rec.departmentScope && rec.departmentScope.length > 0 && !rec.departmentExclusive) && (
-                  <span className="btn secondary" aria-hidden title="Relevant departments">🏷 {rec.departmentScope.join(', ')}</span>
-                )}
+            </div>
+            {debugOverlay && ai?.source && (
+              <div className="mt-2" style={{ fontSize: 12, background: 'var(--ts-surface)', border: '1px solid var(--ts-border)', padding: 12, borderRadius: 12, boxShadow: 'var(--ts-shadow-sm)', color: 'var(--ts-text)' }}>
+                <div><strong>AI Debug</strong></div>
+                <div>source: {ai.source} | model: {ai.model || '(n/a)'} | ideas: {Array.isArray(ai.ideas) ? ai.ideas.length : 0}</div>
+                {Array.isArray(ai.ideas) && ai.ideas.slice(0, 5).map((x, idx) => {
+                  const fsNum = Number(x.fit_score ?? x._ai?.fit_score ?? 0);
+                  const fitDisp = Number.isFinite(fsNum)
+                    ? (fsNum > 1 ? (fsNum / 100).toFixed(2) : fsNum.toFixed(2))
+                    : '—';
+                  const scope = Array.isArray(x.departmentScope) ? x.departmentScope : [];
+                  return (
+                    <div key={idx} style={{ marginTop: 4 }}>
+                      #{idx + 1} · fit={fitDisp}
+                      {' '}title="{String(x.title || '').slice(0, 60)}"
+                      {' '}deptScope={[...scope].join(',')}
+                    </div>
+                  );
+                })}
               </div>
+            )}
+          </div>
 
-              
+          {loading && <Card aria-busy="true">Loading recommendations…</Card>}
+          {error && <Card style={{ borderColor: 'var(--ts-error)' }}>{error}</Card>}
 
-              <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <Button onClick={() => handleSave(rec)} aria-label={`Save ${rec.title}`} title="Save for later" disabled={!!rec.placeholder}>
-                  Save
+          {!loading && !error && filtered.length === 0 && (
+            <Card className="confetti" aria-live="polite">
+              <h2 className="h2">We’re warming up the idea engine 🔧</h2>
+              <p className="muted">
+                No picks yet. Try tweaking your quiz choices or generate another set.
+              </p>
+              <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <Button onClick={() => (window.location.hash = '#/quiz')} title="Retake the quiz for fresh ideas">
+                  Adjust Quiz
                 </Button>
-                <Button variant="ghost" onClick={() => handleFeedback(rec, 'like')} aria-label={`Like ${rec.title}`} title="We’ll show more like this" disabled={!!rec.placeholder}>
-                  👍 Like
-                </Button>
-                <Button variant="ghost" onClick={() => handleFeedback(rec, 'dislike')} aria-label={`Dislike ${rec.title}`} title="We’ll show fewer like this" disabled={!!rec.placeholder}>
-                  👎 Dislike
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => openDetails(rec)}
-                  aria-label={`View details for ${rec.title}`}
-                  title="View details"
-                  disabled={!!rec.placeholder}
-                >
-                  View Details
+                <Button variant="secondary" onClick={() => (window.location.hash = '#/onboarding')} title="Update team basics">
+                  Edit Team
                 </Button>
               </div>
             </Card>
-          ))}
-        </div>
-      )}
+          )}
 
-      {/* Details Modal */}
-      <RecommendationDetailsModal
-        open={detailsOpen}
-        onClose={closeDetails}
-        item={selectedItem}
-        onSave={handleSave}
-        onFeedback={handleFeedback}
-        onFeedbackSubmit={(gameId, fb) => {
-          // Local in-memory store; could be lifted to Zustand if needed later
-          try {
-            if (!window.__TS_FEEDBACK__) window.__TS_FEEDBACK__ = {};
-            const prev = window.__TS_FEEDBACK__[gameId] || [];
-            const next = [...prev, { ...fb, at: Date.now() }];
-            window.__TS_FEEDBACK__[gameId] = next;
-            // eslint-disable-next-line no-console
-            console.log('Feedback submitted:', { gameId, ...fb });
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn('Feedback store failed', e);
-          }
-        }}
-      />
+          {!loading && !error && filtered.length > 0 && (
+            <div className="card-grid">
+              {filtered.map((rec) => (
+                <Card key={rec.id} aria-busy={!!rec.placeholder}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+                    <h3 className="h2" style={{ marginRight: 8 }}>{rec.title}</h3>
+                    {/* Department-exclusive badge */}
+                    {rec.departmentExclusive && (
+                      <span className="btn warning" aria-label="Department exclusive" title="Exclusive for your department">
+                        Dept‑Exclusive
+                      </span>
+                    )}
+                  </div>
 
-      <div className="mt-6" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <Button variant="secondary" onClick={() => (window.location.hash = '#/quiz')} title="Adjust your quiz answers">
-          Back
-        </Button>
-        <Button onClick={() => setRefreshKey((k) => k + 1)} title="See another set based on your profile">
-          Try Another Set
-        </Button>
-        <Button onClick={() => (window.location.hash = '#/dashboard')} title="Review saved picks and feedback">
-          Go to Dashboard
-        </Button>
-      </div>
-    </Container>
+                  {/* Hero alignment label and microcopy */}
+                  <div className="mt-2" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span className="btn ghost" title="Hero alignment" aria-label={`Hero alignment ${rec.heroAlignment || 'Ally'}`}>
+                      🛡 {rec.heroAlignment || 'Ally'}
+                    </span>
+                    {/* Source badge for mock-ai */}
+                    {rec._ai?.source && (
+                      <span
+                        className="btn ghost"
+                        title={`AI Source: ${rec._ai.source}`}
+                        style={{
+                          background: rec._ai.source === 'mock-ai' ? 'color-mix(in srgb, var(--ts-secondary), transparent 80%)' : undefined,
+                          color: 'var(--ts-text)'
+                        }}
+                      >
+                        🤖 {rec._ai.source}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="muted mt-2">{rec.description}</p>
+
+                  {/* AI badges and fit score + reasoning */}
+                  {rec._ai && (
+                    <div className="mt-2" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span className="btn ghost" title="AI Fit score (0 to 1)">🎯 {Number(rec._ai.fit_score).toFixed(2)}</span>
+                      {rec._ai.reasoning && (
+                        <button
+                          className="btn secondary"
+                          onClick={() => setShowReasoning((m) => ({ ...m, [rec.id]: !m[rec.id] }))}
+                          aria-expanded={!!showReasoning[rec.id]}
+                          aria-controls={`rsn-${rec.id}`}
+                        >
+                          {showReasoning[rec.id] ? 'Hide Why' : 'Why this?'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {rec._ai?.reasoning && showReasoning[rec.id] && (
+                    <div id={`rsn-${rec.id}`} className="mt-2" style={{ background: 'var(--ts-surface)', border: '1px solid var(--ts-border)', padding: 12, borderRadius: 12, boxShadow: 'var(--ts-shadow-sm)' }}>
+                      <p className="muted" style={{ margin: 0, color: 'var(--ts-text-muted)' }}>{rec._ai.reasoning}</p>
+                    </div>
+                  )}
+
+                  {/* Meta row */}
+                  <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <span className="btn secondary" aria-hidden title="Duration">⏱ {rec.duration}m</span>
+                    <span className="btn secondary" aria-hidden title="Suggested team size">👥 {rec.suggestedSize}</span>
+                    <span className="btn secondary" aria-hidden title="Budget level">💸 {rec.budget}</span>
+                    {/* Show department scope when present and not exclusive */}
+                    {(rec.departmentScope && rec.departmentScope.length > 0 && !rec.departmentExclusive) && (
+                      <span className="btn secondary" aria-hidden title="Relevant departments">🏷 {rec.departmentScope.join(', ')}</span>
+                    )}
+                  </div>
+
+                  
+                  <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <Button onClick={() => handleSave(rec)} aria-label={`Save ${rec.title}`} title="Save for later" disabled={!!rec.placeholder}>
+                      Save
+                    </Button>
+                    <Button variant="ghost" onClick={() => handleFeedback(rec, 'like')} aria-label={`Like ${rec.title}`} title="We’ll show more like this" disabled={!!rec.placeholder}>
+                      👍 Like
+                    </Button>
+                    <Button variant="ghost" onClick={() => handleFeedback(rec, 'dislike')} aria-label={`Dislike ${rec.title}`} title="We’ll show fewer like this" disabled={!!rec.placeholder}>
+                      👎 Dislike
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => openDetails(rec)}
+                      aria-label={`View details for ${rec.title}`}
+                      title="View details"
+                      disabled={!!rec.placeholder}
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Details Modal */}
+          <RecommendationDetailsModal
+            open={detailsOpen}
+            onClose={closeDetails}
+            item={selectedItem}
+            onSave={handleSave}
+            onFeedback={handleFeedback}
+            onFeedbackSubmit={(gameId, fb) => {
+              // Local in-memory store; could be lifted to Zustand if needed later
+              try {
+                if (!window.__TS_FEEDBACK__) window.__TS_FEEDBACK__ = {};
+                const prev = window.__TS_FEEDBACK__[gameId] || [];
+                const next = [...prev, { ...fb, at: Date.now() }];
+                window.__TS_FEEDBACK__[gameId] = next;
+                // eslint-disable-next-line no-console
+                console.log('Feedback submitted:', { gameId, ...fb });
+              } catch (e) {
+                // eslint-disable-next-line no-console
+                console.warn('Feedback store failed', e);
+              }
+            }}
+          />
+
+          <div className="mt-6" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <Button variant="secondary" onClick={() => (window.location.hash = '#/quiz')} title="Adjust your quiz answers">
+              Back
+            </Button>
+            <Button onClick={() => setRefreshKey((k) => k + 1)} title="See another set based on your profile">
+              Try Another Set
+            </Button>
+            <Button onClick={() => (window.location.hash = '#/dashboard')} title="Review saved picks and feedback">
+              Go to Dashboard
+            </Button>
+          </div>
+        </section>
+      </Container>
+    </div>
   );
 }

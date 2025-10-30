@@ -161,165 +161,169 @@ export default function Quiz({ params = {} }) {
   };
 
   return (
-    <Container>
-      <div className="mb-4">
-        <h1 className="h1">Team Quiz</h1>
-        <p className="muted">Five quick picks to tailor your activities.</p>
-        {isDemo && <div className="mt-2"><span className="btn warning">Demo mode</span></div>}
-      </div>
-
-      <Card as="form" onSubmit={handleSubmit} noValidate>
-        <Progress value={100} label="Quiz progress" />
-
-        <div className="ts-row cols-2 mt-4">
-          {/* Q1: Energy (radios) */}
-          <fieldset>
-            <legend className="label">1) Energy</legend>
-            <div role="radiogroup" aria-label="Energy level" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <label className={`btn ${energy === 'chill' ? '' : 'secondary'}`}>
-                <input
-                  type="radio"
-                  name="energy"
-                  value="chill"
-                  checked={energy === 'chill'}
-                  onChange={() => setEnergy('chill')}
-                  aria-label="Chill"
-                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
-                />
-                Chill
-              </label>
-              <label className={`btn ${energy === 'balanced' ? '' : 'secondary'}`}>
-                <input
-                  type="radio"
-                  name="energy"
-                  value="balanced"
-                  checked={energy === 'balanced'}
-                  onChange={() => setEnergy('balanced')}
-                  aria-label="Balanced"
-                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
-                />
-                Balanced
-              </label>
-              <label className={`btn ${energy === 'high' ? '' : 'secondary'}`}>
-                <input
-                  type="radio"
-                  name="energy"
-                  value="high"
-                  checked={energy === 'high'}
-                  onChange={() => setEnergy('high')}
-                  aria-label="High"
-                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
-                />
-                High
-              </label>
-            </div>
-          </fieldset>
-
-          {/* Q2: Budget (radios) */}
-          <fieldset>
-            <legend className="label">2) Budget</legend>
-            <div role="radiogroup" aria-label="Budget" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <label className={`btn ${budget === 'low' ? '' : 'secondary'}`}>
-                <input
-                  type="radio"
-                  name="budget"
-                  value="low"
-                  checked={budget === 'low'}
-                  onChange={() => setBudget('low')}
-                  aria-label="Low"
-                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
-                />
-                Low
-              </label>
-              <label className={`btn ${budget === 'medium' ? '' : 'secondary'}`}>
-                <input
-                  type="radio"
-                  name="budget"
-                  value="medium"
-                  checked={budget === 'medium'}
-                  onChange={() => setBudget('medium')}
-                  aria-label="Medium"
-                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
-                />
-                Medium
-              </label>
-              <label className={`btn ${budget === 'high' ? '' : 'secondary'}`}>
-                <input
-                  type="radio"
-                  name="budget"
-                  value="high"
-                  checked={budget === 'high'}
-                  onChange={() => setBudget('high')}
-                  aria-label="High"
-                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
-                />
-                High
-              </label>
-            </div>
-          </fieldset>
-
-          {/* Q3: Duration (slider) */}
-          <div>
-            <label className="label" htmlFor="duration">3) Duration (minutes)</label>
-            <input
-              id="duration"
-              className="input"
-              type="range"
-              min={15}
-              max={180}
-              step={15}
-              value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
-              aria-valuemin={15}
-              aria-valuemax={180}
-              aria-valuenow={duration}
-            />
-            <div className="muted">Current: {duration} min</div>
+    <div className="teal-page-bg">
+      <Container>
+        <section className="glass-section">
+          <div className="mb-4">
+            <h1 className="h1">Team Quiz</h1>
+            <p className="muted">Five quick picks to tailor your activities.</p>
+            {isDemo && <div className="mt-2"><span className="btn warning">Demo mode</span></div>}
           </div>
 
-          {/* Q4: Interests (compact chip toggles) */}
-          <div>
-            <span className="label" id="interests-label">4) Interests</span>
-            <div aria-labelledby="interests-label" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {chips.map((c) => (
-                <button
-                  key={c.key}
-                  type="button"
-                  onClick={() => toggleInterest(c.key)}
-                  className={`btn ${interests.includes(c.key) ? '' : 'secondary'}`}
-                  aria-pressed={interests.includes(c.key)}
-                >
-                  {c.label}
-                </button>
-              ))}
+          <Card as="form" onSubmit={handleSubmit} noValidate>
+            <Progress value={100} label="Quiz progress" />
+
+            <div className="ts-row cols-2 mt-4">
+              {/* Q1: Energy (radios) */}
+              <fieldset>
+                <legend className="label">1) Energy</legend>
+                <div role="radiogroup" aria-label="Energy level" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <label className={`btn ${energy === 'chill' ? '' : 'secondary'}`}>
+                    <input
+                      type="radio"
+                      name="energy"
+                      value="chill"
+                      checked={energy === 'chill'}
+                      onChange={() => setEnergy('chill')}
+                      aria-label="Chill"
+                      style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                    />
+                    Chill
+                  </label>
+                  <label className={`btn ${energy === 'balanced' ? '' : 'secondary'}`}>
+                    <input
+                      type="radio"
+                      name="energy"
+                      value="balanced"
+                      checked={energy === 'balanced'}
+                      onChange={() => setEnergy('balanced')}
+                      aria-label="Balanced"
+                      style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                    />
+                    Balanced
+                  </label>
+                  <label className={`btn ${energy === 'high' ? '' : 'secondary'}`}>
+                    <input
+                      type="radio"
+                      name="energy"
+                      value="high"
+                      checked={energy === 'high'}
+                      onChange={() => setEnergy('high')}
+                      aria-label="High"
+                      style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                    />
+                    High
+                  </label>
+                </div>
+              </fieldset>
+
+              {/* Q2: Budget (radios) */}
+              <fieldset>
+                <legend className="label">2) Budget</legend>
+                <div role="radiogroup" aria-label="Budget" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <label className={`btn ${budget === 'low' ? '' : 'secondary'}`}>
+                    <input
+                      type="radio"
+                      name="budget"
+                      value="low"
+                      checked={budget === 'low'}
+                      onChange={() => setBudget('low')}
+                      aria-label="Low"
+                      style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                    />
+                    Low
+                  </label>
+                  <label className={`btn ${budget === 'medium' ? '' : 'secondary'}`}>
+                    <input
+                      type="radio"
+                      name="budget"
+                      value="medium"
+                      checked={budget === 'medium'}
+                      onChange={() => setBudget('medium')}
+                      aria-label="Medium"
+                      style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                    />
+                    Medium
+                  </label>
+                  <label className={`btn ${budget === 'high' ? '' : 'secondary'}`}>
+                    <input
+                      type="radio"
+                      name="budget"
+                      value="high"
+                      checked={budget === 'high'}
+                      onChange={() => setBudget('high')}
+                      aria-label="High"
+                      style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                    />
+                    High
+                  </label>
+                </div>
+              </fieldset>
+
+              {/* Q3: Duration (slider) */}
+              <div>
+                <label className="label" htmlFor="duration">3) Duration (minutes)</label>
+                <input
+                  id="duration"
+                  className="input"
+                  type="range"
+                  min={15}
+                  max={180}
+                  step={15}
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value))}
+                  aria-valuemin={15}
+                  aria-valuemax={180}
+                  aria-valuenow={duration}
+                />
+                <div className="muted">Current: {duration} min</div>
+              </div>
+
+              {/* Q4: Interests (compact chip toggles) */}
+              <div>
+                <span className="label" id="interests-label">4) Interests</span>
+                <div aria-labelledby="interests-label" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {chips.map((c) => (
+                    <button
+                      key={c.key}
+                      type="button"
+                      onClick={() => toggleInterest(c.key)}
+                      className={`btn ${interests.includes(c.key) ? '' : 'secondary'}`}
+                      aria-pressed={interests.includes(c.key)}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Q5: Collaboration (slider) */}
+              <div>
+                <label className="label" htmlFor="collab">5) Collaboration (1–5)</label>
+                <input
+                  id="collab"
+                  className="input"
+                  type="range"
+                  min={1}
+                  max={5}
+                  step={1}
+                  value={collaboration}
+                  onChange={(e) => setCollaboration(Number(e.target.value))}
+                  aria-valuemin={1}
+                  aria-valuemax={5}
+                  aria-valuenow={collaboration}
+                />
+                <div className="muted">Current: {collaboration}</div>
+              </div>
             </div>
-          </div>
 
-          {/* Q5: Collaboration (slider) */}
-          <div>
-            <label className="label" htmlFor="collab">5) Collaboration (1–5)</label>
-            <input
-              id="collab"
-              className="input"
-              type="range"
-              min={1}
-              max={5}
-              step={1}
-              value={collaboration}
-              onChange={(e) => setCollaboration(Number(e.target.value))}
-              aria-valuemin={1}
-              aria-valuemax={5}
-              aria-valuenow={collaboration}
-            />
-            <div className="muted">Current: {collaboration}</div>
-          </div>
-        </div>
-
-        <div className="mt-4" style={{ display: 'flex', gap: 12 }}>
-          <Button variant="secondary" type="button" onClick={() => (window.location.hash = '#/onboarding')}>Back</Button>
-          <Button type="submit" disabled={saving}>{saving ? 'Saving…' : (isDemo ? 'Continuing Demo…' : 'Submit & See Recommendations')}</Button>
-        </div>
-      </Card>
-    </Container>
+            <div className="mt-4" style={{ display: 'flex', gap: 12 }}>
+              <Button variant="secondary" type="button" onClick={() => (window.location.hash = '#/onboarding')}>Back</Button>
+              <Button type="submit" disabled={saving}>{saving ? 'Saving…' : (isDemo ? 'Continuing Demo…' : 'Submit & See Recommendations')}</Button>
+            </div>
+          </Card>
+        </section>
+      </Container>
+    </div>
   );
 }
