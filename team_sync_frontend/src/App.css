@@ -176,20 +176,27 @@ a:hover { text-decoration: underline; }
   appearance: none;
   border: 1px solid transparent;
   border-radius: var(--ts-radius);
-  padding: 11px 18px;
+  /* Enlarged padding for prominence */
+  padding: 14px 22px;
   background: var(--ts-primary);
+  /* Ensure accessible contrast against primary background */
   color: #052a2a;
-  font-weight: 700;
+  font-weight: 800;
+  /* Larger default size */
+  font-size: 16px;
+  line-height: 1.1;
   cursor: pointer;
   transition: transform .12s ease, box-shadow .22s ease, background .22s ease, border-color .22s ease, color .22s ease;
-  box-shadow: 0 10px 22px rgba(43,217,201,0.22);
+  /* Slightly stronger elevation */
+  box-shadow: 0 12px 26px rgba(43,217,201,0.26);
   will-change: transform;
 }
 .btn:hover { transform: translateY(-2px); background: var(--ts-primary-600); }
 .btn:active { transform: translateY(0); }
-.btn:focus { outline: none; box-shadow: var(--ts-focus); }
+.btn:focus { outline: none; box-shadow: 0 0 0 4px rgba(43,217,201,0.40); }
 .btn:disabled { opacity: .6; cursor: not-allowed; }
 
+/* Secondary keeps accessible contrast and subtle elevation */
 .btn.secondary {
   background: #fff;
   color: var(--ts-text);
@@ -198,6 +205,7 @@ a:hover { text-decoration: underline; }
 }
 .btn.secondary:hover { background: #f8fafc; }
 
+/* Warning retains distinct brand color */
 .btn.warning {
   background: var(--ts-secondary);
   color: #0b0f2a;
@@ -205,6 +213,7 @@ a:hover { text-decoration: underline; }
 }
 .btn.warning:hover { background: var(--ts-secondary-600); }
 
+/* Ghost emphasizes outline for visibility */
 .btn.ghost {
   background: transparent;
   color: var(--ts-secondary);
@@ -318,19 +327,22 @@ main[role="main"] {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto auto auto; /* content, illustration, ctas */
-  gap: 14px;
+  gap: 16px;
   align-items: start;
-  justify-items: start;
-  padding: 16px; /* inner breathing room on small screens */
+  /* center items but allow CTA to align left on small screens */
+  justify-items: center;
+  padding: 18px; /* inner breathing room on small screens */
 }
 .landing-hero__media {
   width: 100%;
+  /* Add spacing so illustration doesn't crowd text/CTAs */
+  margin-top: 4px;
 }
 .landing-hero__art,
 .landing-hero__img {
-  width: 100%;
+  width: min(840px, 100%);
   aspect-ratio: 16/10;
-  border-radius: 16px;
+  border-radius: 20px; /* rounded-2xl feel */
   border: 1px solid var(--ts-border);
   box-shadow: var(--ts-shadow-sm);
   background:
@@ -343,38 +355,58 @@ main[role="main"] {
 }
 .landing-hero__content {
   width: 100%;
+  max-width: 760px;
+  text-align: center; /* center header/copy for balance */
 }
 .hero-ctas {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
   align-items: center;
-  margin-top: 16px;
+  justify-content: center; /* center CTAs under illustration */
+  margin-top: 4px;
+  /* Give CTAs their own breathing room from media */
+  padding-top: 2px;
+}
+.hero-ctas .btn {
+  /* Slightly increase CTA sizes further for prominence */
+  padding: 15px 24px;
+  font-size: 17px;
 }
 @media (min-width: 600px) {
   .landing-hero {
-    padding: 20px 24px;
+    padding: 22px 24px;
   }
 }
 @media (min-width: 900px) {
   .landing-hero {
-    /* Keep stacked layout but increase spacing and breathing room */
+    /* Maintain vertical order while providing generous spacing */
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
-    gap: 18px;
-    padding: 24px 28px;
+    gap: 20px;
+    padding: 26px 30px;
+  }
+  .landing-hero__content {
+    text-align: center;
   }
   .landing-hero__art,
   .landing-hero__img {
     aspect-ratio: 4/3;
+    /* subtle offset to create dynamic balance on desktop */
+    transform: translateY(2px);
   }
 }
 @media (min-width: 1200px) {
   .landing-hero {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
-    gap: 20px;
-    padding: 28px 32px;
+    gap: 22px;
+    padding: 30px 34px;
+  }
+  .landing-hero__art,
+  .landing-hero__img {
+    width: min(920px, 100%);
+    margin-top: 4px; /* prevent crowding the header */
   }
 }
 
