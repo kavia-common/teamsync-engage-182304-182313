@@ -10,11 +10,21 @@ import { useStore } from '../state/hooks';
  * Horizontal layout: illustration (CSS art) alongside text/CTA.
  * How It Works (2 steps) moved directly below the hero card.
  * Start Now gates flow: auth (signin) -> plan -> onboarding.
+ *
+ * Enhancements:
+ * - Responsive media pane with aspect-ratio placeholder or optional image hook.
+ * - Improved spacing and vertical alignment across breakpoints.
+ * - Subtle entrance animation with prefers-reduced-motion respected.
+ * - Glassy gradient surface, rounded-2xl, and soft shadow preserved via Card.
+ * - Accessible headings and ARIA labels preserved.
  */
 export default function Landing() {
   const { state, actions } = useStore();
 
-  // Legacy demo support: if accessed with ?demo=1, send to onboarding demo flow.
+  // Optional hero image hook: supply a valid path to replace the CSS art.
+  // Keep null/empty to use the styled illustration block.
+  const HERO_IMAGE = ''; // e.g., '/assets/hero-illustration.png'
+
   useEffect(() => {
     const hash = window.location.hash || '';
     const isDemo = /[?&]demo=1\b/.test(hash);
@@ -26,7 +36,6 @@ export default function Landing() {
     }
   }, [state.plan?.demo, actions]);
 
-  // Scroll helper for pricing anchor
   const scrollToPricing = () => {
     const el = document.getElementById('pricing');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -40,13 +49,25 @@ export default function Landing() {
 
   return (
     <div className="hero" role="region" aria-label="TeamSync landing">
-      {/* Horizontal hero/main card */}
       <Container>
-        <Card className="landing-hero" aria-label="Intro">
+        <Card className="landing-hero enter-hero" aria-label="Intro">
           {/* Illustration / visual side */}
           <div className="landing-hero__media" aria-hidden>
-            {/* Placeholder illustration using CSS gradients; replaceable later */}
-            <div className="landing-hero__art" role="img" aria-label="People collaborating illustration" />
+            {HERO_IMAGE ? (
+              <img
+                src={HERO_IMAGE}
+                alt="Abstract illustration of teammates collaborating"
+                className="landing-hero__img"
+                loading="eager"
+                decoding="async"
+              />
+            ) : (
+              <div
+                className="landing-hero__art"
+                role="img"
+                aria-label="People collaborating illustration"
+              />
+            )}
           </div>
 
           {/* Text / CTA side */}
@@ -56,7 +77,7 @@ export default function Landing() {
               TeamSync learns your team’s size, department, and work mode to suggest curated activities that spark connection.
             </p>
 
-            <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="hero-ctas">
               <Button onClick={handleStartNow} aria-label="Start now and sign in" title="Start now">
                 Start Now
               </Button>

@@ -319,30 +319,65 @@ main[role="main"] {
   grid-template-columns: 1fr;
   gap: 20px;
   align-items: center;
+  padding: 16px; /* inner breathing room on small screens */
 }
 .landing-hero__media {
   width: 100%;
 }
-.landing-hero__art {
+.landing-hero__art,
+.landing-hero__img {
   width: 100%;
   aspect-ratio: 16/10;
   border-radius: 16px;
+  border: 1px solid var(--ts-border);
+  box-shadow: var(--ts-shadow-sm);
   background:
     radial-gradient(circle at 30% 30%, rgba(125,131,255,.25), transparent 55%),
     radial-gradient(circle at 70% 60%, rgba(43,217,201,.28), transparent 55%),
     linear-gradient(180deg, #fff, #f8fafc);
-  border: 1px solid var(--ts-border);
-  box-shadow: var(--ts-shadow-sm);
+  object-fit: cover; /* for image */
+  object-position: center;
+  display: block;
 }
 .landing-hero__content {
   width: 100%;
 }
+.hero-ctas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 16px;
+}
+@media (min-width: 600px) {
+  .landing-hero {
+    padding: 20px 24px;
+  }
+}
 @media (min-width: 900px) {
   .landing-hero {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.05fr .95fr; /* slight emphasis on media */
+    padding: 24px 28px;
   }
-  .landing-hero__art {
+  .landing-hero__art,
+  .landing-hero__img {
     aspect-ratio: 4/3;
+  }
+}
+@media (min-width: 1200px) {
+  .landing-hero {
+    grid-template-columns: 1.1fr .9fr;
+    padding: 28px 32px;
+  }
+}
+
+/* Entrance animation for hero */
+.enter-hero {
+  animation: ts-fade .35s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .enter-hero {
+    animation: none !important;
   }
 }
 
