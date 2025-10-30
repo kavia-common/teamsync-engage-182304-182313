@@ -427,17 +427,19 @@ main[role="main"] {
 /* Constrain illustration height responsively while keeping aspect ratio */
 .landing-hero__art,
 .landing-hero__img {
-  width: min(820px, 100%);
-  aspect-ratio: 16/10;
-  max-height: clamp(160px, 32vh, 240px); /* mobile/tablet clamp */
-  border-radius: 20px; /* rounded-2xl feel */
+  width: min(880px, 100%);
+  aspect-ratio: 16/9;
+  max-height: clamp(180px, 34vh, 320px);
+  border-radius: 20px;
   border: 1px solid var(--ts-border);
-  box-shadow: var(--ts-shadow-sm);
+  /* Subtle shadow for polish */
+  box-shadow: 0 12px 30px rgba(2, 8, 23, 0.08);
+  /* Soft gradient backdrop using Ocean Professional: primary #2563EB, secondary #F59E0B, background #f9fafb */
   background:
-    radial-gradient(circle at 30% 30%, rgba(125,131,255,.25), transparent 55%),
-    radial-gradient(circle at 70% 60%, rgba(43,217,201,.28), transparent 55%),
-    linear-gradient(180deg, #fff, #f8fafc);
-  object-fit: contain; /* show full illustration without cropping */
+    radial-gradient(circle at 25% 30%, rgba(37,99,235,0.18), transparent 55%),
+    radial-gradient(circle at 75% 65%, rgba(245,158,11,0.18), transparent 55%),
+    linear-gradient(180deg, #ffffff, #f9fafb);
+  object-fit: contain;
   object-position: center;
   display: block;
 }
@@ -480,7 +482,7 @@ main[role="main"] {
   .landing-hero {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
-    gap: 14px; /* keep compact spacing on desktop */
+    gap: 14px;
     padding: 18px 22px;
   }
   .landing-hero__content {
@@ -488,9 +490,10 @@ main[role="main"] {
   }
   .landing-hero__art,
   .landing-hero__img {
-    aspect-ratio: 4/3;
-    max-height: clamp(190px, 22vh, 240px); /* compact desktop */
-    transform: none; /* remove offset to reduce vertical footprint */
+    width: min(880px, 100%);
+    aspect-ratio: 16/9;
+    max-height: clamp(240px, 32vh, 360px);
+    transform: none;
   }
 }
 
@@ -499,12 +502,13 @@ main[role="main"] {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
     gap: 16px;
-    padding: 20px 24px; /* still compact on large desktop */
+    padding: 20px 24px;
   }
   .landing-hero__art,
   .landing-hero__img {
     width: min(880px, 100%);
-    max-height: clamp(200px, 24vh, 280px); /* desktop upper bound */
+    aspect-ratio: 16/9;
+    max-height: clamp(260px, 34vh, 420px);
     margin-top: 2px;
   }
 }

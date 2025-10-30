@@ -61,31 +61,6 @@ export default function Landing() {
 
   return (
     <div className="hero" role="region" aria-label="TeamSync landing">
-      {/* Illustration showcase near top */}
-      <Container>
-        <div
-          className="center"
-          style={{
-            maxWidth: 640,
-            margin: '24px auto 8px',
-            padding: '0 12px',
-            textAlign: 'center'
-          }}
-          aria-label="Hero illustration container"
-        >
-          <TeamBondingIllustration
-            alt="Colleagues collaborating in a team bonding scene"
-            className="landing-hero__img"
-            maxWidth={640}
-            style={{ width: '100%', height: 'auto' }}
-          />
-          {/* Accessible fallback text if the image fails to load is handled inside the component below when applicable */}
-          <noscript>
-            <p className="muted">Team bonding illustration (enable JavaScript to view).</p>
-          </noscript>
-        </div>
-      </Container>
-
       <Container>
         <Card className="landing-hero landing-hero--compact enter-hero" aria-label="Intro">
           {/* Header/title and supporting copy */}
@@ -96,33 +71,22 @@ export default function Landing() {
             </p>
           </div>
 
-          {/* Illustration area */}
-          <div className="landing-hero__media">
-            {HERO_IMAGE ? (
-              <img
-                src={HERO_IMAGE}
-                alt={HERO_ALT}
-                className="landing-hero__img"
-                width={1024}
-                height={768}
-                loading="lazy"
-                decoding="async"
-                onError={(e) => {
-                  // graceful fallback to themed gradient if image fails
-                  e.currentTarget.style.background =
-                    'radial-gradient(circle at 30% 30%, rgba(125,131,255,.25), transparent 55%), radial-gradient(circle at 70% 60%, rgba(43,217,201,.28), transparent 55%), linear-gradient(180deg, var(--ts-surface), var(--ts-bg))';
-                  e.currentTarget.style.objectFit = 'contain';
-                  e.currentTarget.src = '';
-                  e.currentTarget.setAttribute('aria-hidden', 'true');
-                }}
-              />
-            ) : (
-              <div
-                className="landing-hero__art"
-                role="img"
-                aria-label="People collaborating illustration"
-              />
-            )}
+          {/* Illustration: sits directly below the hero text and above the CTAs */}
+          <div className="landing-hero__media" aria-label="Hero illustration container">
+            <TeamBondingIllustration
+              alt="Colleagues collaborating in a team bonding scene"
+              className="landing-hero__img"
+              maxWidth={880}
+              style={{
+                width: '100%',
+                height: 'auto',
+                borderRadius: 20,
+                boxShadow: '0 12px 30px rgba(2, 8, 23, 0.08)',
+              }}
+            />
+            <noscript>
+              <p className="muted">Team bonding illustration (enable JavaScript to view).</p>
+            </noscript>
           </div>
 
           {/* CTA row */}
