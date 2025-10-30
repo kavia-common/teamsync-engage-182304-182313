@@ -140,7 +140,12 @@ export default function Recommendations() {
 
   const filtered = useMemo(() => {
     if (segment !== 'department') return recs;
-    return recs.filter(r => r.placeholder || r.departmentExclusive || (r.departmentScope || []).includes(dept));
+    const d = String(dept || '').toLowerCase();
+    return recs.filter((r) => {
+      if (r.placeholder || r.departmentExclusive) return true;
+      const scope = Array.isArray(r.departmentScope) ? r.departmentScope : [];
+      return scope.map((s) => String(s).toLowerCase()).includes(d);
+    });
   }, [recs, segment, dept]);
 
   // Lightweight confetti helper (respects reduced motion)
@@ -322,13 +327,19 @@ export default function Recommendations() {
           <div className="mt-2" style={{ fontSize: 12, background: 'rgba(0,0,0,0.04)', padding: 12, borderRadius: 10 }}>
             <div><strong>AI Debug</strong></div>
             <div>source: {ai.source} | model: {ai.model || '(n/a)'} | ideas: {Array.isArray(ai.ideas) ? ai.ideas.length : 0}</div>
-            {Array.isArray(ai.ideas) && ai.ideas.slice(0, 5).map((x, idx) => (
-              <div key={idx} style={{ marginTop: 4 }}>
-                #{idx + 1} · fit={typeof x.fit_score === 'number' ? (x.fit_score > 1 ? (x.fit_score/100).toFixed(2) : x.fit_score.toFixed(2)) : '—'}
-                {' '}title="{String(x.title || '').slice(0, 60)}"
-                {' '}deptScope={[...(Array.isArray(x.departmentScope) ? x.departmentScope : [])].join(',')}
-              </div>
-            ))}
+            {Array.isArray(ai.ideas) && ai.ideas.slice(0, 5).map((x, idx) => {
+              const fsNum = Number(x.fit_score);
+              const fitDisp = Number.isFinite(fsNum)
+                ? (fsNum > 1 ? (fsNum / 100).toFixed(2) : fsNum.toFixed(2))
+                : '—';
+              return (
+                <div key={idx} style={{ marginTop: 4 }}>
+                  #{idx + 1} · fit={fitDisp}
+                  {' '}title="{String(x.title || '').slice(0, 60)}"
+                  {' '}deptScope={[...(Array.isArray(x.departmentScope) ? x.departmentScope : [])].join(',')}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
