@@ -4,6 +4,7 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { useStore } from '../state/hooks';
 import api from '../services/api';
+import { generateIdeas as mockGenerateIdeas } from '../mock/mockAI';
 
 /**
  * PUBLIC_INTERFACE
@@ -11,6 +12,12 @@ import api from '../services/api';
  * Adds department segmented filter (All vs Department), department-exclusive badge,
  * hero alignment label, and playful microcopy. Maintains accessibility.
  * Integrates gamification: awards on save/feedback and refreshes global gamification state.
+ *
+ * AI Generate button tries backend first and silently falls back to mock AI on error/non-200.
+ * Merges results with the existing list, dedupes by title, sorts by fit_score desc.
+ * Shows badges for source (mock-ai) and AI reasoning.
+ *
+ * TODO: Restore pure backend flow when /api/ai/recommendations is healthy.
  */
 export default function Recommendations() {
   const { state, actions } = useStore();
@@ -65,8 +72,8 @@ export default function Recommendations() {
         }
         setRecs(base);
       })
-      .catch(() => mounted && setError('Failed to load recommendations.'))
-      .finally(() => mounted && setLoading(false));
+      .catch(() => setError('Failed to load recommendations.'))
+      .finally(() => setLoading(false));
     return () => { mounted = false; };
   }, [payload, refreshKey]);
 
@@ -75,6 +82,26 @@ export default function Recommendations() {
   const [aiLoading, setAiLoading] = useState(false);
   const [showReasoning, setShowReasoning] = useState({}); // id -> bool
   const [debugOverlay, setDebugOverlay] = useState(false); // toggles network/debug view
+
+  // Merge, dedupe by title (case/whitespace-insensitive), sort by fit_score desc (0..1)
+  function mergeByTitle(existing, incoming) {
+    const map = new Map();
+    const norm = (t) => String(t || '').trim().toLowerCase();
+    [...existing, ...incoming].forEach(item => {
+      const key = norm(item.title);
+      if (!key) return;
+      const prior = map.get(key);
+      // Prefer items with higher _ai.fit_score if present
+      const priorScore = Number(prior?._ai?.fit_score ?? 0);
+      const currScore = Number(item?._ai?.fit_score ?? 0);
+      if (!prior || currScore > priorScore) {
+        map.set(key, { ...(prior || {}), ...item });
+      }
+    });
+    const merged = Array.from(map.values());
+    merged.sort((a, b) => Number(b?._ai?.fit_score ?? 0) - Number(a?._ai?.fit_score ?? 0));
+    return merged;
+  }
 
   async function generateAI() {
     setAiLoading(true);
@@ -85,54 +112,110 @@ export default function Recommendations() {
         department: state.team?.department || '',
         constraints: { limit: 5, mode: state.team?.workMode || 'hybrid' }
       };
-      const res = await api.postAIRecommendations(payloadAI);
-      setAi(res);
-      // Merge AI ideas into current list with de-dup by title
-      const existing = Array.isArray(recs) ? recs : [];
-      const aiIdeas = (res.ideas || []).map((x) => {
-        const scopeRaw = Array.isArray(x.departmentScope) ? x.departmentScope : [];
-        const scope = scopeRaw.map((s) => String(s).trim());
-        const dpt = String(state.team?.department || '').trim();
-        const exclusive = scope.length === 1 && !!dpt && scope[0].toLowerCase() === dpt.toLowerCase();
-        const rawFit = Number(x.fit_score);
-        const fit = Number.isFinite(rawFit)
-          ? (rawFit > 1 ? Math.max(0, Math.min(1, rawFit / 100)) : Math.max(0, Math.min(1, rawFit)))
-          : 0.5;
-        const tags = Array.isArray(x.tags) ? x.tags.map((t) => String(t).toLowerCase()) : [];
-        return ({
-          id: x.id || `ai-${Math.random().toString(36).slice(2, 8)}`,
-          title: String(x.title || '').trim(),
-          description: String(x.description || '').trim(),
-          duration: Number(x.duration || 30),
-          tags,
-          heroAlignment: x.heroAlignment || 'Ally',
-          departmentScope: scope,
-          departmentExclusive: exclusive,
-          suggestedSize: `${Math.max(2, (state.team?.size || 2) - 1)}-${(state.team?.size || 6) + 2}`,
-          budget: 'medium',
-          _ai: { source: res.source || 'openai', model: res.model || '', fit_score: fit, reasoning: x.reasoning || '' }
+      // Try backend first via service
+      // TODO: Restore pure backend flow when /api/ai/recommendations is healthy
+      const start = Date.now();
+      let res = null;
+      try {
+        res = await api.postAIRecommendations(payloadAI);
+      } catch (e) {
+        // ignore; will fallback to mock below
+      }
+
+      let ideas = [];
+      let source = res?.source || 'mock-ai';
+      let model = res?.model || 'mock-v1';
+      let usage = res?.usage || null;
+
+      if (Array.isArray(res?.ideas) && res.ideas.length > 0) {
+        // Normalize backend ideas to our display schema
+        ideas = res.ideas.map((x, idx) => {
+          const scope = Array.isArray(x.departmentScope) ? x.departmentScope.map(s => String(s).trim()) : [];
+          const dpt = String(state.team?.department || '').trim();
+          const exclusive = scope.length === 1 && !!dpt && scope[0].toLowerCase() === dpt.toLowerCase();
+          const fit = Number.isFinite(Number(x.fit_score))
+            ? Number(x.fit_score)
+            : Number.isFinite(Number(res?.fit_score)) ? Number(res.fit_score) : 0.7;
+
+          return {
+            id: x.id || `ai-${idx}-${Math.random().toString(36).slice(2, 8)}`,
+            title: String(x.title || '').trim(),
+            description: String(x.description || '').trim(),
+            duration: Number(x.duration || 30),
+            tags: Array.isArray(x.tags) ? x.tags.map(t => String(t).toLowerCase()) : [],
+            heroAlignment: x.heroAlignment || 'Ally',
+            departmentScope: scope,
+            departmentExclusive: exclusive,
+            suggestedSize: `${Math.max(2, (state.team?.size || 2) - 1)}-${(state.team?.size || 6) + 2}`,
+            budget: 'medium',
+            _ai: { source: source || 'openai', model: model || '', fit_score: fit, reasoning: x.reasoning || '' }
+          };
         });
-      });
-      // Dedupe by normalized title (case/whitespace-insensitive)
-      const titles = new Set(existing.map((e) => String(e.title || '').toLowerCase().trim()));
-      const aiFiltered = aiIdeas.filter((i) => !titles.has(String(i.title || '').toLowerCase().trim()));
-      const merged = [...existing, ...aiFiltered];
-      // Stable sort by AI fit_score when available; preserve relative order for equal scores
-      merged.sort((a, b) => {
-        const da = Number(a._ai?.fit_score || 0);
-        const db = Number(b._ai?.fit_score || 0);
-        return db - da;
-      });
+      } else {
+        // Silent fallback to mock AI results
+        const mockIdeas = await mockGenerateIdeas(state.team || {}, state.quiz || {}, state.team?.department || 'General');
+        source = 'mock-ai';
+        model = 'mock-v1';
+        ideas = mockIdeas.map((x, idx) => {
+          const scope = Array.isArray(x.departmentScope) ? [x.departmentScope] : [];
+          const dpt = String(state.team?.department || '').trim();
+          const exclusive = scope.length === 1 && !!dpt && scope[0].toLowerCase() === dpt.toLowerCase();
+          const fit = Number.isFinite(Number(x.fit_score)) ? Number(x.fit_score) / 100 : 0.8; // convert 0–100 -> 0–1
+          return {
+            id: x.id || `mock-${idx}-${Math.random().toString(36).slice(2, 8)}`,
+            title: String(x.title || '').trim(),
+            description: String(x.description || '').trim(),
+            duration: Number(x.duration || 45),
+            tags: Array.isArray(x.tags) ? x.tags : [],
+            heroAlignment: x.heroAlignment || 'Ally',
+            departmentScope: scope,
+            departmentExclusive: exclusive,
+            suggestedSize: `${Math.max(2, (state.team?.size || 2) - 1)}-${(state.team?.size || 6) + 2}`,
+            budget: 'medium',
+            _ai: { source, model, fit_score: fit, reasoning: x.reasoning || '' }
+          };
+        });
+      }
+
+      const existing = Array.isArray(recs) ? recs : [];
+      const merged = mergeByTitle(existing, ideas);
       setRecs(merged);
-      if (res.error) {
+
+      const latency_ms = Date.now() - start;
+      setAi({ ideas, source, model, usage: { ...(usage || {}), latency_ms }, error: res?.error || null });
+
+      if (res?.error) {
         // Non-blocking toast substitute
         // eslint-disable-next-line no-console
         console.warn('AI provider error (fallback used):', res.error);
       }
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.warn('AI generation failed:', e?.message || e);
-      setAi({ ideas: [], source: 'fallback', model: 'rules-v1', error: { message: String(e) } });
+      console.warn('AI generation failed, using mock ideas:', e?.message || e);
+      // Final fallback path if anything above throws
+      const mockIdeas = await mockGenerateIdeas(state.team || {}, state.quiz || {}, state.team?.department || 'General');
+      const ideas = mockIdeas.map((x, idx) => {
+        const scope = Array.isArray(x.departmentScope) ? [x.departmentScope] : [];
+        const dpt = String(state.team?.department || '').trim();
+        const exclusive = scope.length === 1 && !!dpt && scope[0].toLowerCase() === dpt.toLowerCase();
+        const fit = Number.isFinite(Number(x.fit_score)) ? Number(x.fit_score) / 100 : 0.8;
+        return {
+          id: x.id || `mock-${idx}-${Math.random().toString(36).slice(2, 8)}`,
+          title: String(x.title || '').trim(),
+          description: String(x.description || '').trim(),
+          duration: Number(x.duration || 45),
+          tags: Array.isArray(x.tags) ? x.tags : [],
+          heroAlignment: x.heroAlignment || 'Ally',
+          departmentScope: scope,
+          departmentExclusive: exclusive,
+          suggestedSize: `${Math.max(2, (state.team?.size || 2) - 1)}-${(state.team?.size || 6) + 2}`,
+          budget: 'medium',
+          _ai: { source: 'mock-ai', model: 'mock-v1', fit_score: fit, reasoning: x.reasoning || '' }
+        };
+      });
+      const existing = Array.isArray(recs) ? recs : [];
+      setRecs(mergeByTitle(existing, ideas));
+      setAi({ ideas, source: 'mock-ai', model: 'mock-v1', usage: null, error: null });
     } finally {
       setAiLoading(false);
     }
@@ -328,15 +411,16 @@ export default function Recommendations() {
             <div><strong>AI Debug</strong></div>
             <div>source: {ai.source} | model: {ai.model || '(n/a)'} | ideas: {Array.isArray(ai.ideas) ? ai.ideas.length : 0}</div>
             {Array.isArray(ai.ideas) && ai.ideas.slice(0, 5).map((x, idx) => {
-              const fsNum = Number(x.fit_score);
+              const fsNum = Number(x.fit_score ?? x._ai?.fit_score ?? 0);
               const fitDisp = Number.isFinite(fsNum)
                 ? (fsNum > 1 ? (fsNum / 100).toFixed(2) : fsNum.toFixed(2))
                 : '—';
+              const scope = Array.isArray(x.departmentScope) ? x.departmentScope : [];
               return (
                 <div key={idx} style={{ marginTop: 4 }}>
                   #{idx + 1} · fit={fitDisp}
                   {' '}title="{String(x.title || '').slice(0, 60)}"
-                  {' '}deptScope={[...(Array.isArray(x.departmentScope) ? x.departmentScope : [])].join(',')}
+                  {' '}deptScope={[...scope].join(',')}
                 </div>
               );
             })}
@@ -383,19 +467,26 @@ export default function Recommendations() {
                 <span className="btn ghost" title="Hero alignment" aria-label={`Hero alignment ${rec.heroAlignment || 'Ally'}`}>
                   🛡 {rec.heroAlignment || 'Ally'}
                 </span>
-                {rec.microcopy && (
-                  <span className="muted" style={{ fontStyle: 'italic' }}>
-                    {rec.microcopy}
+                {/* Source badge for mock-ai */}
+                {rec._ai?.source && (
+                  <span
+                    className="btn ghost"
+                    title={`AI Source: ${rec._ai.source}`}
+                    style={{
+                      background: rec._ai.source === 'mock-ai' ? 'rgba(245,158,11,0.15)' : undefined,
+                      color: rec._ai.source === 'mock-ai' ? '#92400e' : undefined
+                    }}
+                  >
+                    🤖 {rec._ai.source}
                   </span>
                 )}
               </div>
 
               <p className="muted mt-2">{rec.description}</p>
 
-              {/* AI badges and fit score */}
+              {/* AI badges and fit score + reasoning */}
               {rec._ai && (
                 <div className="mt-2" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span className="btn ghost" title={`AI Source: ${rec._ai.source}`}>🤖 {rec._ai.source}</span>
                   <span className="btn ghost" title="AI Fit score (0 to 1)">🎯 {Number(rec._ai.fit_score).toFixed(2)}</span>
                   {rec._ai.reasoning && (
                     <button
@@ -457,7 +548,7 @@ export default function Recommendations() {
         <Button variant="secondary" onClick={() => (window.location.hash = '#/quiz')} title="Adjust your quiz answers">
           Back
         </Button>
-        <Button onClick={tryAnother} title="See another set based on your profile">
+        <Button onClick={() => setRefreshKey((k) => k + 1)} title="See another set based on your profile">
           Try Another Set
         </Button>
         <Button onClick={() => (window.location.hash = '#/dashboard')} title="Review saved picks and feedback">
