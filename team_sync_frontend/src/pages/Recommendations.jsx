@@ -5,6 +5,7 @@ import Button from '../components/common/Button';
 import { useStore } from '../state/hooks';
 import api from '../services/api';
 import { generateIdeas as mockGenerateIdeas } from '../mock/mockAI';
+import RecommendationDetailsModal from '../components/common/RecommendationDetailsModal';
 
 /**
  * PUBLIC_INTERFACE
@@ -378,6 +379,12 @@ export default function Recommendations() {
 
   const tryAnother = () => setRefreshKey((k) => k + 1);
 
+  // Modal state for details view
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const openDetails = (item) => { setSelectedItem(item); setDetailsOpen(true); };
+  const closeDetails = () => { setDetailsOpen(false); setSelectedItem(null); };
+
   const SegmentControl = () => (
     <div role="tablist" aria-label="Recommendation filter" className="mt-3" style={{ display: 'inline-flex', gap: 8 }}>
       <button
@@ -556,11 +563,29 @@ export default function Recommendations() {
                 <Button variant="ghost" onClick={() => handleFeedback(rec, 'dislike')} aria-label={`Dislike ${rec.title}`} title="We’ll show fewer like this" disabled={!!rec.placeholder}>
                   👎 Dislike
                 </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => openDetails(rec)}
+                  aria-label={`View details for ${rec.title}`}
+                  title="View details"
+                  disabled={!!rec.placeholder}
+                >
+                  View Details
+                </Button>
               </div>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Details Modal */}
+      <RecommendationDetailsModal
+        open={detailsOpen}
+        onClose={closeDetails}
+        item={selectedItem}
+        onSave={handleSave}
+        onFeedback={handleFeedback}
+      />
 
       <div className="mt-6" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Button variant="secondary" onClick={() => (window.location.hash = '#/quiz')} title="Adjust your quiz answers">
