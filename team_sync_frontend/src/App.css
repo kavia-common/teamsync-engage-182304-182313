@@ -276,6 +276,19 @@ a:hover { text-decoration: underline; }
 .mb-6 { margin-bottom: 24px; }
 .center { text-align: center; }
 .grid-gap-12 { gap: 12px; }
+/* Screen-reader only utility */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  left: -9999px !important;
+}
 
 /* Landing hero with glassy gradient and playful microcopy space */
 .hero {

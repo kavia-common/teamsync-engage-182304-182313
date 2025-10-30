@@ -15,6 +15,8 @@ export function useStore() {
     setTeam: useZStore((s) => s.setTeam),
     setQuiz: useZStore((s) => s.setQuiz),
     saveRecommendation: useZStore((s) => s.saveRecommendation),
+    // PUBLIC_INTERFACE
+    // Unified feedback method allowing minimal (id,value,title) and extended (comment, rating)
     giveFeedback: (activityId, value, activityTitle = '', comment = '', rating = 0) =>
       useZStore.getState().giveFeedback({ activityId, value, activityTitle, comment, rating })
   };

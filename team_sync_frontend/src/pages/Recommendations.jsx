@@ -9,6 +9,7 @@ import api from '../services/api';
  * PUBLIC_INTERFACE
  * Displays 3–5 recommended activities with actions to save and give feedback.
  * Ensures tags are visible, Save calls both API and store, and "Try Another Set" refreshes items.
+ * Also guarantees a consistent 3–5 layout by filling placeholders if fewer than 3 results.
  */
 export default function Recommendations() {
   const { state, actions } = useStore();
@@ -28,9 +29,26 @@ export default function Recommendations() {
       .getRecommendations(payload)
       .then((r) => {
         if (!mounted) return;
-        // Constrain to 3–5 cards (mock returns up to 5 already)
-        const limited = Array.isArray(r) ? r.slice(0, Math.max(3, Math.min(5, r.length))) : [];
-        setRecs(limited);
+        // Constrain to 3–5 cards (mock returns up to 5 already); ensure at least 3 with placeholders
+        const list = Array.isArray(r) ? r : [];
+        const limited = list.slice(0, Math.max(3, Math.min(5, list.length)));
+        // If fewer than 3, synthesize tasteful placeholders to maintain layout consistency
+        const minCount = 3;
+        if (limited.length < minCount) {
+          const placeholders = Array.from({ length: minCount - limited.length }).map((_, i) => ({
+            id: `placeholder-${i}`,
+            title: 'More ideas loading…',
+            description: 'Adjust your quiz or try another set to see fresh picks tailored to your team.',
+            duration: 30,
+            budget: 'medium',
+            suggestedSize: '—',
+            tags: ['ideas', 'personalized'],
+            placeholder: true
+          }));
+          setRecs([...limited, ...placeholders]);
+        } else {
+          setRecs(limited);
+        }
       })
       .catch(() => mounted && setError('Failed to load recommendations.'))
       .finally(() => mounted && setLoading(false));
@@ -40,22 +58,26 @@ export default function Recommendations() {
   }, [payload, refreshKey]);
 
   const handleSave = async (item) => {
-    // persist via API (with mock fallback), then update local store
+    if (item.placeholder) return; // do not save placeholders
     try {
       await api.saveRecommendation(item);
     } catch {
-      // no-op; service already falls back to mock
+      // service already falls back to mock
     } finally {
       actions.saveRecommendation(item);
       // announce to SR users
       if (typeof window !== 'undefined') {
         const live = document.getElementById('sr-live');
-        if (live) live.textContent = `${item.title} saved`;
+        if (live) {
+          live.textContent = `${item.title} saved`;
+          // clear message after a tick to ensure SR reads subsequent updates
+          setTimeout(() => { if (live) live.textContent = ''; }, 800);
+        }
       }
     }
   };
 
-  // Lightweight confetti helper
+  // Lightweight confetti helper (respects reduced motion)
   function sparkConfettiLight() {
     const prefersReduced =
       typeof window !== 'undefined' &&
@@ -114,16 +136,21 @@ export default function Recommendations() {
   }
 
   const handleFeedback = async (item, value) => {
+    if (item.placeholder) return; // do not feedback placeholders
     await actions.giveFeedback(item.id, value, item.title);
-    // playful microcopy
     if (value === 'like') {
       sparkConfettiLight();
     }
-    alert(
-      value === 'like'
-        ? 'Nice! We’ll sprinkle more like that 🎉'
-        : 'Got it — we’ll show fewer like this 💡'
-    );
+    // Accessible announcement without blocking alerts (reduce noise)
+    if (typeof window !== 'undefined') {
+      const live = document.getElementById('sr-live');
+      if (live) {
+        live.textContent = value === 'like'
+          ? `Noted. We’ll show more like ${item.title}.`
+          : `Got it. We’ll show fewer like ${item.title}.`;
+        setTimeout(() => { if (live) live.textContent = ''; }, 1200);
+      }
+    }
   };
 
   const tryAnother = () => {
@@ -134,7 +161,7 @@ export default function Recommendations() {
   return (
     <Container>
       <div className="mb-4">
-        <h1 className="h1" title="Your squad’s got The Office energy 🎬">Recommendations</h1>
+        <h1 className="h1">Recommendations</h1>
         <p className="muted">
           Based on your team profile and quiz results — handpicked just for you.
         </p>
@@ -143,11 +170,12 @@ export default function Recommendations() {
 
       {loading && <Card aria-busy="true">Loading recommendations…</Card>}
       {error && <Card style={{ borderColor: 'var(--ts-error)' }}>{error}</Card>}
+
       {!loading && !error && recs.length === 0 && (
         <Card className="confetti" aria-live="polite">
           <h2 className="h2">We’re warming up the idea engine 🔧</h2>
           <p className="muted">
-            No picks yet. Try tweaking your quiz choices — or unleash your inner Avengers 🦸‍♀️ and retake it with bold vibes.
+            No picks yet. Try tweaking your quiz choices or generate another set.
           </p>
           <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Button onClick={() => (window.location.hash = '#/quiz')} title="Retake the quiz for fresh ideas">
@@ -159,11 +187,12 @@ export default function Recommendations() {
           </div>
         </Card>
       )}
+
       {!loading && !error && recs.length > 0 && (
         <div className="card-grid">
           {recs.map((rec) => (
-            <Card key={rec.id}>
-              <h3 className="h2" title="Team-boosting activity">{rec.title}</h3>
+            <Card key={rec.id} aria-busy={!!rec.placeholder}>
+              <h3 className="h2">{rec.title}</h3>
               <p className="muted">{rec.description}</p>
 
               {/* Meta row */}
@@ -185,13 +214,13 @@ export default function Recommendations() {
               )}
 
               <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <Button onClick={() => handleSave(rec)} aria-label={`Save ${rec.title}`} title="Save for later">
+                <Button onClick={() => handleSave(rec)} aria-label={`Save ${rec.title}`} title="Save for later" disabled={!!rec.placeholder}>
                   Save
                 </Button>
-                <Button variant="ghost" onClick={() => handleFeedback(rec, 'like')} aria-label={`Like ${rec.title}`} title="We’ll show more like this">
+                <Button variant="ghost" onClick={() => handleFeedback(rec, 'like')} aria-label={`Like ${rec.title}`} title="We’ll show more like this" disabled={!!rec.placeholder}>
                   👍 Like
                 </Button>
-                <Button variant="ghost" onClick={() => handleFeedback(rec, 'dislike')} aria-label={`Dislike ${rec.title}`} title="We’ll show fewer like this">
+                <Button variant="ghost" onClick={() => handleFeedback(rec, 'dislike')} aria-label={`Dislike ${rec.title}`} title="We’ll show fewer like this" disabled={!!rec.placeholder}>
                   👎 Dislike
                 </Button>
               </div>
@@ -199,6 +228,7 @@ export default function Recommendations() {
           ))}
         </div>
       )}
+
       <div className="mt-6" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Button variant="secondary" onClick={() => (window.location.hash = '#/quiz')} title="Adjust your quiz answers">
           Back
