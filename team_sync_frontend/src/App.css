@@ -343,6 +343,40 @@ main[role="main"] {
   color: var(--ts-text-muted);
 }
 
+/* De‑emphasized AI feature badge used in pricing (smaller, softer color) */
+.ai-badge {
+  /* size reductions */
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+
+  /* tone down color: softer secondary with transparency while keeping contrast */
+  background: rgba(125, 131, 255, 0.14); /* softer than btn.warning/background */
+  border: 1px solid rgba(125, 131, 255, 0.28);
+  color: #0b0f2a; /* ensure readable text */
+  box-shadow: none;
+  line-height: 1.1;
+}
+
+.ai-badge--ghost {
+  background: rgba(125, 131, 255, 0.10);
+  border-color: rgba(125, 131, 255, 0.22);
+}
+
+.ai-badge:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(125, 131, 255, 0.28);
+}
+
+/* Responsive tweak: maintain compact look on small screens */
+@media (max-width: 420px) {
+  .ai-badge {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+}
+
 /* Ensure list reset for icon lists without bullets */
 .list-reset {
   list-style: none;

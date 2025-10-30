@@ -190,8 +190,8 @@ export default function Landing() {
 
               <ul className="mt-3" role="list" aria-label="Pro plan features" style={{ paddingLeft: 4, listStyle: 'none', margin: 0 }}>
                 <Check label="Everything in Free">Everything in Free</Check>
-                <Check label="AI Analytics"><span className="btn warning" title="Premium feature enabled">AI Analytics</span></Check>
-                <Check label="Custom Activity Builder"><span className="btn warning" title="Premium feature enabled">Custom Activity Builder</span></Check>
+                <Check label="AI Analytics"><span className="ai-badge" title="Premium feature enabled">AI Analytics</span></Check>
+                <Check label="Custom Activity Builder"><span className="ai-badge ai-badge--ghost" title="Premium feature enabled">Custom Activity Builder</span></Check>
                 <Check label="Advanced feedback insights">Advanced feedback insights</Check>
                 <Check label="Priority support">Priority support</Check>
               </ul>
