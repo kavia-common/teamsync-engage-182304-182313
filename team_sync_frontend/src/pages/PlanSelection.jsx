@@ -23,7 +23,7 @@ export default function PlanSelection() {
   const isPro = state.plan?.tier === 'pro';
 
   const Check = ({ gated = false, children, label }) => (
-    <li aria-label={label || (typeof children === 'string' ? children : undefined)} className="mt-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <li role="listitem" aria-label={label || (typeof children === 'string' ? children : undefined)} className="mt-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <span aria-hidden>{gated ? '🔒' : '✔️'}</span>
       <span className={gated ? 'muted' : ''}>{children}</span>
     </li>

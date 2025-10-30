@@ -61,8 +61,7 @@ export default function Dashboard() {
   const { state, actions } = useStore();
   const saved = state.saved || [];
   const feedback = state.feedback || [];
-  // Wrap state.timeRange in memo to keep a stable primitive and satisfy lint guidance
-  const timeRange = useMemo(() => state.timeRange || '4w', [state.timeRange]);
+  const timeRange = state.timeRange || '4w';
   const planTier = state.plan?.tier || 'free';
   const isPro = planTier === 'pro';
 
@@ -184,7 +183,25 @@ export default function Dashboard() {
     }
   }, [state.team, state.quiz]);
 
-
+  // Render a small Saved Preview block
+  function SavedPreview() {
+    if (!latestSaved) return null;
+    return (
+      <div className="mt-2" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span className="muted" style={{ fontSize: 12 }}>Last saved:</span>
+        <span className="btn ghost" title="Saved activity title">🎯 {latestSaved.title || 'Saved item'}</span>
+        {latestSaved._savedDept ? (
+          <span className="btn secondary" title="Department">🏷 {latestSaved._savedDept}</span>
+        ) : null}
+        {latestSaved._heroAlignment || latestSaved.heroAlignment ? (
+          <span className="btn ghost" title="Hero alignment">🛡 {latestSaved._heroAlignment || latestSaved.heroAlignment}</span>
+        ) : null}
+        {latestSaved._ai?.fit_score ? (
+          <span className="btn ghost" title="AI Fit score">🎯 {(Number(latestSaved._ai.fit_score) || 0).toFixed(2)}</span>
+        ) : null}
+      </div>
+    );
+  }
 
   // Range control
   function TimeRange() {
