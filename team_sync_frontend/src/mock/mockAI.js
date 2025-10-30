@@ -1,67 +1,108 @@
 //
 // Mock AI idea generator used as a temporary fallback when the backend AI service is unavailable.
 // Returns 3–5 ideas with playful tone and department-aware content.
+// Adds configurable scoring/creativity and richer reasoning bullets.
 //
+
+// Lightweight configuration block for easy tuning
+const CONFIG = {
+  // Weighting
+  deptWeight: 2.2,               // emphasis on department alignment
+  interestWeight: 1.4,           // quiz interests weight
+  workModeWeight: 1.1,           // team work mode weight
+  energyWeight: 0.9,             // quiz energy weight
+  baseMinFit: 60,                // clamp min
+  baseMaxFit: 98,                // clamp max
+
+  // Creativity signals for titling and description flourishes
+  creativityPhrases: [
+    'spark-powered', 'playfully strategic', 'micro-epic', 'zero-friction',
+    'caffeine-free momentum', 'snackable collaboration', 'idea-forward', 'delight-first'
+  ],
+
+  // Tag boosts influence fit
+  tagBoosts: {
+    collaboration: 4,
+    communication: 3,
+    creativity: 3,
+    'problem-solving': 3,
+    'remote-friendly': 2,
+    hybrid: 2,
+    'quick-setup': 2,
+    chill: 1,
+    balanced: 1,
+    high: 1
+  },
+
+  // Hero alignments to cycle through
+  heroAlignments: ['Strategist', 'Innovator', 'Guardian', 'Vanguard', 'Ally']
+};
+
 // PUBLIC_INTERFACE
 export async function generateIdeas(team = {}, quiz = {}, department = "General") {
   /** 
    * Generates mock AI ideas for team-building activities.
-   * Params:
-   *  - team: object containing team info (e.g., size, remote/hybrid, preferences)
-   *  - quiz: object containing quiz responses/results
-   *  - department: string of the selected department
-   * Returns:
-   *  - Promise<Array<Idea>> where Idea = {
-   *      id, title, description, duration, tags, departmentScope, 
-   *      heroAlignment, fit_score, reasoning, source, model
-   *    }
+   * - Ensures at least one department-exclusive idea (scope == department)
+   * - Adds creative flourishes in titles/descriptions with playful tone
+   * - Computes fit_score with higher weights for department match and selected interests/work mode
+   * - Enriches reasoning with short bullet points (why fit, dept alignment, constraints)
+   * - Ensures 3–5 total items
+   * Returns: Promise<Array<Idea>> where Idea = {
+   *   id, title, description, duration, tags, departmentScope,
+   *   heroAlignment, fit_score, reasoning, source, model
+   * }
    */
   const rng = seededRandom(JSON.stringify({ team, quiz, department, t: Date.now() }));
-  const size = Math.max(3, Math.min(5, Math.floor(rng() * 5) + 3)); // 3–7 then clamp to 3–5
+  const targetCount = clamp(3 + Math.floor(rng() * 3), 3, 5); // 3–5
   const baseIdeas = getBaseIdeaPool(department);
-  // Pick unique ideas
-  const picks = pickUnique(baseIdeas, size, rng);
 
-  // Ensure at least one idea is exclusive to selected department (departmentScope === department)
-  if (!picks.some(i => i.departmentScope === department)) {
-    const deptExclusive = baseIdeas.find(i => i.departmentScope === department);
-    if (deptExclusive) {
-      // Replace the lowest fit idea with the department exclusive one
+  // Score each idea with weighted logic
+  const scored = baseIdeas.map((idea) => {
+    const score100 = computeFitScore100({ idea, team, quiz, department, rng });
+    return { ...idea, fit_score: score100 };
+  });
+
+  // Choose a diverse subset
+  const picks = pickUnique(scored.sort((a, b) => b.fit_score - a.fit_score), targetCount, rng);
+
+  // Guarantee department-exclusive presence
+  if (!picks.some(i => String(i.departmentScope || '').toLowerCase() === String(department || '').toLowerCase())) {
+    const exclusive = scored.find(i => String(i.departmentScope || '').toLowerCase() === String(department || '').toLowerCase());
+    if (exclusive) {
+      // Replace the lowest fit pick
       let minIdx = 0;
-      for (let i = 1; i < picks.length; i++) {
-        if (picks[i].fit_score < picks[minIdx].fit_score) minIdx = i;
-      }
-      picks[minIdx] = deptExclusive;
+      for (let i = 1; i < picks.length; i++) if (picks[i].fit_score < picks[minIdx].fit_score) minIdx = i;
+      picks[minIdx] = exclusive;
     }
   }
 
-  // Apply playful tone adjustments and minor randomization to fit_score
-  const adjusted = picks.map((idea, idx) => {
-    const jitter = Math.floor(rng() * 10) - 5; // -5..+4
-    const fit = clamp(idea.fit_score + jitter, 55, 98);
-    const hero = idea.heroAlignment || pickOne(["Culture Hero", "People Hero", "Ops Hero", "Product Hero"], rng);
-    const duration = idea.duration || pickOne(["30–45 min", "45–60 min", "60–90 min"], rng);
+  // Final shaping: hero, duration, creative copy, structured reasoning bullets
+  const shaped = picks.slice(0, clamp(picks.length, 3, 5)).map((idea, idx) => {
+    const hero = idea.heroAlignment || pickOne(CONFIG.heroAlignments, rng);
+    const duration = idea.duration || pickOne(["25–35 min", "40–55 min", "60–85 min"], rng);
 
-    // Add playful tone to description
-    const desc = withPlayfulTone(idea.description);
+    const creativeTitle = addCreativeFlourishToTitle(idea.title, rng);
+    const desc = withPlayfulTone(addCreativeFlourishToDescription(idea.description, rng));
+    const reasoningBullets = buildReasoningBullets({ idea, team, quiz, department, rng });
 
     return {
       ...idea,
-      id: idea.id || `mock-${department.toLowerCase()}-${idx}-${Math.floor(rng() * 100000)}`,
+      id: idea.id || `mock-${String(department || 'general').toLowerCase()}-${idx}-${Math.floor(rng() * 1e5)}`,
+      title: creativeTitle,
+      description: desc,
       duration,
       heroAlignment: hero,
-      fit_score: fit,
-      description: desc,
       source: "mock-ai",
       model: "mock-v1",
-      reasoning: idea.reasoning || playfulReasoning(department, rng),
-      tags: Array.isArray(idea.tags) && idea.tags.length ? idea.tags : generateTags(idea, rng)
+      reasoning: reasoningBullets.join(' • '),
+      tags: Array.isArray(idea.tags) && idea.tags.length ? idea.tags : generateTags(idea, rng),
+      fit_score: clamp(idea.fit_score, CONFIG.baseMinFit, CONFIG.baseMaxFit)
     };
   });
 
   // Sort desc by fit_score to feel smarter out of the box
-  adjusted.sort((a, b) => b.fit_score - a.fit_score);
-  return adjusted;
+  shaped.sort((a, b) => b.fit_score - a.fit_score);
+  return shaped;
 }
 
 // Helpers
@@ -99,6 +140,15 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
+function pickSome(arr, n, rng) {
+  const copy = arr.slice();
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, Math.max(0, Math.min(n, copy.length)));
+}
+
 function withPlayfulTone(text) {
   const extras = [
     " Bonus points for team spirit!",
@@ -110,6 +160,17 @@ function withPlayfulTone(text) {
   return `${text.trim()} ${pickOne(extras, seededRandom(text))}`.trim();
 }
 
+function addCreativeFlourishToTitle(title, rng) {
+  const flair = pickOne(CONFIG.creativityPhrases, rng);
+  // Insert flair as a subtitle-like suffix
+  return `${title} · ${flair}`;
+}
+
+function addCreativeFlourishToDescription(desc, rng) {
+  const bits = pickSome(CONFIG.creativityPhrases, 2, rng);
+  return `${desc} This one is ${bits.join(' and ')}.`;
+}
+
 function playfulReasoning(department, rng) {
   const lines = [
     `Optimized for ${department} workflows with a dash of fun.`,
@@ -119,6 +180,26 @@ function playfulReasoning(department, rng) {
     `Low setup, high impact—perfect for a busy ${department} crew.`
   ];
   return pickOne(lines, rng);
+}
+
+// Build concise reasoning bullets
+function buildReasoningBullets({ idea, team, quiz, department, rng }) {
+  const bullets = [];
+  // Why fit
+  bullets.push('why: strong match to team profile');
+  // Department alignment
+  const scope = String(idea.departmentScope || '');
+  const isDept = scope.toLowerCase() === String(department || '').toLowerCase();
+  bullets.push(`dept: ${isDept ? 'exclusive to' : 'relevant for'} ${department || 'your team'}`);
+  // Constraints
+  const duration = idea.duration || 45;
+  const mode = team?.mode || team?.workMode || 'hybrid';
+  const budget = quiz?.budget || 'medium';
+  bullets.push(`constraints: ${duration}m • ${mode} • ${budget}`);
+  // A hint of hero
+  const hero = idea.heroAlignment || pickOne(CONFIG.heroAlignments, rng);
+  bullets.push(`hero: ${hero}`);
+  return bullets;
 }
 
 function generateTags(idea, rng) {
@@ -133,6 +214,43 @@ function generateTags(idea, rng) {
     if (!out.includes(t)) out.push(t);
   }
   return out;
+}
+
+// Weighted fit score out of 100, with stronger department match and interests/work mode
+function computeFitScore100({ idea, team, quiz, department, rng }) {
+  let s = 50; // base
+  const scope = String(idea.departmentScope || '');
+  const dept = String(department || '').trim().toLowerCase();
+  const tags = Array.isArray(idea.tags) ? idea.tags.map(t => String(t).toLowerCase()) : [];
+
+  // Department weight
+  if (scope.toLowerCase() === dept && dept) {
+    s += 25 * CONFIG.deptWeight; // exclusive big boost
+  }
+
+  // Interests
+  const interests = Array.isArray(quiz?.interests) ? quiz.interests.map(t => String(t).toLowerCase()) : [];
+  const overlap = interests.filter(t => tags.includes(t)).length;
+  s += overlap * (6 * CONFIG.interestWeight);
+
+  // Work mode
+  const mode = (team?.mode || team?.workMode || 'hybrid').toLowerCase();
+  if (tags.includes(mode)) s += 6 * CONFIG.workModeWeight;
+  else if (mode === 'hybrid' && (tags.includes('remote-friendly') || tags.includes('in-person'))) s += 3 * CONFIG.workModeWeight;
+
+  // Energy
+  const energy = String(quiz?.energy || 'balanced').toLowerCase();
+  if (tags.includes(energy)) s += 4 * CONFIG.energyWeight;
+
+  // Tag boosts
+  Object.keys(CONFIG.tagBoosts).forEach((t) => {
+    if (tags.includes(t)) s += CONFIG.tagBoosts[t];
+  });
+
+  // Small creative jitter
+  s += Math.floor(rng() * 7) - 3; // -3..+3
+
+  return clamp(Math.round(s), CONFIG.baseMinFit, CONFIG.baseMaxFit);
 }
 
 function getBaseIdeaPool(department) {
@@ -273,7 +391,7 @@ function getBaseIdeaPool(department) {
   const deptIdeas = byDept[dept] || [];
   // Merge and ensure some variety
   const pool = [...shared, ...deptIdeas];
-  // Add a couple of fun generics with department label in reasoning to ensure exclusivity when needed
+  // Add department-labeled exclusives
   pool.push({
     id: "mock-generic-1",
     title: `${dept} Hero Quest`,

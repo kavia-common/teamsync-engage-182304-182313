@@ -90,12 +90,22 @@ export default function Recommendations() {
     [...existing, ...incoming].forEach(item => {
       const key = norm(item.title);
       if (!key) return;
+
+      // Normalize departmentExclusive by exact match to selected department if not already provided
+      const scope = Array.isArray(item.departmentScope) ? item.departmentScope.map(s => String(s).trim()) : [];
+      const dpt = String(state.team?.department || '').trim();
+      const isExclusive = scope.length === 1 && !!dpt && scope[0].toLowerCase() === dpt.toLowerCase();
+      const normalized = {
+        ...item,
+        departmentExclusive: typeof item.departmentExclusive === 'boolean' ? item.departmentExclusive : isExclusive
+      };
+
       const prior = map.get(key);
       // Prefer items with higher _ai.fit_score if present
       const priorScore = Number(prior?._ai?.fit_score ?? 0);
-      const currScore = Number(item?._ai?.fit_score ?? 0);
+      const currScore = Number(normalized?._ai?.fit_score ?? 0);
       if (!prior || currScore > priorScore) {
-        map.set(key, { ...(prior || {}), ...item });
+        map.set(key, { ...(prior || {}), ...normalized });
       }
     });
     const merged = Array.from(map.values());
