@@ -39,10 +39,6 @@ const HINT_IDS = {
 
 // Render compact sentiment chip from score/label
 function SentimentChip({ score = 0, label = 'mixed' }) {
-  const color =
-    label === 'positive' ? 'var(--ts-primary)'
-    : label === 'negative' ? 'var(--ts-error)'
-    : '#9CA3AF';
   const bg =
     label === 'positive' ? 'rgba(43,217,201,0.14)'
     : label === 'negative' ? 'rgba(239,68,68,0.14)'
@@ -59,7 +55,7 @@ function SentimentChip({ score = 0, label = 'mixed' }) {
  * PUBLIC_INTERFACE
  * Dashboard with advanced analytics, trends, persona, feedback, and controls.
  * Adds time range selector (4w/12w/All), premium indicators, and accessible summaries.
- * Integrates gamification refresh on feedback submission.
+ * Integrates gamification refresh on feedback submission and includes a Gamification panel.
  */
 export default function Dashboard() {
   const { state, actions } = useStore();
@@ -310,7 +306,7 @@ export default function Dashboard() {
         <div id="sr-live-dashboard" aria-live="polite" className="sr-only" />
       </div>
 
-      {/* Persona card */}
+      {/* Persona card and Advanced Analytics */}
       <div className="ts-row cols-2">
         <Card>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -346,7 +342,6 @@ export default function Dashboard() {
           )}
         </Card>
 
-        {/* Success metrics */}
         <Card>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <h2 className="h2">Advanced Analytics</h2>
@@ -422,6 +417,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* Team Summary + Saved */}
       <div className="ts-row cols-2">
         <Card>
           <h2 className="h2">Team summary</h2>
@@ -477,7 +473,12 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* Gamification + Recent Feedback */}
       <div className="ts-row cols-2 mt-4">
+        <Card>
+          <GamificationPanel teamId={teamId} />
+        </Card>
+
         <Card>
           <h2 className="h2">Recent feedback</h2>
           {feedback.length === 0 && (
@@ -494,7 +495,10 @@ export default function Dashboard() {
             ))}
           </ul>
         </Card>
+      </div>
 
+      {/* Feedback form */}
+      <div className="ts-row cols-2 mt-4">
         <Card>
           <h2 className="h2">Share feedback</h2>
           <form onSubmit={handleFeedbackSubmit}>
@@ -532,7 +536,188 @@ export default function Dashboard() {
             </div>
           </form>
         </Card>
+
+        {/* spacer for future widgets */}
+        <div style={{ display: 'none' }} />
       </div>
     </Container>
   );
+}
+
+// PUBLIC_INTERFACE
+function GamificationPanel({ teamId }) {
+  /** Accessible, themed Gamification panel.
+   * - Fetches latest gamification on mount via refreshGamification(teamId).
+   * - Shows points total with aria-live, a timeline of recent awards, and a badges grid.
+   * - Subtle confetti animation when a new badge appears, respecting prefers-reduced-motion.
+   */
+  const { state, actions } = useStore();
+  const points = state.gamification?.points ?? 0;
+  const badges = state.gamification?.badges ?? [];
+  const history = state.gamification?.history ?? [];
+  const lastEarned = state.gamification?.lastEarnedBadgeId || null;
+
+  // Refresh on mount
+  useEffect(() => {
+    actions.refreshGamification(teamId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId]);
+
+  // Confetti pulse on new badge earned
+  useEffect(() => {
+    if (!lastEarned) return;
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
+
+    // Minimal confetti overlay
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('aria-hidden', 'true');
+    Object.assign(canvas.style, {
+      position: 'fixed',
+      left: '0', top: '0',
+      width: '100vw', height: '100vh',
+      pointerEvents: 'none',
+      zIndex: 9999
+    });
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    const colors = ['#2BD9C9', '#7D83FF', '#34d399', '#f59e0b'];
+    const particles = Array.from({ length: 32 }).map(() => ({
+      x: (window.innerWidth / 2) + (Math.random() - 0.5) * 220,
+      y: (window.innerHeight / 4) + (Math.random() - 0.5) * 120,
+      r: 1.5 + Math.random() * 2,
+      c: colors[Math.floor(Math.random() * colors.length)],
+      vx: -1.5 + Math.random() * 3,
+      vy: -2 + Math.random() * 1.2,
+    }));
+    let frames = 0;
+    let raf;
+    function step() {
+      frames += 1;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy + 0.5;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.c;
+        ctx.fill();
+      });
+      if (frames < 38) {
+        raf = requestAnimationFrame(step);
+      } else {
+        cancelAnimationFrame(raf);
+        if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      }
+    }
+    raf = requestAnimationFrame(step);
+  }, [lastEarned]);
+
+  // Accessible live region for points updates and badge announcements
+  useEffect(() => {
+    const live = document.getElementById('sr-live-gamification');
+    if (live) {
+      live.textContent = `Points: ${points}. ${lastEarned ? 'New badge earned.' : ''}`;
+      const t = setTimeout(() => { if (live) live.textContent = ''; }, 1500);
+      return () => clearTimeout(t);
+    }
+    return undefined;
+  }, [points, lastEarned]);
+
+  // Compose timeline (most recent first)
+  const timeline = [...history].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 7);
+
+  // Locked badges placeholders up to grid size
+  const badgeIcons = {
+    first_save: '💾',
+    feedback_apprentice: '📝',
+    points_100: '🏆',
+  };
+  const gridTarget = 6;
+  const lockedCount = Math.max(0, gridTarget - badges.length);
+  const locked = Array.from({ length: lockedCount }).map((_, i) => ({ id: `locked_${i}` }));
+
+  return (
+    <div>
+      <h2 className="h2">Gamification</h2>
+      <div id="sr-live-gamification" className="sr-only" aria-live="polite" />
+      <div className="mt-2" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span className="btn warning" aria-label={`Total points ${points}`} title="Total points">
+          ✨ {points} pts
+        </span>
+        <span className="btn secondary" title={`${badges.length} badges`}>
+          🏅 {badges.length} badges
+        </span>
+      </div>
+
+      {/* Badges grid */}
+      <div className="mt-3" role="grid" aria-label="Badges">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 10 }}>
+          {badges.map((b) => (
+            <div key={b.id} role="gridcell" className="ts-card" style={{ padding: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span aria-hidden>{badgeIcons[b.id] || '🏅'}</span>
+                <strong>{b.title || b.id}</strong>
+              </div>
+              <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+                Earned {new Date(b.earnedAt || Date.now()).toLocaleString()}
+              </div>
+            </div>
+          ))}
+          {locked.map((l) => (
+            <div key={l.id} role="gridcell" className="ts-card" style={{ padding: 12, opacity: 0.6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span aria-hidden>🔒</span>
+                <strong>Locked</strong>
+              </div>
+              <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>Earn more points to unlock</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent awards timeline */}
+      <div className="mt-4">
+        <div className="muted" style={{ fontSize: 12, marginBottom: 6 }}>Recent awards</div>
+        {timeline.length === 0 ? (
+          <p className="muted">Make saves and share feedback to start earning points and badges.</p>
+        ) : (
+          <ol className="list-reset" aria-label="Awards timeline">
+            {timeline.map((h) => (
+              <li key={h.id} className="mt-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span aria-hidden>•</span>
+                <span>
+                  <strong style={{ marginRight: 6 }}>{labelForEvent(h.event)}</strong>
+                  <span className="muted">{formatWhen(h.createdAt)} • +{h.points} pts</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// helpers
+function labelForEvent(e) {
+  if (e === 'save') return 'Saved an activity';
+  if (e === 'feedback') return 'Gave feedback';
+  if (e === 'like') return 'Liked';
+  if (e === 'dislike') return 'Disliked';
+  if (e === 'rating') return 'Rated an activity';
+  return 'Engagement';
+}
+function formatWhen(ts) {
+  try {
+    const d = new Date(ts);
+    return d.toLocaleString();
+  } catch {
+    return '';
+  }
 }
