@@ -19,6 +19,10 @@ export default function Landing() {
     const isDemo = /[?&]demo=1\b/.test(hash);
     if (isDemo && !state.plan?.demo) {
       actions.setPlan({ demo: true, tier: 'pro' });
+      // normalize route to onboarding with demo flag to begin guided flow
+      if (!hash.startsWith('#/onboarding')) {
+        window.location.hash = '#/onboarding?demo=1';
+      }
     }
   }, [state.plan?.demo, actions]);
 

@@ -21,6 +21,20 @@ function useHashLocation() {
   return [hash, (h) => { window.location.hash = h; }];
 }
 
+function parseRoute(hash) {
+  const clean = (hash || '#/').replace(/^#/, '');
+  const normalized = clean.startsWith('/') ? clean : `/${clean}`;
+  const [path, query = ''] = normalized.split('?');
+  const params = {};
+  if (query) {
+    query.split('&').forEach(kv => {
+      const [k, v] = kv.split('=');
+      params[decodeURIComponent(k || '')] = decodeURIComponent(v || '');
+    });
+  }
+  return { path, params };
+}
+
 /**
  * PUBLIC_INTERFACE
  * Renders the view based on current hash path with subtle fade transitions.
@@ -28,10 +42,7 @@ function useHashLocation() {
 export default function RoutesView() {
   const [hash] = useHashLocation();
 
-  const route = useMemo(() => {
-    const clean = (hash || '#/').replace(/^#/, '');
-    return clean.startsWith('/') ? clean : `/${clean}`;
-  }, [hash]);
+  const { path, params } = useMemo(() => parseRoute(hash), [hash]);
 
   // Reduced motion detection
   const prefersReduced = useMemo(() => {
@@ -41,16 +52,16 @@ export default function RoutesView() {
 
   // Manage enter/exit classes around route changes
   const [phase, setPhase] = useState('enter'); // 'enter' | 'enter-active' | 'exit' | 'exit-active'
-  const prevRouteRef = useRef(route);
+  const prevRouteRef = useRef(path);
   const timeoutRef = useRef(null);
 
   useEffect(() => {
     // when route changes, run exit then enter sequence
-    if (prevRouteRef.current !== route) {
+    if (prevRouteRef.current !== path) {
       if (prefersReduced) {
         // Skip animation, just update immediately
         setPhase('enter-active');
-        prevRouteRef.current = route;
+        prevRouteRef.current = path;
         return;
       }
       // Start exit phase
@@ -60,7 +71,7 @@ export default function RoutesView() {
       // After exit completes, switch to enter
       clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
-        prevRouteRef.current = route;
+        prevRouteRef.current = path;
         setPhase('enter'); // reset to enter
         requestAnimationFrame(() => setPhase('enter-active'));
       }, 200); // match CSS .page-exit-active duration
@@ -73,26 +84,27 @@ export default function RoutesView() {
       }
     }
     return () => clearTimeout(timeoutRef.current);
-  }, [route, prefersReduced]);
+  }, [path, prefersReduced]);
 
-  function getView(r) {
-    switch (r) {
+  function getView(p) {
+    switch (p) {
       case '/':
         return <Landing />;
       case '/onboarding':
-        return <Onboarding />;
+        // Pass params to allow pages to react to ?demo=1 etc.
+        return <Onboarding params={params} />;
       case '/quiz':
-        return <Quiz />;
+        return <Quiz params={params} />;
       case '/recommendations':
-        return <Recommendations />;
+        return <Recommendations params={params} />;
       case '/dashboard':
-        return <Dashboard />;
+        return <Dashboard params={params} />;
       default:
         return <Landing />;
     }
   }
 
-  const view = getView(route);
+  const view = getView(path);
   const className =
     prefersReduced
       ? ''

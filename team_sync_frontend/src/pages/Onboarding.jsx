@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Container from '../components/common/Container';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -13,8 +13,9 @@ import { useStore } from '../state/hooks';
  * - Basic validation (required fields) with aria-invalid and inline errors.
  * - Keyboard accessible, labeled controls.
  * - "Next → Take Quiz" navigates to #/quiz.
+ * - Demo mode: when accessed via #/onboarding?demo=1, prefill and auto-continue.
  */
-export default function Onboarding() {
+export default function Onboarding({ params = {} }) {
   const { state, actions } = useStore();
   const [name, setName] = useState(state.team.name || '');
   const [size, setSize] = useState(state.team.size || 5);
@@ -22,6 +23,49 @@ export default function Onboarding() {
   const [mode, setMode] = useState(state.team.mode || 'hybrid');
   const [saving, setSaving] = useState(false);
   const [touched, setTouched] = useState({ name: false, size: false });
+
+  // Detect demo from query or plan state
+  const isDemo = String(params.demo || '').toLowerCase() === '1' || !!state.plan?.demo;
+
+  // Prefill when demo mode is active
+  useEffect(() => {
+    if (!isDemo) return;
+    // ensure plan demo flag set and tier visible as pro
+    actions.setPlan({ demo: true, tier: state.plan?.tier || 'pro' });
+
+    // Only prefill if not already provided
+    const prefill = {
+      name: name || 'Engage Squad',
+      size: Number(size) > 0 ? Number(size) : 7,
+      department: department || 'Dev',
+      mode: mode || 'hybrid',
+    };
+
+    setName(prefill.name);
+    setSize(prefill.size);
+    setDepartment(prefill.department);
+    setMode(prefill.mode);
+
+    // Auto-advance shortly after mount to simulate quick demo
+    const t = setTimeout(async () => {
+      setSaving(true);
+      try {
+        await actions.setTeam({
+          name: prefill.name,
+          size: Number(prefill.size),
+          department: prefill.department,
+          mode: prefill.mode,
+        });
+        // proceed to quiz step (quiz page will also auto-complete in demo)
+        window.location.hash = '#/quiz?demo=1';
+      } finally {
+        setSaving(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemo]);
 
   const errors = useMemo(() => {
     const e = {};
@@ -35,7 +79,6 @@ export default function Onboarding() {
 
   const handleNext = async (e) => {
     e?.preventDefault?.();
-    // Mark all as touched to reveal errors if invalid
     if (!canContinue) {
       setTouched({ name: true, size: true });
       return;
@@ -43,7 +86,7 @@ export default function Onboarding() {
     setSaving(true);
     try {
       await actions.setTeam({ name: name.trim(), size: Number(size), department: department.trim(), mode });
-      window.location.hash = '#/quiz';
+      window.location.hash = isDemo ? '#/quiz?demo=1' : '#/quiz';
     } finally {
       setSaving(false);
     }
@@ -54,6 +97,7 @@ export default function Onboarding() {
       <div className="mb-4">
         <h1 className="h1">Onboarding</h1>
         <p className="muted">Tell us about your team so we can tailor the experience.</p>
+        {isDemo && <div className="mt-2"><span className="btn warning">Demo mode</span></div>}
       </div>
       <Card as="form" onSubmit={handleNext} noValidate>
         <Progress value={25} label="Onboarding progress" />
@@ -127,7 +171,7 @@ export default function Onboarding() {
         <div className="mt-4" style={{ display: 'flex', gap: 12 }}>
           <Button type="button" variant="secondary" onClick={() => (window.location.hash = '#/')}>Back</Button>
           <Button type="submit" onClick={handleNext} aria-label="Next, take quiz" disabled={!canContinue || saving}>
-            {saving ? 'Saving…' : 'Next → Take Quiz'}
+            {saving ? 'Saving…' : (isDemo ? 'Continuing Demo…' : 'Next → Take Quiz')}
           </Button>
         </div>
       </Card>

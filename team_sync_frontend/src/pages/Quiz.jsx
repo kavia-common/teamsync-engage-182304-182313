@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Container from '../components/common/Container';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -9,9 +9,12 @@ import { useStore } from '../state/hooks';
  * PUBLIC_INTERFACE
  * 5-question quiz with concise radio/slider inputs.
  * On submit: triggers confetti and navigates to /recommendations.
+ * Demo mode: if ?demo=1, prefill default quiz answers and auto-submit.
  */
-export default function Quiz() {
+export default function Quiz({ params = {} }) {
   const { state, actions } = useStore();
+
+  const isDemo = String(params.demo || '').toLowerCase() === '1' || !!state.plan?.demo;
 
   // Initialize from store with safe defaults
   const initial = useMemo(
@@ -32,6 +35,40 @@ export default function Quiz() {
   const [interests, setInterests] = useState(initial.interests);
   const [collaboration, setCollaboration] = useState(initial.collaboration);
   const [saving, setSaving] = useState(false);
+
+  // Auto-prefill + auto-submit in demo
+  useEffect(() => {
+    if (!isDemo) return;
+    // ensure plan reflects demo/pro for premium awareness
+    actions.setPlan({ demo: true, tier: state.plan?.tier || 'pro' });
+
+    // prefill quick values for a good spread
+    setEnergy('balanced');
+    setBudget('medium');
+    setDuration(45);
+    setInterests(['games', 'creative', 'wellness']);
+    setCollaboration(4);
+
+    const t = setTimeout(async () => {
+      setSaving(true);
+      try {
+        await actions.setQuiz({
+          energy: 'balanced',
+          budget: 'medium',
+          duration: String(45),
+          interests: ['games', 'creative', 'wellness'],
+          collaboration: 4,
+        });
+        // subtle: skip confetti on auto to avoid confusion; recommendations can still celebrate on likes
+        window.location.hash = '#/recommendations';
+      } finally {
+        setSaving(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemo]);
 
   // Accessible multi-select chips (kept but presented as a controlled set of toggles)
   const chips = [
@@ -117,7 +154,6 @@ export default function Quiz() {
         collaboration
       });
       sparkConfetti();
-      // Subtle confirmation can be omitted to reduce noise; confetti is the signal.
       window.location.hash = '#/recommendations';
     } finally {
       setSaving(false);
@@ -129,6 +165,7 @@ export default function Quiz() {
       <div className="mb-4">
         <h1 className="h1">Team Quiz</h1>
         <p className="muted">Five quick picks to tailor your activities.</p>
+        {isDemo && <div className="mt-2"><span className="btn warning">Demo mode</span></div>}
       </div>
 
       <Card as="form" onSubmit={handleSubmit} noValidate>
@@ -280,7 +317,7 @@ export default function Quiz() {
 
         <div className="mt-4" style={{ display: 'flex', gap: 12 }}>
           <Button variant="secondary" type="button" onClick={() => (window.location.hash = '#/onboarding')}>Back</Button>
-          <Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Submit & See Recommendations'}</Button>
+          <Button type="submit" disabled={saving}>{saving ? 'Saving…' : (isDemo ? 'Continuing Demo…' : 'Submit & See Recommendations')}</Button>
         </div>
       </Card>
     </Container>
