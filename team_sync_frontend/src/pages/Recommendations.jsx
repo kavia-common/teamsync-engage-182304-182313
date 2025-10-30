@@ -585,6 +585,20 @@ export default function Recommendations() {
         item={selectedItem}
         onSave={handleSave}
         onFeedback={handleFeedback}
+        onFeedbackSubmit={(gameId, fb) => {
+          // Local in-memory store; could be lifted to Zustand if needed later
+          try {
+            if (!window.__TS_FEEDBACK__) window.__TS_FEEDBACK__ = {};
+            const prev = window.__TS_FEEDBACK__[gameId] || [];
+            const next = [...prev, { ...fb, at: Date.now() }];
+            window.__TS_FEEDBACK__[gameId] = next;
+            // eslint-disable-next-line no-console
+            console.log('Feedback submitted:', { gameId, ...fb });
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.warn('Feedback store failed', e);
+          }
+        }}
       />
 
       <div className="mt-6" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>

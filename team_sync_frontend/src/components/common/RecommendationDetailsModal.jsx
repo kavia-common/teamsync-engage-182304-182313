@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import Button from './Button';
 
@@ -8,17 +8,47 @@ import Button from './Button';
  * Props:
  * - open: boolean to control visibility
  * - onClose: function to close the modal
- * - item: recommendation object with fields like title, description, duration, suggestedSize, budget, tags, heroAlignment, departmentExclusive, departmentScope, _ai
+ * - item: recommendation object
  * - onSave?: optional handler for saving from within modal
- * - onFeedback?: optional handler for like/dislike from within modal
+ * - onFeedback?: optional handler for like/dislike from within modal (legacy quick reaction)
+ * - onFeedbackSubmit?: optional handler for structured feedback submit
+ *
+ * PUBLIC_INTERFACE
+ * onFeedbackSubmit signature:
+ *   onFeedbackSubmit(gameId, { sentiment: 'up'|'down'|null, rating: 0|1|2|3|4|5 })
+ * The component provides accessible controls and local state for sentiment and star rating.
  */
-export default function RecommendationDetailsModal({ open, onClose, item, onSave, onFeedback }) {
+export default function RecommendationDetailsModal({
+  open,
+  onClose,
+  item,
+  onSave,
+  onFeedback,
+  onFeedbackSubmit
+}) {
   const overlayRef = useRef(null);
   const panelRef = useRef(null);
   const lastFocusedRef = useRef(null);
 
+  // Local UI state for feedback controls
+  const [sentiment, setSentiment] = useState(null); // 'up' | 'down' | null
+  const [rating, setRating] = useState(0); // 0..5
+  const [submitted, setSubmitted] = useState(false);
+
+  // Reset feedback state whenever modal opens for a new item
+  useEffect(() => {
+    if (open) {
+      setSentiment(null);
+      setRating(0);
+      setSubmitted(false);
+    }
+  }, [open, item?.id]);
+
   // Mount portal target
   const portalTarget = typeof document !== 'undefined' ? document.body : null;
+
+  // Accessible star list (role=radiogroup). Keep hooks before any early returns.
+  const stars = useMemo(() => [1, 2, 3, 4, 5], []);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -98,7 +128,7 @@ export default function RecommendationDetailsModal({ open, onClose, item, onSave
       <div className="modal-title-wrap">
         <h2 className="h2" id="rec-modal-title">{item?.title || 'Activity details'}</h2>
         {item?.departmentExclusive && (
-          <span className="btn warning" title="Exclusive for your department">Dept‒Exclusive</span>
+          <span className="btn warning" title="Exclusive for your department">Dept\u2012Exclusive</span>
         )}
         {item?._ai?.fit_score ? (
           <span className="btn ghost" title="AI Fit score">🎯 {Number(item._ai.fit_score).toFixed(2)}</span>
@@ -179,21 +209,148 @@ export default function RecommendationDetailsModal({ open, onClose, item, onSave
           </ul>
         </>
       ) : null}
+
+      {/* Feedback section */}
+      <div className="mt-4" aria-label="Feedback section">
+        <div className="muted" style={{ fontWeight: 700, marginBottom: 8 }}>Quick Feedback</div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Sentiment toggle */}
+          <div role="group" aria-label="Sentiment" style={{ display: 'inline-flex', gap: 8 }}>
+            <button
+              type="button"
+              className={`btn ${sentiment === 'up' ? '' : 'secondary'}`}
+              aria-pressed={sentiment === 'up'}
+              onClick={() => setSentiment((s) => (s === 'up' ? null : 'up'))}
+              title="Thumbs up"
+            >
+              👍
+            </button>
+            <button
+              type="button"
+              className={`btn ${sentiment === 'down' ? '' : 'secondary'}`}
+              aria-pressed={sentiment === 'down'}
+              onClick={() => setSentiment((s) => (s === 'down' ? null : 'down'))}
+              title="Thumbs down"
+            >
+              👎
+            </button>
+          </div>
+
+          {/* Star rating */}
+          <div
+            role="radiogroup"
+            aria-label="Star rating"
+            style={{ display: 'inline-flex', gap: 4, marginLeft: 8 }}
+          >
+            {stars.map((n) => {
+              const active = rating >= n;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  role="radio"
+                  aria-checked={rating === n}
+                  className={`btn ${active ? '' : 'secondary'} feedback-star`}
+                  onClick={() => setRating(n)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setRating((r) => Math.min(5, r + 1 || 1));
+                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setRating((r) => Math.max(0, r - 1));
+                    } else if (e.key === 'Home') {
+                      e.preventDefault();
+                      setRating(0);
+                    } else if (e.key === 'End') {
+                      e.preventDefault();
+                      setRating(5);
+                    } else if (e.key === ' ' || e.key === 'Enter') {
+                      e.preventDefault();
+                      setRating(n);
+                    }
+                  }}
+                  title={`${n} star${n > 1 ? 's' : ''}`}
+                >
+                  {active ? '★' : '☆'}
+                </button>
+              );
+            })}
+            {/* Clear rating button for keyboard/mouse */}
+            <button
+              type="button"
+              className="btn secondary"
+              onClick={() => setRating(0)}
+              aria-label="Clear rating"
+              title="Clear rating"
+            >
+              ⟲
+            </button>
+          </div>
+        </div>
+        {/* Submission confirmation text */}
+        {submitted && (
+          <div
+            className="mt-2"
+            aria-live="polite"
+            style={{
+              fontSize: 13,
+              color: 'var(--ts-text-muted)'
+            }}
+          >
+            Thanks! Your feedback helps improve future picks.
+          </div>
+        )}
+      </div>
     </div>
   );
 
+  const handleSubmitFeedback = () => {
+    const payload = { sentiment, rating: Number(rating || 0) };
+    // Prefer new structured callback; fallback to legacy quick reaction if sentiment only
+    if (typeof onFeedbackSubmit === 'function') {
+      const gid = item?.id || item?.title || '';
+      onFeedbackSubmit(gid, payload);
+      setSubmitted(true);
+      // small acknowledgement also via aria-live (within modal)
+      if (typeof document !== 'undefined') {
+        const live = panelRef.current?.querySelector('#rec-modal-live');
+        if (live) {
+          live.textContent = 'Feedback submitted';
+          setTimeout(() => { if (live) live.textContent = ''; }, 1000);
+        }
+      }
+    } else if (typeof onFeedback === 'function' && payload.sentiment) {
+      // Map to existing like/dislike for backward compat
+      onFeedback(item, payload.sentiment === 'up' ? 'like' : 'dislike');
+      setSubmitted(true);
+    } else {
+      setSubmitted(true);
+    }
+  };
+
   const Footer = (
     <div className="modal-footer">
-      {onSave ? (
-        <Button onClick={() => onSave(item)} aria-label={`Save ${item?.title || 'activity'}`}>Save</Button>
-      ) : null}
-      {onFeedback ? (
-        <>
-          <Button variant="ghost" onClick={() => onFeedback(item, 'like')} aria-label={`Like ${item?.title || 'activity'}`}>👍 Like</Button>
-          <Button variant="ghost" onClick={() => onFeedback(item, 'dislike')} aria-label={`Dislike ${item?.title || 'activity'}`}>👎 Dislike</Button>
-        </>
-      ) : null}
-      <Button variant="secondary" onClick={onClose} aria-label="Close">Close</Button>
+      <div id="rec-modal-live" className="sr-only" aria-live="polite" />
+      {/* Left: primary actions */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginRight: 'auto' }}>
+        {onSave ? (
+          <Button onClick={() => onSave(item)} aria-label={`Save ${item?.title || 'activity'}`}>Save</Button>
+        ) : null}
+      </div>
+      {/* Right: feedback submit + close */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <Button
+          variant="ghost"
+          onClick={handleSubmitFeedback}
+          aria-label="Submit feedback"
+          disabled={submitted || (sentiment === null && rating === 0)}
+          title="Submit your feedback"
+        >
+          Submit Feedback
+        </Button>
+        <Button variant="secondary" onClick={onClose} aria-label="Close">Close</Button>
+      </div>
     </div>
   );
 

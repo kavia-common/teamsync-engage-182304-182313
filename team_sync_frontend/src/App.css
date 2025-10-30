@@ -558,6 +558,21 @@ main[role="main"] {
   border-bottom-right-radius: 20px;
 }
 
+/* Feedback stars - compact buttons aligned with theme */
+.feedback-star {
+  width: 42px;
+  padding: 10px 0;
+  font-size: 18px;
+  line-height: 1;
+  text-align: center;
+}
+.feedback-star.btn.secondary:hover {
+  background: rgba(125,131,255,0.08);
+}
+.feedback-star.btn:focus {
+  box-shadow: var(--ts-focus);
+}
+
 /* Page fade */
 @keyframes ts-fade {
   from { opacity: 0; transform: translateY(6px); }
