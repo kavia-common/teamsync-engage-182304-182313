@@ -164,8 +164,14 @@ const api = {
     // Calls backend AI endpoint; falls back to mock recommendations if backend is unavailable.
     try {
       const data = await postJson('/api/ai/recommendations', payload);
-      if (!data || !Array.isArray(data.ideas)) throw new Error('Invalid AI response');
-      return { ...data, source: data.source || 'openai' };
+      // Defensive shape guard
+      const ideas = Array.isArray(data?.ideas) ? data.ideas : Array.isArray(data) ? data : [];
+      if (!Array.isArray(ideas) || ideas.length === 0) throw new Error('Invalid AI response');
+      const source = data?.source || 'openai';
+      const model = data?.model || (source === 'openai' ? (process?.env?.REACT_APP_OPENAI_MODEL || 'gpt-4o-mini') : 'rules-v1');
+      const usage = data?.usage || null;
+      const error = data?.error || null;
+      return { ideas, source, model, usage, error };
     } catch (e) {
       // Fallback: use existing getRecommendations mock to avoid blocking UX
       const ideas = await mockApi.getRecommendations(payload);
