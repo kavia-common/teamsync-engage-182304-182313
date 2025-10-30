@@ -167,12 +167,20 @@ export default function Recommendations() {
 
   const handleFeedback = async (item, value) => {
     if (item.placeholder) return; // do not feedback placeholders
-    await actions.giveFeedback(item.id, value, item.title);
+    // Map like/dislike to numeric rating for backend thresholds (>=4 like, <=2 dislike)
+    const rating = value === 'like' ? 4 : 2;
+    const comment = ''; // quick reactions carry no long comment
+    await actions.giveFeedback(item.id, value, item.title, comment, rating);
     if (value === 'like') sparkConfettiLight();
-    // Gamification: local + server award
+
+    // Gamification: local + server award, include longComment meta=false to align with backend bonus logic
     try {
-      await actions.recordAward('feedback', { activityId: item.id, value });
-      await api.awardGamification({ teamId, event: 'feedback', meta: { activityId: item.id, value } });
+      await actions.recordAward('feedback', { activityId: item.id, value, rating, longComment: false });
+      await api.awardGamification({
+        teamId,
+        event: 'feedback',
+        meta: { activityId: item.id, value, rating, longComment: false }
+      });
       await afterAwardRefreshAndCelebrate();
     } catch { /* ignore */ }
 

@@ -100,12 +100,22 @@ export const useZStore = create((set, get) => ({
 
   // PUBLIC_INTERFACE
   recordAward: async (event, meta = {}) => {
-    // optimistic local update; backend sync handled by services/api award call sites
+    // optimistic local update aligned with backend defaults
     const now = new Date().toISOString();
     const id = `${event}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    // simple rules: assign small points per event; badges via thresholds
-    const pointsMap = { save: 10, feedback: 5, like: 3, dislike: 1, rating: 6 };
-    const inc = pointsMap[event] ?? 2;
+
+    // Backend-aligned points:
+    // save: +5
+    // feedback: +3 base (+1 if longComment)
+    // like/dislike/rating used as markers; keep small nudge
+    let inc = 1;
+    if (event === 'save') inc = 5;
+    else if (event === 'feedback') {
+      inc = 3 + (meta?.longComment ? 1 : 0);
+      // Optional streak bonus estimation is backend-derived; omit locally to avoid mismatch
+    } else if (event === 'like') inc = 1;
+    else if (event === 'dislike') inc = 1;
+    else if (event === 'rating') inc = 2;
 
     const s = get();
     const prevPoints = s.gamification.points || 0;
@@ -115,45 +125,25 @@ export const useZStore = create((set, get) => ({
       { id, event, meta, points: inc, createdAt: now },
     ];
 
-    // Check badge rules (idempotent)
-    const had = (bid) => (s.gamification.badges || []).some((b) => b.id === bid);
+    // Remove local-only badge inference; rely on backend-synced badges for accuracy.
     const newBadges = [...(s.gamification.badges || [])];
-    let newlyEarned = null;
-
-    // Rule: First Save
-    if (event === 'save' && !had('first_save')) {
-      newlyEarned = { id: 'first_save', title: 'First Save', earnedAt: now };
-      newBadges.push(newlyEarned);
-    }
-    // Rule: Feedback Apprentice at 5 feedback entries
-    const feedbackCount =
-      newHistory.filter((h) => h.event === 'feedback' || (h.event === 'rating')).length;
-    if (feedbackCount >= 5 && !had('feedback_apprentice')) {
-      newlyEarned = { id: 'feedback_apprentice', title: 'Feedback Apprentice', earnedAt: now };
-      newBadges.push(newlyEarned);
-    }
-    // Rule: Points Milestone 100
-    if (nextPoints >= 100 && !had('points_100')) {
-      newlyEarned = { id: 'points_100', title: 'Level 100 Points', earnedAt: now };
-      newBadges.push(newlyEarned);
-    }
 
     set(() => ({
       gamification: {
         points: nextPoints,
         badges: newBadges,
         history: newHistory,
-        lastEarnedBadgeId: newlyEarned?.id || null,
+        lastEarnedBadgeId: null, // will be set on refresh if backend awarded a badge
       },
     }));
 
-    // Auto-clear the transient lastEarnedBadgeId after short delay for UI pulse
+    // Clear transient badge pulse flag just in case
     setTimeout(() => {
       const g = get().gamification || {};
       if (g.lastEarnedBadgeId) {
         set((st) => ({ gamification: { ...st.gamification, lastEarnedBadgeId: null } }));
       }
-    }, 1200);
+    }, 800);
   },
 }));
 

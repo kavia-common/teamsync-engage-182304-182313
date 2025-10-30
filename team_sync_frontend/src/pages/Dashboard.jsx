@@ -138,7 +138,7 @@ export default function Dashboard() {
     try {
       const target = saved[saved.length - 1];
       const activityId = target?.id || 'general';
-      const sentiment = rating >= 4 ? 'like' : 'dislike';
+      const sentiment = rating >= 4 ? 'like' : rating <= 2 ? 'dislike' : 'neutral';
       await actions.giveFeedback(activityId, sentiment, target?.title || 'General feedback', comment, rating);
       try {
         await api.giveFeedback(activityId, sentiment);
@@ -146,8 +146,13 @@ export default function Dashboard() {
 
       // Gamification: record local award and notify backend, then refresh state
       try {
-        await actions.recordAward('feedback', { activityId, rating, sentiment });
-        await api.awardGamification({ teamId, event: 'feedback', meta: { activityId, rating, sentiment } });
+        const longComment = typeof comment === 'string' && comment.trim().length >= 120;
+        await actions.recordAward('feedback', { activityId, rating, sentiment, longComment });
+        await api.awardGamification({
+          teamId,
+          event: 'feedback',
+          meta: { activityId, rating, sentiment, longComment, comment: comment || '' }
+        });
         await actions.refreshGamification(teamId);
       } catch { /* ignore */ }
 
@@ -634,9 +639,16 @@ function GamificationPanel({ teamId }) {
 
   // Locked badges placeholders up to grid size
   const badgeIcons = {
+    // legacy local ids
     first_save: '💾',
     feedback_apprentice: '📝',
     points_100: '🏆',
+    // backend ids
+    'badge-first-save': '💾',
+    'badge-feedback-apprentice': '📝',
+    'badge-creative-champ': '✨',
+    'badge-most-collaborative': '👥',
+    'badge-consistent-contributor': '🗓️',
   };
   const gridTarget = 6;
   const lockedCount = Math.max(0, gridTarget - badges.length);
@@ -651,7 +663,7 @@ function GamificationPanel({ teamId }) {
           ✨ {points} pts
         </span>
         <span className="btn secondary" title={`${badges.length} badges`}>
-          🏅 {badges.length} badges
+          🎅 {badges.length} badges
         </span>
       </div>
 
@@ -659,13 +671,16 @@ function GamificationPanel({ teamId }) {
       <div className="mt-3" role="grid" aria-label="Badges">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 10 }}>
           {badges.map((b) => (
-            <div key={b.id} role="gridcell" className="ts-card" style={{ padding: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span aria-hidden>{badgeIcons[b.id] || '🏅'}</span>
-                <strong>{b.title || b.id}</strong>
+            <div key={b.id || b.badgeId} role="gridcell" className="ts-card" style={{ padding: 12 }}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                title={b.description || b.title || b.badgeId || b.id}
+              >
+                <span aria-hidden>{badgeIcons[b.id] || badgeIcons[b.badgeId] || '🏅'}</span>
+                <strong>{b.title || b.badgeId || b.id}</strong>
               </div>
               <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
-                Earned {new Date(b.earnedAt || Date.now()).toLocaleString()}
+                Earned {new Date(b.earnedAt || b.awardedAt || Date.now()).toLocaleString()}
               </div>
             </div>
           ))}
@@ -692,8 +707,8 @@ function GamificationPanel({ teamId }) {
               <li key={h.id} className="mt-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span aria-hidden>•</span>
                 <span>
-                  <strong style={{ marginRight: 6 }}>{labelForEvent(h.event)}</strong>
-                  <span className="muted">{formatWhen(h.createdAt)} • +{h.points} pts</span>
+                  <strong style={{ marginRight: 6 }}>{labelForEvent(h.type || h.event)}</strong>
+                  <span className="muted">{formatWhen(h.createdAt)} • +{h.points || 0} pts</span>
                 </span>
               </li>
             ))}
@@ -708,9 +723,10 @@ function GamificationPanel({ teamId }) {
 function labelForEvent(e) {
   if (e === 'save') return 'Saved an activity';
   if (e === 'feedback') return 'Gave feedback';
-  if (e === 'like') return 'Liked';
-  if (e === 'dislike') return 'Disliked';
+  if (e === 'like' || e === 'feedback-like') return 'Liked';
+  if (e === 'dislike' || e === 'feedback-dislike') return 'Disliked';
   if (e === 'rating') return 'Rated an activity';
+  if (e === 'badge') return 'Badge awarded';
   return 'Engagement';
 }
 function formatWhen(ts) {
