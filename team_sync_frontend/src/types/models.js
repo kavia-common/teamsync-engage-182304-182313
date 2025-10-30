@@ -18,5 +18,7 @@
  * @property {'low'|'medium'|'high'} budget
  * @property {string} suggestedSize
  * @property {string[]} tags
+ * @property {boolean} [departmentExclusive] - True when this activity is exclusive to a single department.
+ * @property {string[]} [departmentScope] - Departments this activity targets (if any).
  */
 export {};

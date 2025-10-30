@@ -28,7 +28,9 @@ export default function Recommendations() {
   const [refreshKey, setRefreshKey] = useState(0); // bump to force refetch
   const [segment, setSegment] = useState((state.team?.department || '').trim() ? 'department' : 'all'); // 'all' | 'department'
 
-  const dept = (state.team?.department || '').trim();
+  // Normalize department to match mock data keys (e.g., 'Dev' -> 'Development')
+  let dept = (state.team?.department || '').trim();
+  if (/^dev(elopment)?$/i.test(dept)) dept = 'Development';
   const teamId = state.team?.teamId || state.team?.id || state.team?.name || '';
 
   // derive payload; keep stable reference with useMemo

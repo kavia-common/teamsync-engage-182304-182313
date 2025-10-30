@@ -29,7 +29,7 @@ export const ACTIVITIES = [
     microcopy: 'Every hero has an origin story — what’s yours?'
   },
 
-  // Leadership exclusive
+  // Leadership exclusive (x2)
   {
     id: 'lead1',
     title: 'Vision Mapping Workshop',
@@ -44,8 +44,22 @@ export const ACTIVITIES = [
     heroHint: 'Strategist',
     microcopy: 'Lead the league — chart a course worthy of legends.'
   },
+  {
+    id: 'lead2',
+    title: 'Executive Alignment Roundtable',
+    description: 'Facilitated roundtable to align priorities and unblock cross-team initiatives.',
+    duration: 45,
+    budget: 'low',
+    suggestedSize: '3-10',
+    tags: ['strategy', 'communication', 'remote', 'in_person', 'chill'],
+    departments: ['Leadership'],
+    exclusiveDepartments: ['Leadership'],
+    mode: ['remote', 'in_person', 'hybrid'],
+    heroHint: 'Guardian',
+    microcopy: 'Unite the guild — align, decide, and advance.'
+  },
 
-  // Sales exclusive
+  // Sales exclusive (x2)
   {
     id: 'sales1',
     title: 'Pitch Battle Royale',
@@ -60,24 +74,52 @@ export const ACTIVITIES = [
     heroHint: 'Vanguard',
     microcopy: 'Dial up the charisma — it’s showtime!'
   },
-
-  // Product exclusive
   {
-    id: 'prod1',
-    title: 'Lightning Discovery Jam',
-    description: '5×5 ideation: five minutes per prompt to uncover real user pains.',
-    duration: 45,
+    id: 'sales2',
+    title: 'Objection Handling Jam',
+    description: 'Pair up to roleplay tough objections and craft winning responses.',
+    duration: 35,
     budget: 'low',
-    suggestedSize: '3-12',
-    tags: ['product', 'discovery', 'remote', 'in_person', 'creative', 'balanced'],
-    departments: ['Product'],
-    exclusiveDepartments: ['Product'],
+    suggestedSize: '4-16',
+    tags: ['communication', 'training', 'remote', 'in_person', 'balanced'],
+    departments: ['Sales'],
+    exclusiveDepartments: ['Sales'],
     mode: ['remote', 'in_person', 'hybrid'],
-    heroHint: 'Innovator',
-    microcopy: 'Prototype your destiny — one idea at a time.'
+    heroHint: 'Strategist',
+    microcopy: 'Turn challenges into champions.'
   },
 
-  // Operations exclusive
+  // Marketing exclusive (x2)
+  {
+    id: 'mkt1',
+    title: 'Brand Story Sprint',
+    description: 'Rapid exercise to refine your elevator pitch and narrative arc.',
+    duration: 40,
+    budget: 'low',
+    suggestedSize: '3-12',
+    tags: ['creative', 'brand', 'remote', 'in_person', 'balanced'],
+    departments: ['Marketing'],
+    exclusiveDepartments: ['Marketing'],
+    mode: ['remote', 'in_person', 'hybrid'],
+    heroHint: 'Innovator',
+    microcopy: 'Craft the saga — your audience awaits.'
+  },
+  {
+    id: 'mkt2',
+    title: 'Content Idea Roulette',
+    description: 'Spin themed prompts to generate a month of fresh content ideas.',
+    duration: 30,
+    budget: 'low',
+    suggestedSize: '3-12',
+    tags: ['creative', 'content', 'remote', 'in_person', 'high'],
+    departments: ['Marketing'],
+    exclusiveDepartments: ['Marketing'],
+    mode: ['remote', 'in_person', 'hybrid'],
+    heroHint: 'Vanguard',
+    microcopy: 'Roll the wheel — ideas on demand.'
+  },
+
+  // Operations exclusive (x2)
   {
     id: 'ops1',
     title: 'Process Kaizen Sprint',
@@ -93,7 +135,7 @@ export const ACTIVITIES = [
     microcopy: 'Order from chaos — optimize like a mastermind.'
   },
 
-  // QA exclusive
+  // QA exclusive (x2)
   {
     id: 'qa1',
     title: 'Bug Hunt Bingo',
@@ -108,8 +150,22 @@ export const ACTIVITIES = [
     heroHint: 'Guardian',
     microcopy: 'Defend the realm — banish bugs with righteous clicks.'
   },
+  {
+    id: 'qa2',
+    title: 'Test Case Showdown',
+    description: 'Teams compete to design edge-case scenarios for a sample feature.',
+    duration: 40,
+    budget: 'low',
+    suggestedSize: '3-12',
+    tags: ['quality', 'training', 'remote', 'in_person', 'creative'],
+    departments: ['QA'],
+    exclusiveDepartments: ['QA'],
+    mode: ['remote', 'in_person', 'hybrid'],
+    heroHint: 'Strategist',
+    microcopy: 'Edge cases assemble — outsmart the bugs.'
+  },
 
-  // Dev exclusive
+  // Development exclusive (x2)
   {
     id: 'dev1',
     title: 'Architecture Kata',
@@ -118,11 +174,25 @@ export const ACTIVITIES = [
     budget: 'low',
     suggestedSize: '4-12',
     tags: ['engineering', 'architecture', 'remote', 'in_person', 'creative', 'balanced'],
-    departments: ['Dev'],
-    exclusiveDepartments: ['Dev'],
+    departments: ['Development'],
+    exclusiveDepartments: ['Development'],
     mode: ['remote', 'in_person', 'hybrid'],
     heroHint: 'Strategist',
     microcopy: 'Refactor reality — design like a hero engineer.'
+  },
+  {
+    id: 'dev2',
+    title: 'Code Golf Relay',
+    description: 'Pass the baton to write the shortest readable solution to a fun problem.',
+    duration: 35,
+    budget: 'low',
+    suggestedSize: '3-10',
+    tags: ['engineering', 'games', 'remote', 'in_person', 'high'],
+    departments: ['Development'],
+    exclusiveDepartments: ['Development'],
+    mode: ['remote', 'in_person', 'hybrid'],
+    heroHint: 'Vanguard',
+    microcopy: 'Fewer chars, more cheers — fore!'
   },
 
   // Existing general activities (augmented with metadata)

@@ -37,7 +37,7 @@ export default function Onboarding({ params = {} }) {
     const prefill = {
       name: name || 'Engage Squad',
       size: Number(size) > 0 ? Number(size) : 7,
-      department: department || 'Dev',
+      department: department || 'Development',
       mode: mode || 'hybrid',
     };
 
@@ -144,13 +144,21 @@ export default function Onboarding({ params = {} }) {
           </div>
           <div>
             <label className="label" htmlFor="team-dept">Department</label>
-            <input
+            <select
               id="team-dept"
-              className="input"
-              placeholder="e.g., Engineering, Sales"
+              className="select"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-            />
+              aria-label="Select your department"
+            >
+              <option value="">Select department</option>
+              <option value="Leadership">Leadership</option>
+              <option value="Sales">Sales</option>
+              <option value="Operations">Operations</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Development">Development</option>
+              <option value="QA">QA</option>
+            </select>
           </div>
           <div>
             <label className="label" htmlFor="team-mode">Work mode</label>
