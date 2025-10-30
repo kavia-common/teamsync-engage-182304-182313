@@ -13,6 +13,7 @@ const BASE_URL =
 // Helper to perform fetch with timeout and parse JSON
 async function fetchJson(path, options = {}) {
   const controller = new AbortController();
+  const t0 = performance && performance.now ? performance.now() : Date.now();
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
@@ -23,6 +24,12 @@ async function fetchJson(path, options = {}) {
         ...(options.headers || {}),
       },
     });
+    const t1 = performance && performance.now ? performance.now() : Date.now();
+    const latency_ms = Math.round(t1 - t0);
+    // Developer observability
+    // eslint-disable-next-line no-console
+    console.debug('[api]', { route: path, latency_ms, method: (options.method || 'GET') });
+
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }
@@ -113,7 +120,36 @@ const api = {
     } catch (e) {
       return mockApi.generatePersona(team, quiz);
     }
-  }
+  },
+
+  // --- Gamification ---
+
+  // PUBLIC_INTERFACE
+  async getGamification(teamId) {
+    try {
+      const q = new URLSearchParams({ teamId: String(teamId || '') }).toString();
+      const data = await fetchJson(`/api/gamification?${q}`, { method: 'GET' });
+      if (!data) throw new Error('Invalid gamification');
+      return data;
+    } catch (e) {
+      // fallback when backend not available: derive from mock store arrays if exposed
+      // Since mock has no gamification, provide a neutral default
+      return { points: 0, badges: [], history: [] };
+    }
+  },
+
+  // PUBLIC_INTERFACE
+  async awardGamification({ teamId, event, meta = {} }) {
+    try {
+      const payload = { teamId, event, meta };
+      const data = await postJson('/api/gamification/award', payload);
+      if (!data || data.ok !== true) throw new Error('Invalid award response');
+      return data;
+    } catch (e) {
+      // fallback: pretend ok
+      return { ok: true, source: 'fallback' };
+    }
+  },
 };
 
 export default api;

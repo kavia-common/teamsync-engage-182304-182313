@@ -59,6 +59,7 @@ function SentimentChip({ score = 0, label = 'mixed' }) {
  * PUBLIC_INTERFACE
  * Dashboard with advanced analytics, trends, persona, feedback, and controls.
  * Adds time range selector (4w/12w/All), premium indicators, and accessible summaries.
+ * Integrates gamification refresh on feedback submission.
  */
 export default function Dashboard() {
   const { state, actions } = useStore();
@@ -74,6 +75,8 @@ export default function Dashboard() {
   const [generating, setGenerating] = useState(false);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [loadingPersona, setLoadingPersona] = useState(false);
+
+  const teamId = state.team?.teamId || state.team?.id || state.team?.name || '';
 
   // concise team summary (team name, size, department, work mode)
   const teamSummary = useMemo(() => {
@@ -98,8 +101,8 @@ export default function Dashboard() {
     (async () => {
       setLoadingAnalytics(true);
       try {
-        const teamId = state.team?.teamId || state.team?.id || state.team?.name || '';
-        const data = await api.getAnalytics(timeRange, teamId);
+        const teamIdLocal = state.team?.teamId || state.team?.id || state.team?.name || '';
+        const data = await api.getAnalytics(timeRange, teamIdLocal);
         if (mounted && data) actions.setAnalytics(data);
       } catch {
         // handled in api via fallback
@@ -144,6 +147,14 @@ export default function Dashboard() {
       try {
         await api.giveFeedback(activityId, sentiment);
       } catch { /* ignore */ }
+
+      // Gamification: record local award and notify backend, then refresh state
+      try {
+        await actions.recordAward('feedback', { activityId, rating, sentiment });
+        await api.awardGamification({ teamId, event: 'feedback', meta: { activityId, rating, sentiment } });
+        await actions.refreshGamification(teamId);
+      } catch { /* ignore */ }
+
       setComment('');
       setRating(4);
       const live = document.getElementById('sr-live-dashboard');

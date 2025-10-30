@@ -10,6 +10,7 @@ import api from '../services/api';
  * Displays 3–5 recommended activities with actions to save and give feedback.
  * Adds department segmented filter (All vs Department), department-exclusive badge,
  * hero alignment label, and playful microcopy. Maintains accessibility.
+ * Integrates gamification: awards on save/feedback and refreshes global gamification state.
  */
 export default function Recommendations() {
   const { state, actions } = useStore();
@@ -20,6 +21,7 @@ export default function Recommendations() {
   const [segment, setSegment] = useState((state.team?.department || '').trim() ? 'department' : 'all'); // 'all' | 'department'
 
   const dept = (state.team?.department || '').trim();
+  const teamId = state.team?.teamId || state.team?.id || state.team?.name || '';
 
   // derive payload; keep stable reference with useMemo
   const payload = useMemo(() => ({ team: state.team, quiz: state.quiz }), [state.team, state.quiz]);
@@ -65,30 +67,6 @@ export default function Recommendations() {
     if (segment !== 'department') return recs;
     return recs.filter(r => r.placeholder || r.departmentExclusive || (r.departmentScope || []).includes(dept));
   }, [recs, segment, dept]);
-
-  const handleSave = async (item) => {
-    if (item.placeholder) return; // do not save placeholders
-    try {
-      await api.saveRecommendation(item);
-    } catch {
-      // service already falls back to mock
-    } finally {
-      // Ensure we persist department info and hero label on save
-      const enriched = {
-        ...item,
-        _savedDept: dept,
-        _heroAlignment: item.heroAlignment || 'Ally',
-      };
-      actions.saveRecommendation(enriched);
-      if (typeof window !== 'undefined') {
-        const live = document.getElementById('sr-live');
-        if (live) {
-          live.textContent = `${item.title} saved`;
-          setTimeout(() => { if (live) live.textContent = ''; }, 800);
-        }
-      }
-    }
-  };
 
   // Lightweight confetti helper (respects reduced motion)
   function sparkConfettiLight() {
@@ -148,10 +126,56 @@ export default function Recommendations() {
     raf = requestAnimationFrame(step);
   }
 
+  async function afterAwardRefreshAndCelebrate() {
+    // Refresh gamification state
+    try { await actions.refreshGamification(teamId); } catch { /* ignore */ }
+    // To avoid hook rule violations and extra coupling, we conservatively trigger a light confetti
+    // after a potential award; the UI remains subtle and respects reduced motion.
+    sparkConfettiLight();
+  }
+
+  const handleSave = async (item) => {
+    if (item.placeholder) return; // do not save placeholders
+    try {
+      await api.saveRecommendation(item);
+    } catch {
+      // service already falls back to mock
+    } finally {
+      // Ensure we persist department info and hero label on save
+      const enriched = {
+        ...item,
+        _savedDept: dept,
+        _heroAlignment: item.heroAlignment || 'Ally',
+      };
+      actions.saveRecommendation(enriched);
+      // Gamification: record local award and POST to backend
+      try {
+        await actions.recordAward('save', { activityId: item.id, title: item.title });
+        await api.awardGamification({ teamId, event: 'save', meta: { activityId: item.id } });
+        await afterAwardRefreshAndCelebrate();
+      } catch { /* ignore */ }
+
+      if (typeof window !== 'undefined') {
+        const live = document.getElementById('sr-live');
+        if (live) {
+          live.textContent = `${item.title} saved`;
+          setTimeout(() => { if (live) live.textContent = ''; }, 800);
+        }
+      }
+    }
+  };
+
   const handleFeedback = async (item, value) => {
     if (item.placeholder) return; // do not feedback placeholders
     await actions.giveFeedback(item.id, value, item.title);
     if (value === 'like') sparkConfettiLight();
+    // Gamification: local + server award
+    try {
+      await actions.recordAward('feedback', { activityId: item.id, value });
+      await api.awardGamification({ teamId, event: 'feedback', meta: { activityId: item.id, value } });
+      await afterAwardRefreshAndCelebrate();
+    } catch { /* ignore */ }
+
     if (typeof window !== 'undefined') {
       const live = document.getElementById('sr-live');
       if (live) {

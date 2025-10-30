@@ -8,6 +8,7 @@ import { useZStore } from './store.zustand';
  * - setAnalytics(payload)
  * - setPersona(payload)
  * - giveFeedback(activityId, value, activityTitle?, comment?, rating?)
+ * Also exposes gamification actions/selectors.
  */
 export function useStore() {
   const state = useZStore((s) => ({
@@ -19,6 +20,7 @@ export function useStore() {
     timeRange: s.timeRange,
     analytics: s.analytics,
     persona: s.persona,
+    gamification: s.gamification,
   }));
   const actions = {
     setTeam: useZStore((s) => s.setTeam),
@@ -33,6 +35,12 @@ export function useStore() {
     setTimeRange: useZStore((s) => s.setTimeRange),
     setAnalytics: useZStore((s) => s.setAnalytics),
     setPersona: useZStore((s) => s.setPersona),
+
+    // Gamification
+    // PUBLIC_INTERFACE
+    refreshGamification: useZStore((s) => s.refreshGamification),
+    // PUBLIC_INTERFACE
+    recordAward: useZStore((s) => s.recordAward),
   };
   return { state, actions };
 }
