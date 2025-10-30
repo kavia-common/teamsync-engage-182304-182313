@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import Container from '../components/common/Container';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import SocialSignInButton from '../components/common/SocialSignInButton';
 
 /**
  * PUBLIC_INTERFACE
@@ -54,6 +55,20 @@ export default function Signin() {
     helpId
   ].filter(Boolean).join(' ') || undefined;
 
+  // Social sign-in placeholder handler with inline toast/notice
+  // PUBLIC_INTERFACE
+  const onSocialSignIn = async (provider) => {
+    if (provider !== 'google') return;
+    // show inline toast/notice for 2.5s
+    setToast({ type: 'info', message: 'Redirecting to Google… (placeholder auth)' });
+    // eslint-disable-next-line no-console
+    console.log('[Auth] Social sign-in requested:', provider);
+    await new Promise((res) => setTimeout(res, 2500));
+    setToast(null);
+  };
+
+  const [toast, setToast] = useState(null);
+
   return (
     <Container>
       <div className="mb-4">
@@ -61,6 +76,33 @@ export default function Signin() {
         <p className="muted">Welcome back. After sign-in, you’ll choose a plan.</p>
       </div>
       <Card as="form" onSubmit={onSubmit} noValidate>
+        {/* Prominent social sign-in above form */}
+        <div className="mt-2" style={{ display: 'grid', gap: 10 }}>
+          <SocialSignInButton
+            provider="google"
+            size="lg"
+            onClick={() => onSocialSignIn('google')}
+          />
+          <div className="social-divider" role="separator" aria-label="or continue with email">
+            <span>or</span>
+          </div>
+          {toast && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="muted"
+              style={{
+                background: '#fff',
+                border: '1px solid var(--ts-border)',
+                borderRadius: 12,
+                padding: '8px 10px',
+                boxShadow: 'var(--ts-shadow-sm)'
+              }}
+            >
+              {toast.message}
+            </div>
+          )}
+        </div>
         <div className="ts-row cols-2">
           <div>
             <label className="label" htmlFor="email">Email</label>
@@ -175,10 +217,16 @@ export default function Signin() {
           </div>
         </div>
 
-        <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
           <Button type="submit" disabled={!canSubmit || submitting} aria-label="Sign in and choose plan">
             {submitting ? 'Signing in…' : 'Sign in'}
           </Button>
+          <SocialSignInButton
+            provider="google"
+            size="sm"
+            onClick={() => onSocialSignIn('google')}
+            aria-label="Sign in with Google"
+          />
           <a href="#/signup" className="btn secondary" aria-label="New to TeamSync? Create an account">New to TeamSync? Create an account</a>
           <Button type="button" variant="ghost" onClick={() => (window.location.hash = '#/')} aria-label="Back to landing">Back</Button>
         </div>
