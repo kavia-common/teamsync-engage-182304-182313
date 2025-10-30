@@ -33,7 +33,7 @@ function scoreActivities({ team, quiz }) {
     const isExclusiveForDept = a.exclusiveDepartments?.includes(dept);
     const mentionsDept = (a.departments || []).includes(dept);
     if (isExclusiveForDept) s += 100; // hard ensure exclusives bubble up
-    else if (mentionsDept) s += 20;
+    else if (mentionsDept) s += 26;
 
     // mode match
     const modes = a.mode || [];
@@ -50,7 +50,7 @@ function scoreActivities({ team, quiz }) {
 
     // interests overlap
     const overlaps = (interests || []).filter((t) => (a.tags || []).includes(t)).length;
-    s += overlaps * 3;
+    s += overlaps * 3.2;
 
     // small diversity nudge for cross-department fun
     if ((a.tags || []).includes('cross_department')) s += 2;
@@ -74,8 +74,8 @@ function scoreActivities({ team, quiz }) {
   // Fill remaining 2–4 items with high scores prioritizing dept relevance
   const pool = nonExclusiveRanked.filter(a => !result.find(r => r.id === a.id));
   const mixed = [
-    // prefer dept relevant first
-    ...pool.filter(a => (a.departments || []).includes(dept)).slice(0, 2),
+    // prefer dept relevant first (allow up to 3)
+    ...pool.filter(a => (a.departments || []).includes(dept)).slice(0, 3),
     // then strong general matches
     ...pool.filter(a => !(a.departments || []).includes(dept)).slice(0, 4),
   ];

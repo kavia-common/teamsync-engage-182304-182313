@@ -17,7 +17,7 @@ export default function Recommendations() {
   const [recs, setRecs] = useState([]);
   const [error, setError] = useState('');
   const [refreshKey, setRefreshKey] = useState(0); // bump to force refetch
-  const [segment, setSegment] = useState('all'); // 'all' | 'department'
+  const [segment, setSegment] = useState((state.team?.department || '').trim() ? 'department' : 'all'); // 'all' | 'department'
 
   const dept = (state.team?.department || '').trim();
 
