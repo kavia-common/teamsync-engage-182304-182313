@@ -6,13 +6,15 @@ import { useStore } from '../state/hooks';
 
 /**
  * PUBLIC_INTERFACE
- * Landing page focusing on primary auth CTAs (Sign up, Sign in).
- * Plan selection is a read-only preview; selection occurs post-auth.
+ * Landing page hero with a single primary "Start Now" CTA.
+ * Horizontal layout: illustration (CSS art) alongside text/CTA.
+ * How It Works (2 steps) moved directly below the hero card.
+ * Start Now gates flow: auth (signin) -> plan -> onboarding.
  */
 export default function Landing() {
   const { state, actions } = useStore();
 
-  // Auto-detect demo query param (legacy), but do not surface demo CTA
+  // Legacy demo support: if accessed with ?demo=1, send to onboarding demo flow.
   useEffect(() => {
     const hash = window.location.hash || '';
     const isDemo = /[?&]demo=1\b/.test(hash);
@@ -24,85 +26,78 @@ export default function Landing() {
     }
   }, [state.plan?.demo, actions]);
 
-  const isPro = state.plan?.tier === 'pro';
-  const isFree = state.plan?.tier === 'free';
-
-  // helpers for checkmark lists
-  const Check = ({ gated = false, children, label }) => (
-    <li role="listitem" aria-label={label || (typeof children === 'string' ? children : undefined)} className="mt-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <span aria-hidden>{gated ? '🔒' : '✔️'}</span>
-      <span className={gated ? 'muted' : ''}>{children}</span>
-    </li>
-  );
-
-  // pricing anchor helper
+  // Scroll helper for pricing anchor
   const scrollToPricing = () => {
     const el = document.getElementById('pricing');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // PUBLIC_INTERFACE
+  function handleStartNow() {
+    /** Navigate to auth step first (signin). Users can switch to signup there. */
+    window.location.hash = '#/signin';
+  }
+
   return (
-    <div className="hero">
-      <div className="hero-inner">
-        <div>
-          {/* Headline and tagline */}
-          <h1 className="h1" title="Team time, simplified">
-            Plan engaging team activities in just a few clicks.
-          </h1>
-          <p className="muted">
-            TeamSync learns your team’s size, department, and work mode to suggest curated activities that spark connection.
-          </p>
-
-          {/* Primary CTA group directly beneath hero text */}
-          <div className="grid-gap-12 mt-3" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }} aria-label="Primary actions">
-            {/* Only auth CTAs */}
-            <a href="#/signup" className="btn" aria-label="Sign up">Sign up</a>
-            <a href="#/signin" className="btn secondary" aria-label="Sign in">Sign in</a>
-            <Button variant="ghost" onClick={scrollToPricing} aria-label="Jump to pricing">
-              View Pricing
-            </Button>
+    <div className="hero" role="region" aria-label="TeamSync landing">
+      {/* Horizontal hero/main card */}
+      <Container>
+        <Card className="landing-hero" aria-label="Intro">
+          {/* Illustration / visual side */}
+          <div className="landing-hero__media" aria-hidden>
+            {/* Placeholder illustration using CSS gradients; replaceable later */}
+            <div className="landing-hero__art" role="img" aria-label="People collaborating illustration" />
           </div>
 
-          {/* Plan preview note (read-only) */}
-          <div className="mt-3" aria-live="polite">
-            <span className="btn secondary" title="Plan selection occurs after sign-in">
-              Previewing {isPro ? 'Pro' : 'Free'} plan — choose your plan after you sign in.
-            </span>
-          </div>
+          {/* Text / CTA side */}
+          <div className="landing-hero__content">
+            <h1 className="h1">Plan engaging team activities in just a few clicks.</h1>
+            <p className="muted">
+              TeamSync learns your team’s size, department, and work mode to suggest curated activities that spark connection.
+            </p>
 
-          <p className="muted mt-3" aria-label="Theme note">
-            Ocean Professional theme • Modern • Fast • A sprinkle of fun ✨
-          </p>
-        </div>
+            <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Button onClick={handleStartNow} aria-label="Start now and sign in" title="Start now">
+                Start Now
+              </Button>
+              <Button variant="ghost" onClick={scrollToPricing} aria-label="View pricing plans">View Pricing</Button>
+            </div>
 
-        {/* Simplified How it works: 2 steps with themed icons */}
-        <Card aria-label="How it works">
-          <h2 className="h2">How it works</h2>
-          <ol className="list-reset" aria-label="Two step flow">
-            <li className="mt-2" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <span aria-hidden className="btn secondary" title="Onboarding">🧭</span>
-              <div>
-                <strong>Onboarding</strong>
-                <div className="muted">Tell us about your team — size, department, and work mode.</div>
-              </div>
-            </li>
-            <li className="mt-2" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <span aria-hidden className="btn secondary" title="Recommendations">🤖</span>
-              <div>
-                <strong>Recommendations</strong>
-                <div className="muted">Get 3–5 curated activities matched to your team’s vibe.</div>
-              </div>
-            </li>
-          </ol>
-          <div className="mt-4">
-            <a href="#/signup" className="btn" aria-label="Start by signing up" title="Create your account">
-              Start Now
-            </a>
+            <p className="muted mt-3" aria-label="Theme note">
+              Ocean Professional theme • Modern • Fast • A sprinkle of fun ✨
+            </p>
           </div>
         </Card>
-      </div>
+      </Container>
 
-      {/* Pricing section */}
+      {/* How it works: two steps directly below hero */}
+      <Container>
+        <section aria-labelledby="how-heading" className="mt-6">
+          <h2 id="how-heading" className="h2">How it works</h2>
+          <div className="ts-row cols-2 mt-3" role="list" aria-label="Two step flow">
+            <Card role="listitem" className="how-card">
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <span aria-hidden className="how-icon" title="Onboarding">🧭</span>
+                <div>
+                  <strong>Onboarding</strong>
+                  <div className="muted">Tell us about your team — size, department, and work mode.</div>
+                </div>
+              </div>
+            </Card>
+            <Card role="listitem" className="how-card">
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <span aria-hidden className="how-icon" title="Recommendations">🤖</span>
+                <div>
+                  <strong>Recommendations</strong>
+                  <div className="muted">Get 3–5 curated activities matched to your team’s vibe.</div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </section>
+      </Container>
+
+      {/* Pricing section (read-only preview; selection occurs after auth on /plan) */}
       <Container>
         <section id="pricing" aria-labelledby="pricing-heading" role="region" style={{ scrollMarginTop: 80 }}>
           <div className="mt-6 center">
@@ -110,9 +105,7 @@ export default function Landing() {
             <p className="muted">Sign in to choose a plan. You can start free and upgrade anytime.</p>
           </div>
 
-          {/* Responsive two-card grid */}
           <div className="ts-row cols-2 mt-4" role="list" aria-label="Plan options (preview)" style={{ alignItems: 'stretch' }}>
-            {/* Free plan (read-only) */}
             <Card aria-label="Free plan" role="listitem" style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                 <div>
@@ -124,22 +117,18 @@ export default function Landing() {
                 </span>
               </div>
               <p className="muted" style={{ marginTop: 8 }}>Everything you need to get started.</p>
-
-              <ul className="mt-3" role="list" aria-label="Free plan features" style={{ paddingLeft: 4, listStyle: 'none', margin: 0 }}>
-                <Check label="Onboarding and team profiling">Onboarding & team profiling</Check>
-                <Check label="Personality quiz">Personality quiz</Check>
-                <Check label="3 to 5 activity recommendations">3–5 activity recommendations</Check>
-                <Check label="Basic feedback">Basic feedback</Check>
-                <Check gated label="AI Analytics (Premium)">AI Analytics <span className="sr-only">(Premium)</span></Check>
-                <Check gated label="Custom Activity Builder (Premium)">Custom Activity Builder <span className="sr-only">(Premium)</span></Check>
+              <ul className="mt-3 list-reset" aria-label="Free plan features">
+                <li className="mt-2"><span aria-hidden>✅</span> Onboarding & team profiling</li>
+                <li className="mt-2"><span aria-hidden>✅</span> Personality quiz</li>
+                <li className="mt-2"><span aria-hidden>✅</span> 3–5 activity recommendations</li>
+                <li className="mt-2"><span aria-hidden>✅</span> Basic feedback</li>
+                <li className="mt-2"><span aria-hidden>🔒</span> <span className="muted">AI Analytics (Premium)</span></li>
               </ul>
-
-              <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
-                <a href="#/signin" className="btn secondary" aria-label="Sign in to choose plan">Sign in to choose</a>
+              <div className="mt-4" style={{ marginTop: 'auto' }}>
+                <Button variant="secondary" onClick={handleStartNow} aria-label="Sign in to choose plan">Sign in to choose</Button>
               </div>
             </Card>
 
-            {/* Pro/Business plan (read-only) */}
             <Card aria-label="Pro plan" role="listitem" style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                 <div>
@@ -151,29 +140,30 @@ export default function Landing() {
                 </span>
               </div>
               <p className="muted" style={{ marginTop: 8 }}>Best for growing teams that want advanced insights.</p>
-
-              <ul className="mt-3" role="list" aria-label="Pro plan features" style={{ paddingLeft: 4, listStyle: 'none', margin: 0 }}>
-                <Check label="Everything in Free">Everything in Free</Check>
-                <Check label="AI Analytics"><span className="ai-badge" title="Premium feature enabled">AI Analytics</span></Check>
-                <Check label="Custom Activity Builder"><span className="ai-badge ai-badge--ghost" title="Premium feature enabled">Custom Activity Builder</span></Check>
-                <Check label="Advanced feedback insights">Advanced feedback insights</Check>
-                <Check label="Priority support">Priority support</Check>
+              <ul className="mt-3 list-reset" aria-label="Pro plan features">
+                <li className="mt-2"><span aria-hidden>✅</span> Everything in Free</li>
+                <li className="mt-2"><span aria-hidden>✅</span> <span className="ai-badge">AI Analytics</span></li>
+                <li className="mt-2"><span aria-hidden>✅</span> <span className="ai-badge ai-badge--ghost">Custom Activity Builder</span></li>
+                <li className="mt-2"><span aria-hidden>✅</span> Advanced feedback insights</li>
+                <li className="mt-2"><span aria-hidden>✅</span> Priority support</li>
               </ul>
-
-              <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
-                <a href="#/signin" className="btn" aria-label="Sign in to upgrade">Sign in to upgrade</a>
+              <div className="mt-4" style={{ marginTop: 'auto', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <Button onClick={handleStartNow} aria-label="Sign in to upgrade">Sign in to upgrade</Button>
+                <Button variant="secondary" onClick={scrollToPricing} aria-label="Explore pricing details">Details</Button>
               </div>
             </Card>
           </div>
 
           <div className="mt-3">
             <p className="muted center" title="Selection note">
-              Plan selection happens after you sign up or sign in. You can switch anytime.
+              Plan selection happens after you sign in. You can switch anytime.
             </p>
           </div>
         </section>
+      </Container>
 
-        {/* Feature highlights for consistency with theme */}
+      {/* Extra highlights */}
+      <Container>
         <div className="ts-row cols-3 mt-6">
           <Card>
             <h3 className="h2">Smart</h3>
