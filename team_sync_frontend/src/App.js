@@ -20,11 +20,16 @@ function App() {
       '--ts-text': '#1E293B',
       '--ts-text-muted': 'rgba(30,41,59,0.72)',
       '--ts-primary': '#2BD9C9',
+      '--ts-primary-600': '#22c9ba',
+      '--ts-primary-700': '#19b5a7',
       '--ts-secondary': '#7D83FF',
+      '--ts-secondary-600': '#6b72ff',
       '--ts-error': '#EF4444',
       '--ts-border': '#e6e8ec',
+      '--ts-shadow-sm': '0 4px 12px rgba(2, 8, 23, 0.06)',
       '--ts-shadow': '0 12px 30px rgba(2, 8, 23, 0.08)',
       '--ts-radius': '16px',
+      '--ts-radius-2xl': '20px',
       '--ts-focus': '0 0 0 3px rgba(43,217,201,0.35)'
     }),
     []

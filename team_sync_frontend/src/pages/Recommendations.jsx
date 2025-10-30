@@ -35,7 +35,8 @@ export default function Recommendations() {
 
   const handleFeedback = async (item, value) => {
     await actions.giveFeedback(item.id, value, item.title);
-    alert('Thanks for the feedback!');
+    // playful microcopy
+    alert(value === 'like' ? 'Nice! We’ll sprinkle more like that 🎉' : 'Got it — we’ll show fewer like this 💡');
   };
 
   return (

@@ -16,7 +16,7 @@ export default function Landing() {
           <p className="muted mb-4">
             TeamSync learns your team’s style, size, and vibe to suggest curated activities that spark connection.
           </p>
-          <p className="muted" style={{ fontStyle: 'italic', marginTop: -6 }}>Psst — it only takes 2 minutes ✨</p>
+          <p className="muted" style={{ fontStyle: 'italic', marginTop: -6 }}>Psst — it only takes 2 minutes ✨ We’ll bring the fun.</p>
           <div className="grid-gap-12" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a href="#/onboarding" className="btn" aria-label="Start onboarding">Get Started</a>
             <a href="#/quiz" className="btn secondary" aria-label="Take the quiz">Take the Quiz</a>
