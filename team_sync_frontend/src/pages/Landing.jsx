@@ -21,11 +21,13 @@ import { useStore } from '../state/hooks';
 export default function Landing() {
   const { state, actions } = useStore();
 
-  // Optional hero image hook: now using local optimized asset.
-  // Local asset path: '/assets/hero-illustration.webp'
-  const HERO_IMAGE = '/assets/hero-illustration.webp';
+  // Optional hero image hook: now using a stable external illustration (team collaboration with colorful puzzle pieces).
+  // Source: Vecteezy CDN free asset (requires attribution retained below).
+  // Note: Keep alt descriptive and ensure responsive rendering with CSS classes.
+  const HERO_IMAGE =
+    'https://static.vecteezy.com/system/resources/previews/006/435/657/non_2x/business-teamwork-people-connecting-puzzle-elements-collaboration-teamwork-partnership-illustration-vector.jpg';
   const HERO_ALT =
-    'Team collaborating with colorful puzzle pieces, representing team building.';
+    'Illustration of a diverse team collaborating to connect colorful puzzle pieces, symbolizing teamwork and alignment.';
 
   useEffect(() => {
     const hash = window.location.hash || '';
@@ -72,6 +74,14 @@ export default function Landing() {
                 height={768}
                 loading="lazy"
                 decoding="async"
+                onError={(e) => {
+                  // graceful fallback to themed gradient if image fails
+                  e.currentTarget.style.background =
+                    'radial-gradient(circle at 30% 30%, rgba(125,131,255,.25), transparent 55%), radial-gradient(circle at 70% 60%, rgba(43,217,201,.28), transparent 55%), linear-gradient(180deg, #fff, #f8fafc)';
+                  e.currentTarget.style.objectFit = 'contain';
+                  e.currentTarget.src = '';
+                  e.currentTarget.setAttribute('aria-hidden', 'true');
+                }}
               />
             ) : (
               <div
@@ -96,20 +106,20 @@ export default function Landing() {
         </Card>
       </Container>
 
-      {/* Asset attribution (required by Freepik when using free assets) */}
+      {/* Asset attribution (required by Vecteezy for free assets) */}
       <Container>
         <p className="muted center attribution-note">
-          Illustration by{' '}
+          Illustration via{' '}
           <a
-            href="https://www.freepik.com/free-vector/teamwork-people-with-puzzle-pieces_5686193.htm"
+            href="https://www.vecteezy.com/vector-art/6435657-business-teamwork-people-connecting-puzzle-elements-collaboration-teamwork-partnership-illustration"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Freepik teamwork illustration attribution link"
-            title="Freepik teamwork illustration"
+            aria-label="Vecteezy teamwork puzzle illustration attribution link"
+            title="Vecteezy teamwork puzzle illustration"
           >
-            Freepik
+            Vecteezy
           </a>{' '}
-          (locally optimized copy used)
+          (served from external CDN)
         </p>
       </Container>
 
