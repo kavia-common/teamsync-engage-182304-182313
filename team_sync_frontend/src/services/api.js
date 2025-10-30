@@ -164,14 +164,52 @@ const api = {
     // Calls backend AI endpoint; falls back to mock recommendations if backend is unavailable.
     try {
       const data = await postJson('/api/ai/recommendations', payload);
-      // Defensive shape guard
-      const ideas = Array.isArray(data?.ideas) ? data.ideas : Array.isArray(data) ? data : [];
-      if (!Array.isArray(ideas) || ideas.length === 0) throw new Error('Invalid AI response');
+
+      // Normalize response: some providers/versions might return array root or missing metadata
+      const rawIdeas = Array.isArray(data?.ideas)
+        ? data.ideas
+        : Array.isArray(data)
+          ? data
+          : [];
+
+      if (!Array.isArray(rawIdeas) || rawIdeas.length === 0) throw new Error('Invalid AI response');
+
+      // Source/model defaults
       const source = data?.source || 'openai';
-      const model = data?.model || (source === 'openai' ? (process?.env?.REACT_APP_OPENAI_MODEL || 'gpt-4o-mini') : 'rules-v1');
+      const model =
+        data?.model ||
+        (source === 'openai'
+          ? (typeof process !== 'undefined' && process.env && process.env.REACT_APP_OPENAI_MODEL) || 'gpt-4o-mini'
+          : 'rules-v1');
       const usage = data?.usage || null;
       const error = data?.error || null;
-      return { ideas, source, model, usage, error };
+
+      // Ensure each idea has expected fields and fit_score in 0..1, departmentScope array, heroAlignment string
+      const ideas = rawIdeas.map((x, idx) => ({
+        id: x.id || `ai-${idx}-${Math.random().toString(36).slice(2, 8)}`,
+        title: String(x.title || '').trim(),
+        description: String(x.description || '').trim(),
+        duration: Number(x.duration || 30),
+        tags: Array.isArray(x.tags) ? x.tags.map((t) => String(t).toLowerCase()) : [],
+        departmentScope: Array.isArray(x.departmentScope) ? x.departmentScope : [],
+        heroAlignment: x.heroAlignment || 'Ally',
+        // normalize provider-sent 0..100 to 0..1 if needed
+        fit_score: (() => {
+          const fs = Number(x.fit_score);
+          if (Number.isNaN(fs)) return 0.5;
+          return fs > 1 ? Math.max(0, Math.min(1, fs / 100)) : Math.max(0, Math.min(1, fs));
+        })(),
+        reasoning: String(x.reasoning || '').trim(),
+        durationBucket: x.durationBucket || (Number(x.duration || 30) <= 20 ? 'short' : Number(x.duration || 30) <= 60 ? 'medium' : 'long'),
+        mode: x.mode || 'hybrid'
+      }));
+
+      // Cap to 5 and stable sort by fit_score desc
+      const sortedIdeas = ideas
+        .slice(0, 5)
+        .sort((a, b) => (Number(b.fit_score || 0) - Number(a.fit_score || 0)));
+
+      return { ideas: sortedIdeas, source, model, usage, error };
     } catch (e) {
       // Fallback: use existing getRecommendations mock to avoid blocking UX
       const ideas = await mockApi.getRecommendations(payload);

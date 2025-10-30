@@ -168,7 +168,11 @@ export default function Dashboard() {
     }
   };
 
+
   // Fetch a fresh recommendation set then navigate to /recommendations
+  // Quick glance: latest saved item info (department + hero)
+  const latestSaved = saved && saved.length ? saved[saved.length - 1] : null;
+
   const handleGenerateNew = useCallback(async () => {
     setGenerating(true);
     try {
@@ -178,6 +182,26 @@ export default function Dashboard() {
       setGenerating(false);
     }
   }, [state.team, state.quiz]);
+
+  // Render a small Saved Preview block
+  function SavedPreview() {
+    if (!latestSaved) return null;
+    return (
+      <div className="mt-2" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span className="muted" style={{ fontSize: 12 }}>Last saved:</span>
+        <span className="btn ghost" title="Saved activity title">🎯 {latestSaved.title || 'Saved item'}</span>
+        {latestSaved._savedDept ? (
+          <span className="btn secondary" title="Department">🏷 {latestSaved._savedDept}</span>
+        ) : null}
+        {latestSaved._heroAlignment || latestSaved.heroAlignment ? (
+          <span className="btn ghost" title="Hero alignment">🛡 {latestSaved._heroAlignment || latestSaved.heroAlignment}</span>
+        ) : null}
+        {latestSaved._ai?.fit_score ? (
+          <span className="btn ghost" title="AI Fit score">🎯 {(Number(latestSaved._ai.fit_score) || 0).toFixed(2)}</span>
+        ) : null}
+      </div>
+    );
+  }
 
   // Range control
   function TimeRange() {

@@ -90,11 +90,12 @@ export default function Recommendations() {
       // Merge AI ideas into current list with de-dup by title
       const existing = Array.isArray(recs) ? recs : [];
       const aiIdeas = (res.ideas || []).map((x) => {
-        const scope = Array.isArray(x.departmentScope) ? x.departmentScope : [];
-        const dpt = (state.team?.department || '').trim();
-        const exclusive = scope.length === 1 && !!dpt && scope[0] === dpt;
+        const scopeRaw = Array.isArray(x.departmentScope) ? x.departmentScope : [];
+        const scope = scopeRaw.map((s) => String(s).trim());
+        const dpt = String(state.team?.department || '').trim();
+        const exclusive = scope.length === 1 && !!dpt && scope[0].toLowerCase() === dpt.toLowerCase();
         const fit = typeof x.fit_score === 'number'
-          ? (x.fit_score > 1 ? Math.max(0, Math.min(1, x.fit_score / 100)) : x.fit_score)
+          ? Math.max(0, Math.min(1, x.fit_score))
           : 0.5;
         const tags = Array.isArray(x.tags) ? x.tags.map((t) => String(t).toLowerCase()) : [];
         return ({
@@ -111,10 +112,16 @@ export default function Recommendations() {
           _ai: { source: res.source || 'openai', fit_score: fit, reasoning: x.reasoning || '' }
         });
       });
-      const titles = new Set(existing.map((e) => (e.title || '').toLowerCase().trim()));
-      const merged = [...existing, ...aiIdeas.filter((i) => !titles.has((i.title || '').toLowerCase().trim()))];
-      // sort by AI fit_score when available, falling back to keep original order
-      merged.sort((a, b) => (Number(b._ai?.fit_score || 0) - Number(a._ai?.fit_score || 0)));
+      // Dedupe by normalized title (case/whitespace-insensitive)
+      const titles = new Set(existing.map((e) => String(e.title || '').toLowerCase().trim()));
+      const aiFiltered = aiIdeas.filter((i) => !titles.has(String(i.title || '').toLowerCase().trim()));
+      const merged = [...existing, ...aiFiltered];
+      // Stable sort by AI fit_score when available; preserve relative order for equal scores
+      merged.sort((a, b) => {
+        const da = Number(a._ai?.fit_score || 0);
+        const db = Number(b._ai?.fit_score || 0);
+        return db - da;
+      });
       setRecs(merged);
       if (res.error) {
         // Non-blocking toast substitute
