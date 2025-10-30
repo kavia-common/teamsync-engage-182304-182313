@@ -5,27 +5,24 @@ import Button from '../components/common/Button';
 
 /**
  * PUBLIC_INTERFACE
- * Playful landing page with call to action.
+ * Playful landing page with headline, tagline, and primary CTA to onboarding.
  */
 export default function Landing() {
   return (
     <div className="hero">
       <div className="hero-inner">
         <div>
+          {/* Exact requested headline */}
           <h1 className="h1" title="Team time, simplified">
             Plan engaging team activities in just a few clicks.
           </h1>
+
+          {/* Exact requested tagline */}
           <p className="muted mb-4">
             TeamSync learns your team’s size, department, and work mode to suggest curated activities that spark connection.
           </p>
-          <p
-            className="muted"
-            style={{ fontStyle: 'italic', marginTop: -6 }}
-            aria-live="polite"
-            title="Your squad’s got The Office energy 🎬 (and we’re here for it)"
-          >
-            Psst — it only takes 2 minutes ✨ We’ll bring the fun.
-          </p>
+
+          {/* Primary CTA must route to #/onboarding */}
           <div className="grid-gap-12" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a
               href="#/onboarding"
@@ -35,6 +32,7 @@ export default function Landing() {
             >
               Start Onboarding
             </a>
+            {/* Keep a secondary path to onboarding as an alternative CTA */}
             <a
               href="#/onboarding"
               className="btn secondary"
@@ -44,10 +42,13 @@ export default function Landing() {
               Begin
             </a>
           </div>
+
+          {/* Supportive microcopy can remain but is not part of the exact tagline requirement */}
           <p className="muted mt-3" aria-label="Theme note">
             Ocean Professional theme • Modern • Fast • A sprinkle of fun ✨
           </p>
         </div>
+
         <Card aria-label="How it works">
           <h2 className="h2">How it works</h2>
           <ol className="muted">
