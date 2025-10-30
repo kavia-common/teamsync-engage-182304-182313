@@ -94,8 +94,8 @@ export default function Landing() {
 
           {/* CTA row */}
           <div className="hero-ctas" role="group" aria-label="Primary actions">
-            <Button onClick={handleStartNow} aria-label="Start now and sign in" title="Start now">
-              Start Now
+            <Button onClick={handleStartNow} aria-label="Try TeamSync and sign in" title="Try TeamSync">
+              Try TeamSync
             </Button>
             <Button variant="ghost" onClick={scrollToPricing} aria-label="View pricing plans">View Pricing</Button>
           </div>
