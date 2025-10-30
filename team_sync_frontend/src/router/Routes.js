@@ -4,10 +4,12 @@ import Onboarding from '../pages/Onboarding';
 import Quiz from '../pages/Quiz';
 import Recommendations from '../pages/Recommendations';
 import Dashboard from '../pages/Dashboard';
+import Signup from '../pages/Signup';
+import Signin from '../pages/Signin';
 
 /**
  * A super-light hash router to avoid adding react-router-dom dependency.
- * Supports: #/, #/onboarding, #/quiz, #/recommendations, #/dashboard
+ * Supports: #/, #/signup, #/signin, #/onboarding, #/quiz, #/recommendations, #/dashboard, #/pricing (anchor handled)
  */
 function useHashLocation() {
   const [hash, setHash] = useState(window.location.hash || '#/');
@@ -43,6 +45,18 @@ export default function RoutesView() {
   const [hash] = useHashLocation();
 
   const { path, params } = useMemo(() => parseRoute(hash), [hash]);
+
+  // scroll to pricing anchor when route is '#/pricing'
+  useEffect(() => {
+    if (path === '/pricing') {
+      // Switch to landing, then scroll pricing
+      window.location.hash = '#/';
+      setTimeout(() => {
+        const el = document.getElementById('pricing');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 0);
+    }
+  }, [path]);
 
   // Reduced motion detection
   const prefersReduced = useMemo(() => {
@@ -90,8 +104,11 @@ export default function RoutesView() {
     switch (p) {
       case '/':
         return <Landing />;
+      case '/signup':
+        return <Signup />;
+      case '/signin':
+        return <Signin />;
       case '/onboarding':
-        // Pass params to allow pages to react to ?demo=1 etc.
         return <Onboarding params={params} />;
       case '/quiz':
         return <Quiz params={params} />;

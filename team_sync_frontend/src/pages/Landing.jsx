@@ -6,14 +6,13 @@ import { useStore } from '../state/hooks';
 
 /**
  * PUBLIC_INTERFACE
- * Landing page with primary CTA group (Sign up, Sign in, Demo, Get Started),
- * simplified "How it works" (Onboarding, Recommendations), pricing, and highlights.
- * Accessibility friendly; uses rounded-2xl cards, shadows, and teal/purple palette.
+ * Landing page focusing on primary auth CTAs (Sign up, Sign in).
+ * Plan selection is a read-only preview; selection occurs post-auth.
  */
 export default function Landing() {
   const { state, actions } = useStore();
 
-  // Auto-detect demo query param and set demo mode + route to onboarding
+  // Auto-detect demo query param (legacy), but do not surface demo CTA
   useEffect(() => {
     const hash = window.location.hash || '';
     const isDemo = /[?&]demo=1\b/.test(hash);
@@ -24,20 +23,6 @@ export default function Landing() {
       }
     }
   }, [state.plan?.demo, actions]);
-
-  // CTA handlers
-  const goOnboarding = () => (window.location.hash = '#/onboarding');
-  const startDemo = () => {
-    actions.setPlan({ demo: true, tier: 'pro' });
-    window.location.hash = '#/onboarding?demo=1';
-  };
-  const getStartedFree = () => {
-    actions.setPlan({ tier: 'free', demo: false });
-    window.location.hash = '#/onboarding';
-  };
-
-  const selectFree = () => actions.setPlan({ tier: 'free', demo: false });
-  const selectPro = () => actions.setPlan({ tier: 'pro', demo: false });
 
   const isPro = state.plan?.tier === 'pro';
   const isFree = state.plan?.tier === 'free';
@@ -50,7 +35,7 @@ export default function Landing() {
     </li>
   );
 
-  // pricing CTA anchor scroll helper
+  // pricing anchor helper
   const scrollToPricing = () => {
     const el = document.getElementById('pricing');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -70,27 +55,18 @@ export default function Landing() {
 
           {/* Primary CTA group directly beneath hero text */}
           <div className="grid-gap-12 mt-3" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }} aria-label="Primary actions">
-            {/* Sign up and Sign in link to placeholder hash routes if unimplemented */}
+            {/* Only auth CTAs */}
             <a href="#/signup" className="btn" aria-label="Sign up">Sign up</a>
             <a href="#/signin" className="btn secondary" aria-label="Sign in">Sign in</a>
-
-            {/* Keep Demo and Get Started links intact */}
-            <Button className="warning" onClick={startDemo} aria-label="Start demo" title="See it in action (demo mode)">
-              🚀 Demo
-            </Button>
-            <Button onClick={getStartedFree} aria-label="Get started for free" title="Create your first plan free">
-              Get Started
-            </Button>
             <Button variant="ghost" onClick={scrollToPricing} aria-label="Jump to pricing">
               View Pricing
             </Button>
           </div>
 
-          {/* Selected plan badge */}
+          {/* Plan preview note (read-only) */}
           <div className="mt-3" aria-live="polite">
-            <span className={`btn ${isPro ? 'warning' : 'secondary'}`} title="Current plan">
-              {isPro ? 'Pro/Business Plan Selected' : 'Free Plan Selected'}
-              {state.plan?.demo ? ' • Demo' : ''}
+            <span className="btn secondary" title="Plan selection occurs after sign-in">
+              Previewing {isPro ? 'Pro' : 'Free'} plan — choose your plan after you sign in.
             </span>
           </div>
 
@@ -119,13 +95,9 @@ export default function Landing() {
             </li>
           </ol>
           <div className="mt-4">
-            <Button
-              onClick={goOnboarding}
-              aria-label="Start onboarding now"
-              title="Ready when you are 🚀"
-            >
+            <a href="#/signup" className="btn" aria-label="Start by signing up" title="Create your account">
               Start Now
-            </Button>
+            </a>
           </div>
         </Card>
       </div>
@@ -135,24 +107,20 @@ export default function Landing() {
         <section id="pricing" aria-labelledby="pricing-heading" role="region" style={{ scrollMarginTop: 80 }}>
           <div className="mt-6 center">
             <h2 className="h2" id="pricing-heading">Simple pricing</h2>
-            <p className="muted">Start free. Upgrade anytime for advanced features.</p>
+            <p className="muted">Sign in to choose a plan. You can start free and upgrade anytime.</p>
           </div>
 
           {/* Responsive two-card grid */}
-          <div className="ts-row cols-2 mt-4" role="list" aria-label="Plan options" style={{ alignItems: 'stretch' }}>
-            {/* Free plan */}
+          <div className="ts-row cols-2 mt-4" role="list" aria-label="Plan options (preview)" style={{ alignItems: 'stretch' }}>
+            {/* Free plan (read-only) */}
             <Card aria-label="Free plan" role="listitem" style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                 <div>
                   <h3 className="h2" style={{ marginBottom: 4 }}>Free</h3>
                   <div className="muted" aria-label="Price">$0 <span className="muted">/ user / month</span></div>
                 </div>
-                <span
-                  className={`btn ${isFree ? '' : 'secondary'}`}
-                  aria-label={isFree ? 'Free plan selected' : 'Select Free plan'}
-                  aria-pressed={isFree}
-                >
-                  {isFree ? 'Selected' : 'Select'}
+                <span className="btn secondary" aria-label="Selection after sign-in" title="Choose after sign-in">
+                  Select after sign-in
                 </span>
               </div>
               <p className="muted" style={{ marginTop: 8 }}>Everything you need to get started.</p>
@@ -167,29 +135,19 @@ export default function Landing() {
               </ul>
 
               <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
-                <Button
-                  variant={isFree ? 'primary' : 'secondary'}
-                  onClick={() => { selectFree(); getStartedFree(); }}
-                  aria-label={isFree ? 'Continue with Free plan' : 'Choose Free plan'}
-                >
-                  {isFree ? 'Continue Free' : 'Choose Free'}
-                </Button>
+                <a href="#/signin" className="btn secondary" aria-label="Sign in to choose plan">Sign in to choose</a>
               </div>
             </Card>
 
-            {/* Pro/Business plan */}
-            <Card aria-label="Pro plan" role="listitem" style={{ display: 'flex', flexDirection: 'column', borderColor: isPro ? 'var(--ts-secondary)' : undefined }}>
+            {/* Pro/Business plan (read-only) */}
+            <Card aria-label="Pro plan" role="listitem" style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                 <div>
                   <h3 className="h2" style={{ marginBottom: 4 }}>Pro / Business</h3>
                   <div className="muted" aria-label="Price">$15–25 <span className="muted">/ user / month</span></div>
                 </div>
-                <span
-                  className={`btn ${isPro ? '' : 'secondary'}`}
-                  aria-label={isPro ? 'Pro plan selected' : 'Select Pro plan'}
-                  aria-pressed={isPro}
-                >
-                  {isPro ? 'Selected' : 'Select'}
+                <span className="btn secondary" aria-label="Selection after sign-in" title="Choose after sign-in">
+                  Select after sign-in
                 </span>
               </div>
               <p className="muted" style={{ marginTop: 8 }}>Best for growing teams that want advanced insights.</p>
@@ -203,19 +161,14 @@ export default function Landing() {
               </ul>
 
               <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
-                <Button onClick={() => { selectPro(); goOnboarding(); }} title="Upgrade and continue" aria-label="Upgrade to Pro and continue">
-                  Upgrade & Continue
-                </Button>
-                <Button variant="secondary" onClick={startDemo} title="Try a guided demo" aria-label="Try a guided demo">
-                  Try Demo
-                </Button>
+                <a href="#/signin" className="btn" aria-label="Sign in to upgrade">Sign in to upgrade</a>
               </div>
             </Card>
           </div>
 
           <div className="mt-3">
-            <p className="muted center" title="Referral note">
-              Note: Some activities may include referral fees when purchased through partners. This never affects your price.
+            <p className="muted center" title="Selection note">
+              Plan selection happens after you sign up or sign in. You can switch anytime.
             </p>
           </div>
         </section>
