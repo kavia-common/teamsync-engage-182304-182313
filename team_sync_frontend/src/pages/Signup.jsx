@@ -201,7 +201,7 @@ export default function Signup() {
           <Button type="submit" disabled={!canSubmit || submitting} aria-label="Create account and choose plan">
             {submitting ? 'Creating…' : 'Create account'}
           </Button>
-          <a href="#/signin" className="btn secondary" aria-label="Go to sign in">Sign in</a>
+          <a href="#/signin" className="btn secondary" aria-label="Already have an account? Sign in">Already have an account? Sign in</a>
           <Button type="button" variant="ghost" onClick={() => (window.location.hash = '#/')} aria-label="Back to landing">Back</Button>
         </div>
       </Card>

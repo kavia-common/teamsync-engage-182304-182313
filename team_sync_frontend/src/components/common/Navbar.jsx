@@ -11,9 +11,9 @@ export default function Navbar({ theme, onToggleTheme }) {
   const { state } = useStore();
 
   // PUBLIC_INTERFACE
-  // Primary CTA click: start TeamSync by navigating to sign-in (keeps existing flow).
+  // Primary CTA click: start TeamSync by navigating to sign-up first.
   const handleStart = () => {
-    window.location.hash = '#/signin';
+    window.location.hash = '#/signup';
   };
 
   return (

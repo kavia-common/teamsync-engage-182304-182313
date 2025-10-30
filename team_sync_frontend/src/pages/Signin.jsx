@@ -179,7 +179,7 @@ export default function Signin() {
           <Button type="submit" disabled={!canSubmit || submitting} aria-label="Sign in and choose plan">
             {submitting ? 'Signing in…' : 'Sign in'}
           </Button>
-          <a href="#/signup" className="btn secondary" aria-label="Go to sign up">Create account</a>
+          <a href="#/signup" className="btn secondary" aria-label="New to TeamSync? Create an account">New to TeamSync? Create an account</a>
           <Button type="button" variant="ghost" onClick={() => (window.location.hash = '#/')} aria-label="Back to landing">Back</Button>
         </div>
       </Card>

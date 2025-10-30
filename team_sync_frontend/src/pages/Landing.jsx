@@ -47,8 +47,8 @@ export default function Landing() {
 
   // PUBLIC_INTERFACE
   function handleStartNow() {
-    /** Navigate to auth step first (signin). Users can switch to signup there. */
-    window.location.hash = '#/signin';
+    /** Navigate to auth step first (signup). Users can switch to sign in there. */
+    window.location.hash = '#/signup';
   }
 
   return (
