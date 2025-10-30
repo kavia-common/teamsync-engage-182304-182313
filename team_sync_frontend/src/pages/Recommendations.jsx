@@ -542,16 +542,7 @@ export default function Recommendations() {
                 )}
               </div>
 
-              {/* Tags visible as chips for scannability */}
-              {Array.isArray(rec.tags) && rec.tags.length > 0 && (
-                <div className="mt-3" aria-label="Tags" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {rec.tags.slice(0, 6).map((t) => (
-                    <span key={t} className="btn ghost" aria-hidden>
-                      #{t}
-                    </span>
-                  ))}
-                </div>
-              )}
+              
 
               <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Button onClick={() => handleSave(rec)} aria-label={`Save ${rec.title}`} title="Save for later" disabled={!!rec.placeholder}>
