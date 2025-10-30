@@ -1,61 +1,85 @@
 //
-// Lightweight analytics derivation from local state feedback and saved items.
-// Provides success metrics, simple sentiment heuristic, trends, and persona hints.
 //
-
+// Lightweight analytics derivation from local state feedback and saved items.
+// Provides success metrics, improved sentiment heuristic, trends, and persona hints.
+//
 // PUBLIC_INTERFACE
 export function deriveSuccessMetrics({ feedback = [], saved = [] }) {
-  /** Return completionRate, likeRatio, avgRating, totals. */
+  /**
+   * Tighter metric definitions:
+   * - completionRate: rated feedback (has rating) divided by saved count (cap at 1). If no saved, fallback to 0 unless feedback exists (then small baseline 0.1).
+   * - likeRatio: likes / (likes + dislikes). Ignores neutral/no reaction entries.
+   * - avgRating: arithmetic mean of rating values; if none, estimate from reactions (like=4.5, dislike=2.0).
+   */
   const totalFeedback = feedback.length;
   const likes = feedback.filter(f => f.value === 'like').length;
   const dislikes = feedback.filter(f => f.value === 'dislike').length;
-  const rated = feedback.filter(f => typeof f.rating === 'number' && f.rating > 0);
-  const sumRating = rated.reduce((acc, f) => acc + (f.rating || 0), 0);
+  const reactionTotal = likes + dislikes;
 
-  const completionRate = saved.length > 0 ? Math.min(1, totalFeedback / (saved.length * 2)) : (totalFeedback > 0 ? 0.15 : 0);
-  const likeRatio = totalFeedback ? likes / totalFeedback : 0;
-  const avgRating = rated.length ? sumRating / rated.length : (totalFeedback ? (likes * 5 + dislikes * 2) / (totalFeedback) : 0);
+  const ratedList = feedback.filter(f => typeof f.rating === 'number' && f.rating > 0);
+  const ratedCount = ratedList.length;
+  const sumRating = ratedList.reduce((acc, f) => acc + (f.rating || 0), 0);
+
+  const completionRate =
+    saved.length > 0
+      ? Math.max(0, Math.min(1, ratedCount / saved.length))
+      : (ratedCount > 0 ? 0.1 : 0);
+
+  const likeRatio = reactionTotal ? likes / reactionTotal : 0;
+
+  const estimatedAvgFromReactions =
+    reactionTotal ? ((likes * 4.5 + dislikes * 2.0) / reactionTotal) : 0;
+  const avgRating = ratedCount ? (sumRating / ratedCount) : estimatedAvgFromReactions;
 
   return {
     completionRate,
     likeRatio,
     avgRating,
-    totals: { feedback: totalFeedback, likes, dislikes, saved: saved.length, rated: rated.length }
+    totals: {
+      feedback: totalFeedback,
+      likes,
+      dislikes,
+      saved: saved.length,
+      rated: ratedCount
+    }
   };
 }
 
 // PUBLIC_INTERFACE
 export function deriveSentimentSummary({ feedback = [] }) {
   /**
-   * Simple heuristic sentiment from comments:
-   * positive keywords vs negative keywords; fallback to rating/like.
+   * Improved heuristic sentiment:
+   * - Keyword scoring with small TF-like weights.
+   * - Reaction and rating carry calibrated weights.
+   * - Bucket into positive | mixed | negative with slightly widened neutral band to reduce flip-flop.
    */
-  const posWords = ['love', 'great', 'good', 'fun', 'amazing', 'awesome', 'engaging', 'useful'];
-  const negWords = ['bad', 'boring', 'slow', 'confusing', 'hate', 'meh', 'bug', 'issue', 'hard'];
+  const posWords = ['love', 'great', 'good', 'fun', 'amazing', 'awesome', 'engaging', 'useful', 'enjoy', 'nice'];
+  const negWords = ['bad', 'boring', 'slow', 'confusing', 'hate', 'meh', 'bug', 'issue', 'hard', 'annoy'];
 
   let score = 0;
-  let mentions = { positive: 0, negative: 0, neutral: 0 };
+  const mentions = { positive: 0, negative: 0, neutral: 0 };
 
   feedback.forEach(f => {
     let local = 0;
     const c = (f.comment || '').toLowerCase();
+
     if (c) {
-      posWords.forEach(w => { if (c.includes(w)) { local += 1; } });
-      negWords.forEach(w => { if (c.includes(w)) { local -= 1; } });
-    } else {
-      // fall back to reaction/rating signals
-      if (f.value === 'like') local += 0.5;
-      if (f.value === 'dislike') local -= 0.5;
-      if (typeof f.rating === 'number') local += (f.rating - 3) * 0.2; // center at 3
+      posWords.forEach(w => { if (c.includes(w)) local += 0.8; });
+      negWords.forEach(w => { if (c.includes(w)) local -= 0.9; });
     }
+    // reaction/rating signals always considered
+    if (f.value === 'like') local += 0.6;
+    if (f.value === 'dislike') local -= 0.6;
+    if (typeof f.rating === 'number') local += (f.rating - 3) * 0.25; // center at 3
+
     score += local;
-    if (local > 0.25) mentions.positive += 1;
-    else if (local < -0.25) mentions.negative += 1;
+    if (local > 0.35) mentions.positive += 1;
+    else if (local < -0.35) mentions.negative += 1;
     else mentions.neutral += 1;
   });
 
   const sentimentScore = feedback.length ? Math.max(-1, Math.min(1, score / feedback.length)) : 0;
-  const label = sentimentScore > 0.25 ? 'positive' : sentimentScore < -0.25 ? 'negative' : 'mixed';
+  const label = sentimentScore > 0.3 ? 'positive' : sentimentScore < -0.3 ? 'negative' : 'mixed';
 
   return { sentimentScore, label, mentions };
 }
@@ -65,8 +89,10 @@ export function deriveTrendBuckets({ feedback = [], range = '4w' }) {
   /**
    * Bucket feedback by week index (simple local time bucketing).
    * range: '4w' | '12w' | 'all'
+   * Adds graceful empty-state by returning at least 4 buckets with zeros.
    */
-  const weeks = range === '12w' ? 12 : range === '4w' ? 4 : Math.max(4, Math.min(24, Math.ceil((feedback.length || 0) / 2) || 6));
+  const baseWeeks = range === '12w' ? 12 : range === '4w' ? 4 : 12;
+  const weeks = Math.max(4, baseWeeks);
   const now = Date.now();
   const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
 
@@ -75,12 +101,20 @@ export function deriveTrendBuckets({ feedback = [], range = '4w' }) {
     likes: 0,
     dislikes: 0,
     total: 0,
-    tags: {} // aggregate tags by mention
+    tags: {}
   }));
 
+  if (!feedback.length) {
+    // return zeros but still provide axis labels
+    return {
+      buckets,
+      topTagsTrend: buckets.map(b => ({ name: b.name, tag: '', count: 0 }))
+    };
+  }
+
   feedback.forEach((f, idx) => {
-    // Simulate createdAt from id time or distribute evenly
-    let t = f.createdAt ? new Date(f.createdAt).getTime() : (now - (idx % weeks) * MS_PER_WEEK * 0.6);
+    // Use createdAt if present; otherwise distribute pseudo-randomly but deterministically across recent weeks
+    let t = f.createdAt ? new Date(f.createdAt).getTime() : (now - ((idx % weeks) * MS_PER_WEEK * 0.7));
     const diffW = Math.floor((now - t) / MS_PER_WEEK);
     const bucketIndex = Math.max(0, Math.min(weeks - 1, weeks - 1 - diffW));
     const b = buckets[bucketIndex];
@@ -88,7 +122,7 @@ export function deriveTrendBuckets({ feedback = [], range = '4w' }) {
     if (f.value === 'like') b.likes += 1;
     else if (f.value === 'dislike') b.dislikes += 1;
     b.total += 1;
-    // tag trend if we have activity tags attached in title as #tag or metadata (not always present)
+
     const comment = (f.comment || '').toLowerCase();
     const tagMatches = (comment.match(/#([a-z0-9_]+)/g) || []).map(s => s.substring(1));
     tagMatches.forEach(tag => {
@@ -98,7 +132,7 @@ export function deriveTrendBuckets({ feedback = [], range = '4w' }) {
 
   const topTagsTrend = buckets.map(b => {
     const entries = Object.entries(b.tags);
-    const top = entries.sort((a, b) => b[1] - a[1])[0];
+    const top = entries.sort((a, x) => x[1] - a[1])[0];
     return { name: b.name, tag: top ? top[0] : '', count: top ? top[1] : 0 };
   });
 
@@ -150,7 +184,7 @@ export function deriveHeroAlignmentBreakdown({ saved = [], feedback = [] }) {
 export function derivePersona({ team = {}, quiz = {}, saved = [], feedback = [] }) {
   /**
    * Lightweight persona composition: name and witty summary from engagement.
-   * This is a placeholder for AI-backed persona later.
+   * Adds small copy refinements and alignment breakdown ready for chip display.
    */
   const breakdown = deriveHeroAlignmentBreakdown({ saved, feedback });
   const top = breakdown[0]?.hero || 'Ally';

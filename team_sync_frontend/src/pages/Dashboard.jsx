@@ -30,6 +30,31 @@ const {
   Legend,
 } = Recharts || {};
 
+// Accessible hint ids for metric explanations
+const HINT_IDS = {
+  completion: 'metric-hint-completion',
+  likeRatio: 'metric-hint-like-ratio',
+  avgRating: 'metric-hint-avg-rating',
+};
+
+// Render compact sentiment chip from score/label
+function SentimentChip({ score = 0, label = 'mixed' }) {
+  const color =
+    label === 'positive' ? 'var(--ts-primary)'
+    : label === 'negative' ? 'var(--ts-error)'
+    : '#9CA3AF';
+  const bg =
+    label === 'positive' ? 'rgba(43,217,201,0.14)'
+    : label === 'negative' ? 'rgba(239,68,68,0.14)'
+    : 'rgba(148,163,184,0.14)';
+  const icon = label === 'positive' ? '😊' : label === 'negative' ? '☹️' : '😐';
+  return (
+    <span className="btn secondary" style={{ background: bg, borderColor: bg, color: '#0b0f2a' }} title={`Sentiment: ${label} (${(score*100).toFixed(0)}%)`}>
+      {icon} {label.charAt(0).toUpperCase()+label.slice(1)}
+    </span>
+  );
+}
+
 /**
  * PUBLIC_INTERFACE
  * Dashboard with advanced analytics, trends, persona, feedback, and controls.
@@ -104,25 +129,18 @@ export default function Dashboard() {
 
   const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
-    // accept empty comment but ensure rating present
     if (!rating) return;
     setSubmitting(true);
     try {
-      // attach feedback to last saved item if any
       const target = saved[saved.length - 1];
       const activityId = target?.id || 'general';
       const sentiment = rating >= 4 ? 'like' : 'dislike';
-      // update local state
       await actions.giveFeedback(activityId, sentiment, target?.title || 'General feedback', comment, rating);
-      // try to notify backend/mock (non-blocking perception since store already updated)
       try {
         await api.giveFeedback(activityId, sentiment);
-      } catch {
-        // fallback handled in api layer already
-      }
+      } catch { /* ignore */ }
       setComment('');
       setRating(4);
-      // Accessible live region update
       const live = document.getElementById('sr-live-dashboard');
       if (live) {
         live.textContent = 'Thanks for the feedback!';
@@ -137,8 +155,6 @@ export default function Dashboard() {
   const handleGenerateNew = useCallback(async () => {
     setGenerating(true);
     try {
-      // Trigger a fetch to warm recommendations; the Recommendations page fetches again,
-      // but this ensures we "generate" now per requirement.
       await api.getRecommendations({ team: state.team, quiz: state.quiz });
       window.location.hash = '#/recommendations';
     } finally {
@@ -168,43 +184,45 @@ export default function Dashboard() {
 
   // Chart: likes vs dislikes over time
   function TrendChart() {
+    const hasData = (trendBuckets || []).some(b => (b.likes || b.dislikes));
     if (Recharts && ResponsiveContainer && (LineChart || AreaChart)) {
       const ChartImpl = AreaChart || LineChart;
       return (
-        <div className="mt-3" style={{ height: 240 }}>
+        <div className="mt-3" style={{ height: 260 }}>
+          <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Weekly engagement trend</div>
           <ResponsiveContainer width="100%" height="100%">
             <ChartImpl data={trendBuckets}>
               {CartesianGrid ? <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /> : null}
-              {XAxis ? <XAxis dataKey="name" /> : null}
-              {YAxis ? <YAxis allowDecimals={false} /> : null}
+              {XAxis ? <XAxis dataKey="name" label={{ value: 'Week', position: 'insideBottom', offset: -4 }} /> : null}
+              {YAxis ? <YAxis allowDecimals={false} label={{ value: 'Count', angle: -90, position: 'insideLeft' }} /> : null}
               {Tooltip ? <Tooltip /> : null}
               {Legend ? <Legend /> : null}
               {Area
                 ? (
                   <>
-                    <Area type="monotone" dataKey="likes" stroke="#22c9ba" fill="#2BD9C922" strokeWidth={2} />
-                    <Area type="monotone" dataKey="dislikes" stroke="#EF4444" fill="#EF444422" strokeWidth={2} />
+                    <Area type="monotone" dataKey="likes" name="Likes" stroke="#22c9ba" fill="#2BD9C922" strokeWidth={2} />
+                    <Area type="monotone" dataKey="dislikes" name="Dislikes" stroke="#EF4444" fill="#EF444422" strokeWidth={2} />
                   </>
                 )
                 : (
                   <>
-                    {Line ? <Line type="monotone" dataKey="likes" stroke="#22c9ba" strokeWidth={2} dot={{ r: 2 }} /> : null}
-                    {Line ? <Line type="monotone" dataKey="dislikes" stroke="#EF4444" strokeWidth={2} dot={{ r: 2 }} /> : null}
+                    {Line ? <Line type="monotone" dataKey="likes" name="Likes" stroke="#22c9ba" strokeWidth={2} dot={{ r: 2 }} /> : null}
+                    {Line ? <Line type="monotone" dataKey="dislikes" name="Dislikes" stroke="#EF4444" strokeWidth={2} dot={{ r: 2 }} /> : null}
                   </>
                 )
               }
             </ChartImpl>
           </ResponsiveContainer>
+          {!hasData && <div className="muted mt-2">No engagement yet for this range.</div>}
         </div>
       );
     }
     // Fallback: simple inline bars
     return (
       <div className="mt-3" style={{ height: 220 }}>
-        <div className="muted mb-2">Engagement (fallback)</div>
+        <div className="muted mb-2">Weekly engagement (fallback)</div>
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${trendBuckets.length || 6}, 1fr)`, gap: 8, alignItems: 'end', height: 180 }}>
           {trendBuckets.map((b) => {
-            const total = b.likes + b.dislikes;
             const lh = Math.min(100, b.likes * 16);
             const dh = Math.min(100, b.dislikes * 16);
             return (
@@ -218,6 +236,7 @@ export default function Dashboard() {
             );
           })}
         </div>
+        {!trendBuckets.some(b => (b.likes || b.dislikes)) && <div className="muted mt-2">No engagement yet for this range.</div>}
       </div>
     );
   }
@@ -229,13 +248,14 @@ export default function Dashboard() {
       const BI = BarChart || LineChart;
       return (
         <div className="mt-3" style={{ height: 200 }}>
+          <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Top tag by week</div>
           <ResponsiveContainer width="100%" height="100%">
             <BI data={data}>
               {CartesianGrid ? <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /> : null}
               {XAxis ? <XAxis dataKey="name" /> : null}
               {YAxis ? <YAxis allowDecimals={false} /> : null}
               {Tooltip ? <Tooltip /> : null}
-              {Bar ? <Bar dataKey="count" fill="#7D83FF" radius={[6,6,0,0]} /> : <Line type="monotone" dataKey="count" stroke="#7D83FF" strokeWidth={2} />}
+              {Bar ? <Bar dataKey="count" name="Tag mentions" fill="#7D83FF" radius={[6,6,0,0]} /> : <Line type="monotone" dataKey="count" stroke="#7D83FF" strokeWidth={2} />}
             </BI>
           </ResponsiveContainer>
         </div>
@@ -244,12 +264,27 @@ export default function Dashboard() {
     return (
       <div className="mt-3">
         <div className="muted">Top tags by week:</div>
-        <ul>
+        <ul className="list-reset">
           {data.map(d => <li key={d.name}>{d.name}: #{d.tag} ×{d.count}</li>)}
         </ul>
       </div>
     );
   }
+
+  // Premium banner for AI Analytics on Free plan
+  const PremiumBanner = !isPro ? (
+    <div role="note" aria-label="Premium analytics banner" className="mt-2" style={{ padding: 12, border: '1px dashed var(--ts-border)', borderRadius: 12, background: 'rgba(125,131,255,0.06)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div>
+          <strong>AI Analytics Preview</strong>
+          <div className="muted">Upgrade to unlock AI‑powered insights, sentiment models, and deeper trends.</div>
+        </div>
+        <Button className="warning" onClick={() => { window.location.hash = '#/'; setTimeout(() => { const el = document.querySelector('[aria-label="Pro plan"]'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 0); }}>
+          Upgrade
+        </Button>
+      </div>
+    </div>
+  ) : null;
 
   return (
     <Container>
@@ -277,8 +312,8 @@ export default function Dashboard() {
                 <span className="btn ghost" aria-hidden>🧭 Tone: {(personaBlock.persona?.tone || []).join(', ') || 'playful'}</span>
               </div>
               <p className="muted mt-2">{personaBlock.persona?.summary}</p>
-              {/* Hero alignment breakdown */}
-              <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {/* Hero alignment breakdown (badges) */}
+              <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} aria-label="Hero alignment breakdown">
                 {(personaBlock.breakdown || []).slice(0, 4).map(h => (
                   <span key={h.hero} className="btn secondary" title="Hero alignment share">
                     🛡 {h.hero}: {Math.round(h.pct * 100)}%
@@ -302,26 +337,63 @@ export default function Dashboard() {
               <TimeRange />
             </div>
           </div>
+          {PremiumBanner}
           {loadingAnalytics ? (
             <p className="muted">Loading analytics…</p>
           ) : (
             <>
-              <div className="mt-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 12 }}>
+              {/* Metric hints (aria-describedby) */}
+              <div className="sr-only" id={HINT_IDS.completion}>
+                Completion rate is the share of saved activities that received a rating.
+              </div>
+              <div className="sr-only" id={HINT_IDS.likeRatio}>
+                Like ratio is likes divided by likes plus dislikes.
+              </div>
+              <div className="sr-only" id={HINT_IDS.avgRating}>
+                Average rating is the mean of provided ratings, or an estimate from reactions when ratings are missing.
+              </div>
+
+              <div className="mt-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 12 }}>
                 <div>
                   <div className="muted">Completion rate</div>
-                  <div style={{ fontWeight: 800, fontSize: 20 }}>{Math.round((analytics.success?.completionRate || 0) * 100)}%</div>
+                  <div
+                    style={{ fontWeight: 800, fontSize: 20 }}
+                    aria-describedby={HINT_IDS.completion}
+                    title="Rated feedback vs saved activities"
+                  >
+                    {Math.round((analytics.success?.completionRate || 0) * 100)}%
+                  </div>
                 </div>
                 <div>
                   <div className="muted">Like ratio</div>
-                  <div style={{ fontWeight: 800, fontSize: 20 }}>{Math.round((analytics.success?.likeRatio || 0) * 100)}%</div>
+                  <div
+                    style={{ fontWeight: 800, fontSize: 20 }}
+                    aria-describedby={HINT_IDS.likeRatio}
+                    title="Likes ÷ (Likes + Dislikes)"
+                  >
+                    {Math.round((analytics.success?.likeRatio || 0) * 100)}%
+                  </div>
                 </div>
                 <div>
                   <div className="muted">Avg rating</div>
-                  <div style={{ fontWeight: 800, fontSize: 20 }}>{(analytics.success?.avgRating || 0).toFixed(1)}/5</div>
+                  <div
+                    style={{ fontWeight: 800, fontSize: 20 }}
+                    aria-describedby={HINT_IDS.avgRating}
+                    title="Mean rating; estimated if missing"
+                  >
+                    {(analytics.success?.avgRating || 0).toFixed(1)}/5
+                  </div>
+                </div>
+                <div>
+                  <div className="muted">Sentiment</div>
+                  <div>
+                    <SentimentChip score={analytics.sentiment?.sentimentScore || 0} label={analytics.sentiment?.label || 'mixed'} />
+                  </div>
                 </div>
               </div>
+
               <div className="mt-2 muted" aria-live="polite">
-                Summary: {analytics.sentiment?.label || 'mixed'} sentiment • {analytics.success?.totals?.likes || 0} likes / {analytics.success?.totals?.dislikes || 0} dislikes • {analytics.success?.totals?.feedback || 0} total feedback.
+                {analytics.success?.totals?.likes || 0} likes • {analytics.success?.totals?.dislikes || 0} dislikes • {analytics.success?.totals?.feedback || 0} total feedback
               </div>
               <TrendChart />
               <TopTagTrend />
