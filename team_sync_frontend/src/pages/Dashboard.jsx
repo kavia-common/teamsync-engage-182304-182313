@@ -305,16 +305,179 @@ export default function Dashboard() {
   ) : null;
 
   const authUser = useAuthStore((s) => s.user);
+  const setAuthUser = useAuthStore((s) => s.setUser);
   const userName = (authUser?.name || '').trim();
-  const teamName = (authUser?.teamName || state.team?.name || 'Your team').trim() || 'Your team';
+
+  // Inline team name editing state
+  const effectiveTeamName = (authUser?.teamName || state.team?.name || 'Your team').trim() || 'Your team';
+  const [editing, setEditing] = useState(false);
+  const [teamInput, setTeamInput] = useState(effectiveTeamName);
+  const [error, setError] = useState('');
+  const [statusMsg, setStatusMsg] = useState('');
+  const inputRef = React.useRef(null);
+  const editButtonRef = React.useRef(null);
+
+  // Keep input in sync when auth store changes and not actively editing
+  useEffect(() => {
+    if (!editing) {
+      setTeamInput(effectiveTeamName);
+    }
+  }, [effectiveTeamName, editing]);
+
+  // Focus management on enter/exit edit mode
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select?.();
+    }
+  }, [editing]);
+
+  const validateTeam = (v) => {
+    const name = String(v || '').trim();
+    if (!name) return 'Team name cannot be empty.';
+    if (name.length < 2) return 'Team name must be at least 2 characters.';
+    if (name.length > 50) return 'Team name must be 50 characters or fewer.';
+    return '';
+  };
+
+  const saveTeamName = () => {
+    const val = teamInput;
+    const validation = validateTeam(val);
+    if (validation) {
+      setError(validation);
+      // announce error
+      const live = document.getElementById('sr-live-dashboard');
+      if (live) {
+        live.textContent = validation;
+        setTimeout(() => { if (live) live.textContent = ''; }, 1500);
+      }
+      return;
+    }
+    // Persist to authStore (localStorage-backed) while preserving other fields.
+    const nextUser = {
+      ...(authUser || {}),
+      teamName: String(val).trim(),
+    };
+    try {
+      setAuthUser(nextUser);
+      // also reflect in in-memory zustand team for parts that read state.team.name
+      if (actions?.setTeam) {
+        actions.setTeam({ name: String(val).trim() });
+      }
+      setStatusMsg('Team name saved.');
+      setEditing(false);
+      setError('');
+      const live = document.getElementById('sr-live-dashboard');
+      if (live) {
+        live.textContent = 'Team name updated.';
+        setTimeout(() => { if (live) live.textContent = ''; }, 1200);
+      }
+      // return focus to Edit button after save for keyboard flow
+      setTimeout(() => {
+        editButtonRef.current?.focus();
+      }, 0);
+    } catch (e) {
+      setError('Failed to save. Please try again.');
+      const live = document.getElementById('sr-live-dashboard');
+      if (live) {
+        live.textContent = 'Failed to save team name.';
+        setTimeout(() => { if (live) live.textContent = ''; }, 1500);
+      }
+    }
+  };
+
+  const cancelEdit = () => {
+    setTeamInput(effectiveTeamName);
+    setError('');
+    setEditing(false);
+    // return focus to Edit button to maintain flow
+    setTimeout(() => {
+      editButtonRef.current?.focus();
+    }, 0);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveTeamName();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEdit();
+    }
+  };
 
   return (
     <Container>
       <div className="mb-4">
-        <h1 className="h1" style={{ marginBottom: 6 }}>
-          {`Welcome, ${teamName}!`}
-        </h1>
-        <p className="muted">
+        {/* Heading row with editable team name */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          {!editing ? (
+            <>
+              <h1 className="h1" style={{ marginBottom: 6, marginRight: 6 }}>
+                {`Welcome, ${effectiveTeamName}!`}
+              </h1>
+              <button
+                ref={editButtonRef}
+                type="button"
+                className="btn secondary"
+                aria-label="Edit team name"
+                onClick={() => { setEditing(true); setStatusMsg(''); }}
+                title="Edit team name"
+              >
+                ✏️ Edit
+              </button>
+            </>
+          ) : (
+            <div
+              role="group"
+              aria-label="Edit team name"
+              style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}
+            >
+              <label htmlFor="team-name-input" className="sr-only">Team name</label>
+              <input
+                id="team-name-input"
+                ref={inputRef}
+                className="input"
+                style={{ maxWidth: 320 }}
+                value={teamInput}
+                onChange={(e) => setTeamInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                aria-invalid={!!error}
+                aria-describedby={error ? 'team-name-error' : undefined}
+                placeholder="Enter team name"
+              />
+              <button
+                type="button"
+                className="btn"
+                onClick={saveTeamName}
+                aria-label="Save team name"
+                title="Save"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={cancelEdit}
+                aria-label="Cancel"
+                title="Cancel"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+        {error && (
+          <div id="team-name-error" role="alert" className="muted" style={{ color: 'var(--ts-error)', marginTop: 6 }}>
+            {error}
+          </div>
+        )}
+        {statusMsg && !error && (
+          <div className="muted" style={{ color: 'var(--ts-secondary)', marginTop: 6 }}>
+            {statusMsg}
+          </div>
+        )}
+        <p className="muted" style={{ marginTop: 6 }}>
           {userName ? `Signed in as ${userName}.` : 'Signed in.'} Here’s your team summary and recent engagement.
         </p>
         <div id="sr-live-dashboard" aria-live="polite" className="sr-only" />
