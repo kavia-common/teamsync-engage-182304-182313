@@ -50,7 +50,7 @@ export default function Landing() {
   return (
     <div className="hero" role="region" aria-label="TeamSync landing">
       <Container>
-        <Card className="landing-hero enter-hero" aria-label="Intro">
+        <Card className="landing-hero landing-hero--compact enter-hero" aria-label="Intro">
           {/* Header/title and supporting copy */}
           <div className="landing-hero__content" aria-labelledby="hero-heading">
             <h1 id="hero-heading" className="h1">Plan engaging team activities in just a few clicks.</h1>

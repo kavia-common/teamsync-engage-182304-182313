@@ -318,7 +318,8 @@ main[role="main"] {
 
 /* Landing hero with glassy gradient and playful microcopy space */
 .hero {
-  padding: 64px 24px;
+  /* Reduce outer hero padding to bring next section above the fold */
+  padding: clamp(32px, 6vw, 54px) 24px;
   background: var(--ts-hero-gradient);
 }
 
@@ -327,21 +328,29 @@ main[role="main"] {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto auto auto; /* content, illustration, ctas */
-  gap: 16px;
+  gap: 12px; /* tighter default gap */
   align-items: start;
-  /* center items but allow CTA to align left on small screens */
   justify-items: center;
-  padding: 18px; /* inner breathing room on small screens */
+  padding: 14px; /* tighter inner padding on small screens */
 }
+
+/* Compact variant to be toggled via component class for extra tightening */
+.landing-hero--compact {
+  gap: 10px;
+  padding: 12px 14px;
+}
+
 .landing-hero__media {
   width: 100%;
-  /* Add spacing so illustration doesn't crowd text/CTAs */
-  margin-top: 4px;
+  margin-top: 2px; /* reduce spacing above media */
 }
+
+/* Constrain illustration height responsively while keeping aspect ratio */
 .landing-hero__art,
 .landing-hero__img {
-  width: min(840px, 100%);
+  width: min(820px, 100%);
   aspect-ratio: 16/10;
+  max-height: clamp(160px, 32vh, 240px); /* mobile/tablet clamp */
   border-radius: 20px; /* rounded-2xl feel */
   border: 1px solid var(--ts-border);
   box-shadow: var(--ts-shadow-sm);
@@ -353,38 +362,47 @@ main[role="main"] {
   object-position: center;
   display: block;
 }
+
 .landing-hero__content {
   width: 100%;
-  max-width: 760px;
-  text-align: center; /* center header/copy for balance */
+  max-width: 720px; /* slightly tighter */
+  text-align: center;
+  margin-bottom: 2px; /* reduce bottom space before media */
 }
+
 .hero-ctas {
   display: flex;
-  gap: 14px;
+  gap: 12px; /* slightly tighter */
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center; /* center CTAs under illustration */
-  margin-top: 4px;
-  /* Give CTAs their own breathing room from media */
-  padding-top: 2px;
+  justify-content: center;
+  margin-top: 2px; /* reduce spacing from media */
+  padding-top: 0;
 }
+
 .hero-ctas .btn {
-  /* Slightly increase CTA sizes further for prominence */
-  padding: 15px 24px;
-  font-size: 17px;
+  /* keep prominent but not oversized */
+  padding: 13px 20px;
+  font-size: 16px;
 }
+
 @media (min-width: 600px) {
   .landing-hero {
-    padding: 22px 24px;
+    padding: 16px 18px;
+    gap: 12px;
+  }
+  .landing-hero__art,
+  .landing-hero__img {
+    max-height: clamp(170px, 28vh, 220px); /* small/medium screens */
   }
 }
+
 @media (min-width: 900px) {
   .landing-hero {
-    /* Maintain vertical order while providing generous spacing */
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
-    gap: 20px;
-    padding: 26px 30px;
+    gap: 14px; /* keep compact spacing on desktop */
+    padding: 18px 22px;
   }
   .landing-hero__content {
     text-align: center;
@@ -392,22 +410,55 @@ main[role="main"] {
   .landing-hero__art,
   .landing-hero__img {
     aspect-ratio: 4/3;
-    /* subtle offset to create dynamic balance on desktop */
-    transform: translateY(2px);
+    max-height: clamp(190px, 26vh, 260px); /* md/desktop target 220–280px */
+    transform: none; /* remove offset to reduce vertical footprint */
   }
 }
+
 @media (min-width: 1200px) {
   .landing-hero {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
-    gap: 22px;
-    padding: 30px 34px;
+    gap: 16px;
+    padding: 20px 24px; /* still compact on large desktop */
   }
   .landing-hero__art,
   .landing-hero__img {
-    width: min(920px, 100%);
-    margin-top: 4px; /* prevent crowding the header */
+    width: min(880px, 100%);
+    max-height: clamp(200px, 24vh, 280px); /* desktop upper bound */
+    margin-top: 2px;
   }
+}
+
+/* Entrance animation for hero */
+.enter-hero {
+  animation: ts-fade .35s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .enter-hero {
+    animation: none !important;
+  }
+}
+
+/* Keep .hero-inner for legacy sections under hero */
+.hero-inner {
+  max-width: 980px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr; gap: 16px;
+}
+@media (min-width: 860px) {
+  .hero-inner { grid-template-columns: 1.2fr .8fr; }
+}
+
+/* How it works cards */
+.how-card { display: block; }
+.how-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(125,131,255,0.12);
+  border: 1px solid rgba(125,131,255,0.25);
 }
 
 /* Entrance animation for hero */
