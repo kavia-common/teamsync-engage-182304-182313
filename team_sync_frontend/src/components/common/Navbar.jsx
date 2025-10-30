@@ -4,12 +4,17 @@ import { useStore } from '../../state/hooks';
 
 /**
  * PUBLIC_INTERFACE
- * Navbar with brand, key links, and theme toggle.
+ * Navbar simplified to show only the TeamSync primary CTA and Theme toggle.
+ * Preserves theme toggle behavior and Ocean Professional styling.
  */
 export default function Navbar({ theme, onToggleTheme }) {
   const { state } = useStore();
-  const planBadge = state.plan?.tier === 'pro' ? 'Pro' : 'Free';
-  const demoSuffix = state.plan?.demo ? ' • Demo' : '';
+
+  // PUBLIC_INTERFACE
+  // Primary CTA click: start TeamSync by navigating to sign-in (keeps existing flow).
+  const handleStart = () => {
+    window.location.hash = '#/signin';
+  };
 
   return (
     <header className="navbar" role="banner">
@@ -20,15 +25,15 @@ export default function Navbar({ theme, onToggleTheme }) {
         </a>
         <nav aria-label="Primary">
           <div className="nav-actions">
-            <a className="btn ghost" href="#/onboarding">Onboard</a>
-            <a className="btn ghost" href="#/quiz">Quiz</a>
-            <a className="btn ghost" href="#/recommendations">Recommendations</a>
-            <a className="btn ghost" href="#/dashboard">Dashboard</a>
-            <a className="btn ghost" href="#/pricing" onClick={(e) => { e.preventDefault(); window.location.hash = '#/'; setTimeout(() => { const el = document.querySelector('[aria-label="Pro plan"]'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 0); }}>
-              Pricing
-            </a>
-            <span className="btn secondary" aria-label="Current plan badge">{planBadge}{demoSuffix}</span>
-            <Button aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`} onClick={onToggleTheme} className="secondary">
+            <Button onClick={handleStart} aria-label="Start TeamSync" title="Start TeamSync">
+              TeamSync
+            </Button>
+            <Button
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+              onClick={onToggleTheme}
+              className="secondary"
+              title={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+            >
               {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
             </Button>
           </div>
