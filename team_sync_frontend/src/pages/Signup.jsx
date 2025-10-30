@@ -3,6 +3,7 @@ import Container from '../components/common/Container';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import SocialSignInButton from '../components/common/SocialSignInButton';
+import { useAuthStore } from '../state/authStore';
 
 /**
  * PUBLIC_INTERFACE
@@ -44,6 +45,15 @@ export default function Signup() {
     try {
       // Simulate registration success
       await new Promise((res) => setTimeout(res, 350));
+      // Persist minimal user to client store
+      const setUser = useAuthStore.getState().setUser;
+      setUser({
+        name: name.trim(),
+        email: email.trim(),
+        // Default teamName mirrors Onboarding "Team name" once provided; set a provisional value for greeting
+        teamName: 'Your team',
+      });
+      // Proceed to plan selection then later to onboarding/quiz; greeting appears immediately
       window.location.hash = '#/plan';
     } finally {
       setSubmitting(false);

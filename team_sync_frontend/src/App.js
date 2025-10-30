@@ -3,6 +3,7 @@ import './App.css';
 import './index.css';
 import RoutesView from './router/Routes';
 import Navbar from './components/common/Navbar';
+import { useAuthStore } from './state/authStore';
 
 /**
  * App entry applies the Ocean Professional theme using CSS variables,
@@ -13,6 +14,15 @@ function App() {
 
   // initialize from localStorage or prefers-color-scheme once
   useEffect(() => {
+    // Hydrate auth on app mount
+    try {
+      const u = useAuthStore.getState().getUser();
+      if (typeof window !== 'undefined') {
+        window.__TS_TEAM_ID__ = u?.teamName || '';
+      }
+    } catch {
+      // ignore
+    }
     try {
       const saved = localStorage.getItem('ts-theme');
       if (saved === 'light' || saved === 'dark') {

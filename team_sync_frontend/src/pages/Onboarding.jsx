@@ -86,6 +86,16 @@ export default function Onboarding({ params = {} }) {
     setSaving(true);
     try {
       await actions.setTeam({ name: name.trim(), size: Number(size), department: department.trim(), mode });
+      // Mirror to auth store so greetings reflect the latest team name
+      try {
+        const { setUser, getUser } = require('../state/authStore');
+        const current = getUser ? getUser() : null;
+        if (current) {
+          setUser({ ...current, teamName: String(name || '').trim() || 'Your team' });
+        }
+      } catch {
+        // ignore if module not yet available or SSR
+      }
       window.location.hash = isDemo ? '#/quiz?demo=1' : '#/quiz';
     } finally {
       setSaving(false);

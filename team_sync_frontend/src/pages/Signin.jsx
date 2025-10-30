@@ -3,6 +3,7 @@ import Container from '../components/common/Container';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import SocialSignInButton from '../components/common/SocialSignInButton';
+import { useAuthStore } from '../state/authStore';
 
 /**
  * PUBLIC_INTERFACE
@@ -42,7 +43,16 @@ export default function Signin() {
     try {
       // Simulate auth success
       await new Promise((res) => setTimeout(res, 350));
-      window.location.hash = '#/plan';
+      const setUser = useAuthStore.getState().setUser;
+      // Use email local part as friendly name fallback
+      const fallbackName = String(email).split('@')[0] || 'Member';
+      setUser({
+        name: fallbackName,
+        email: email.trim(),
+        teamName: 'Your team',
+      });
+      // Route to dashboard as requested
+      window.location.hash = '#/dashboard';
     } finally {
       setSubmitting(false);
     }

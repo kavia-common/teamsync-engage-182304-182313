@@ -3,6 +3,7 @@ import Container from '../components/common/Container';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { useStore } from '../state/hooks';
+import { useAuthStore } from '../state/authStore';
 import api from '../services/api';
 import { deriveSuccessMetrics, deriveSentimentSummary, deriveTrendBuckets, deriveHeroAlignmentBreakdown, derivePersona } from '../services/analytics';
 
@@ -303,11 +304,19 @@ export default function Dashboard() {
     </div>
   ) : null;
 
+  const authUser = useAuthStore((s) => s.user);
+  const userName = (authUser?.name || '').trim();
+  const teamName = (authUser?.teamName || state.team?.name || 'Your team').trim() || 'Your team';
+
   return (
     <Container>
       <div className="mb-4">
-        <h1 className="h1">Dashboard</h1>
-        <p className="muted">Welcome back. Here’s your team summary and recent engagement.</p>
+        <h1 className="h1" style={{ marginBottom: 6 }}>
+          {`Welcome, ${teamName}!`}
+        </h1>
+        <p className="muted">
+          {userName ? `Signed in as ${userName}.` : 'Signed in.'} Here’s your team summary and recent engagement.
+        </p>
         <div id="sr-live-dashboard" aria-live="polite" className="sr-only" />
       </div>
 
