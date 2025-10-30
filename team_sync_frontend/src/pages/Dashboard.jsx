@@ -184,6 +184,26 @@ export default function Dashboard() {
             {saved.map((s) => (
               <li key={s.id} className="mt-2">
                 <strong>{s.title}</strong> — {s.duration}m • {s.budget} • {s.suggestedSize}
+                {s._heroAlignment ? (
+                  <span title="Hero alignment" className="btn ghost" style={{ marginLeft: 8 }}>
+                    🛡 {s._heroAlignment}
+                  </span>
+                ) : null}
+                {s.departmentExclusive ? (
+                  <span title="Department exclusive" className="btn warning" style={{ marginLeft: 8 }}>
+                    Dept‑Exclusive
+                  </span>
+                ) : null}
+                {Array.isArray(s.departmentScope) && s.departmentScope.length > 0 && !s.departmentExclusive ? (
+                  <span title="Relevant departments" className="btn secondary" style={{ marginLeft: 8 }}>
+                    🏷 {s.departmentScope.join(', ')}
+                  </span>
+                ) : null}
+                {s._savedDept ? (
+                  <span title="Saved under department" className="btn secondary" style={{ marginLeft: 8 }}>
+                    Dept: {s._savedDept}
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>

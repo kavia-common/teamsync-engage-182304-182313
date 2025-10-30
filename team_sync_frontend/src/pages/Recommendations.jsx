@@ -8,8 +8,8 @@ import api from '../services/api';
 /**
  * PUBLIC_INTERFACE
  * Displays 3–5 recommended activities with actions to save and give feedback.
- * Ensures tags are visible, Save calls both API and store, and "Try Another Set" refreshes items.
- * Also guarantees a consistent 3–5 layout by filling placeholders if fewer than 3 results.
+ * Adds department segmented filter (All vs Department), department-exclusive badge,
+ * hero alignment label, and playful microcopy. Maintains accessibility.
  */
 export default function Recommendations() {
   const { state, actions } = useStore();
@@ -17,6 +17,9 @@ export default function Recommendations() {
   const [recs, setRecs] = useState([]);
   const [error, setError] = useState('');
   const [refreshKey, setRefreshKey] = useState(0); // bump to force refetch
+  const [segment, setSegment] = useState('all'); // 'all' | 'department'
+
+  const dept = (state.team?.department || '').trim();
 
   // derive payload; keep stable reference with useMemo
   const payload = useMemo(() => ({ team: state.team, quiz: state.quiz }), [state.team, state.quiz]);
@@ -29,11 +32,12 @@ export default function Recommendations() {
       .getRecommendations(payload)
       .then((r) => {
         if (!mounted) return;
-        // Constrain to 3–5 cards (mock returns up to 5 already); ensure at least 3 with placeholders
         const list = Array.isArray(r) ? r : [];
+
+        // Constrain to 3–5 cards; ensure at least 3 with placeholders
         const limited = list.slice(0, Math.max(3, Math.min(5, list.length)));
-        // If fewer than 3, synthesize tasteful placeholders to maintain layout consistency
         const minCount = 3;
+        let base = limited;
         if (limited.length < minCount) {
           const placeholders = Array.from({ length: minCount - limited.length }).map((_, i) => ({
             id: `placeholder-${i}`,
@@ -43,19 +47,24 @@ export default function Recommendations() {
             budget: 'medium',
             suggestedSize: '—',
             tags: ['ideas', 'personalized'],
-            placeholder: true
+            placeholder: true,
+            heroAlignment: 'Ally',
+            departmentExclusive: false,
+            departmentScope: []
           }));
-          setRecs([...limited, ...placeholders]);
-        } else {
-          setRecs(limited);
+          base = [...limited, ...placeholders];
         }
+        setRecs(base);
       })
       .catch(() => mounted && setError('Failed to load recommendations.'))
       .finally(() => mounted && setLoading(false));
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [payload, refreshKey]);
+
+  const filtered = useMemo(() => {
+    if (segment !== 'department') return recs;
+    return recs.filter(r => r.placeholder || r.departmentExclusive || (r.departmentScope || []).includes(dept));
+  }, [recs, segment, dept]);
 
   const handleSave = async (item) => {
     if (item.placeholder) return; // do not save placeholders
@@ -64,13 +73,17 @@ export default function Recommendations() {
     } catch {
       // service already falls back to mock
     } finally {
-      actions.saveRecommendation(item);
-      // announce to SR users
+      // Ensure we persist department info and hero label on save
+      const enriched = {
+        ...item,
+        _savedDept: dept,
+        _heroAlignment: item.heroAlignment || 'Ally',
+      };
+      actions.saveRecommendation(enriched);
       if (typeof window !== 'undefined') {
         const live = document.getElementById('sr-live');
         if (live) {
           live.textContent = `${item.title} saved`;
-          // clear message after a tick to ensure SR reads subsequent updates
           setTimeout(() => { if (live) live.textContent = ''; }, 800);
         }
       }
@@ -138,10 +151,7 @@ export default function Recommendations() {
   const handleFeedback = async (item, value) => {
     if (item.placeholder) return; // do not feedback placeholders
     await actions.giveFeedback(item.id, value, item.title);
-    if (value === 'like') {
-      sparkConfettiLight();
-    }
-    // Accessible announcement without blocking alerts (reduce noise)
+    if (value === 'like') sparkConfettiLight();
     if (typeof window !== 'undefined') {
       const live = document.getElementById('sr-live');
       if (live) {
@@ -153,10 +163,30 @@ export default function Recommendations() {
     }
   };
 
-  const tryAnother = () => {
-    // Trigger a different set by bumping refreshKey to refetch.
-    setRefreshKey((k) => k + 1);
-  };
+  const tryAnother = () => setRefreshKey((k) => k + 1);
+
+  const SegmentControl = () => (
+    <div role="tablist" aria-label="Recommendation filter" className="mt-3" style={{ display: 'inline-flex', gap: 8 }}>
+      <button
+        role="tab"
+        aria-selected={segment === 'all'}
+        className={`btn ${segment === 'all' ? '' : 'secondary'}`}
+        onClick={() => setSegment('all')}
+      >
+        All
+      </button>
+      <button
+        role="tab"
+        aria-selected={segment === 'department'}
+        className={`btn ${segment === 'department' ? '' : 'secondary'}`}
+        onClick={() => setSegment('department')}
+        disabled={!dept}
+        title={dept ? `Show ${dept} picks` : 'Set department in Onboarding'}
+      >
+        {dept ? `${dept}` : 'Department'}
+      </button>
+    </div>
+  );
 
   return (
     <Container>
@@ -165,13 +195,14 @@ export default function Recommendations() {
         <p className="muted">
           Based on your team profile and quiz results — handpicked just for you.
         </p>
+        <SegmentControl />
         <div id="sr-live" aria-live="polite" className="sr-only" />
       </div>
 
       {loading && <Card aria-busy="true">Loading recommendations…</Card>}
       {error && <Card style={{ borderColor: 'var(--ts-error)' }}>{error}</Card>}
 
-      {!loading && !error && recs.length === 0 && (
+      {!loading && !error && filtered.length === 0 && (
         <Card className="confetti" aria-live="polite">
           <h2 className="h2">We’re warming up the idea engine 🔧</h2>
           <p className="muted">
@@ -188,18 +219,43 @@ export default function Recommendations() {
         </Card>
       )}
 
-      {!loading && !error && recs.length > 0 && (
+      {!loading && !error && filtered.length > 0 && (
         <div className="card-grid">
-          {recs.map((rec) => (
+          {filtered.map((rec) => (
             <Card key={rec.id} aria-busy={!!rec.placeholder}>
-              <h3 className="h2">{rec.title}</h3>
-              <p className="muted">{rec.description}</p>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+                <h3 className="h2" style={{ marginRight: 8 }}>{rec.title}</h3>
+                {/* Department-exclusive badge */}
+                {rec.departmentExclusive && (
+                  <span className="btn warning" aria-label="Department exclusive" title="Exclusive for your department">
+                    Dept‑Exclusive
+                  </span>
+                )}
+              </div>
+
+              {/* Hero alignment label and microcopy */}
+              <div className="mt-2" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <span className="btn ghost" title="Hero alignment" aria-label={`Hero alignment ${rec.heroAlignment || 'Ally'}`}>
+                  🛡 {rec.heroAlignment || 'Ally'}
+                </span>
+                {rec.microcopy && (
+                  <span className="muted" style={{ fontStyle: 'italic' }}>
+                    {rec.microcopy}
+                  </span>
+                )}
+              </div>
+
+              <p className="muted mt-2">{rec.description}</p>
 
               {/* Meta row */}
               <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <span className="btn secondary" aria-hidden title="Duration">⏱ {rec.duration}m</span>
                 <span className="btn secondary" aria-hidden title="Suggested team size">👥 {rec.suggestedSize}</span>
                 <span className="btn secondary" aria-hidden title="Budget level">💸 {rec.budget}</span>
+                {/* Show department scope when present and not exclusive */}
+                {(rec.departmentScope && rec.departmentScope.length > 0 && !rec.departmentExclusive) && (
+                  <span className="btn secondary" aria-hidden title="Relevant departments">🏷 {rec.departmentScope.join(', ')}</span>
+                )}
               </div>
 
               {/* Tags visible as chips for scannability */}
