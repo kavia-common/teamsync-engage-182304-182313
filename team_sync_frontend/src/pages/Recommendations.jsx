@@ -376,7 +376,7 @@ export default function Recommendations() {
     }
   };
 
-  const tryAnother = () => setRefreshKey((k) => k + 1);
+
 
   const SegmentControl = () => (
     <div role="tablist" aria-label="Recommendation filter" className="mt-3" style={{ display: 'inline-flex', gap: 8 }}>

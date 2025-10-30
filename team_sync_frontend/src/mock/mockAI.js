@@ -171,16 +171,7 @@ function addCreativeFlourishToDescription(desc, rng) {
   return `${desc} This one is ${bits.join(' and ')}.`;
 }
 
-function playfulReasoning(department, rng) {
-  const lines = [
-    `Optimized for ${department} workflows with a dash of fun.`,
-    `Balances focus and play—right in the ${department} sweet spot.`,
-    `Targets collaboration friction points common in ${department}.`,
-    `Amplifies strengths while quietly fixing ${department} bottlenecks.`,
-    `Low setup, high impact—perfect for a busy ${department} crew.`
-  ];
-  return pickOne(lines, rng);
-}
+
 
 // Build concise reasoning bullets
 function buildReasoningBullets({ idea, team, quiz, department, rng }) {

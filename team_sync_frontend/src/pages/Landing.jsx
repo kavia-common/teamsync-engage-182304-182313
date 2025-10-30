@@ -142,7 +142,7 @@ export default function Landing() {
 
       {/* Pricing section (read-only preview; selection occurs after auth on /plan) */}
       <Container>
-        <section id="pricing" aria-labelledby="pricing-heading" role="region" style={{ scrollMarginTop: 80 }}>
+        <section id="pricing" aria-labelledby="pricing-heading" style={{ scrollMarginTop: 80 }}>
           <div className="mt-6 center">
             <h2 className="h2" id="pricing-heading">Simple pricing</h2>
             <p className="muted">Sign in to choose a plan. You can start free and upgrade anytime.</p>
