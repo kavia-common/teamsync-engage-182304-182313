@@ -407,7 +407,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="mt-2 muted" aria-live="polite">
+              <div className="mt-2 muted" aria-live="polite" aria-atomic="true">
                 {analytics.success?.totals?.likes || 0} likes • {analytics.success?.totals?.dislikes || 0} dislikes • {analytics.success?.totals?.feedback || 0} total feedback
               </div>
               <TrendChart />
@@ -645,7 +645,7 @@ function GamificationPanel({ teamId }) {
   return (
     <div>
       <h2 className="h2">Gamification</h2>
-      <div id="sr-live-gamification" className="sr-only" aria-live="polite" />
+      <div id="sr-live-gamification" className="sr-only" aria-live="polite" aria-atomic="true" />
       <div className="mt-2" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <span className="btn warning" aria-label={`Total points ${points}`} title="Total points">
           ✨ {points} pts
