@@ -55,7 +55,7 @@ function App() {
 
   if (!hydrated) {
     return (
-      <div className="App" style={{ background: 'var(--ts-bg)', minHeight: '100vh', color: 'var(--ts-text)' }}>
+      <div className="App teal-page-bg" style={{ minHeight: '100vh', color: 'var(--ts-text)' }}>
         <a href="#main" className="skip-link">Skip to main content</a>
         <header className="navbar" role="banner">
           <div className="navbar-inner">
@@ -77,11 +77,13 @@ function App() {
   }
 
   return (
-    <div className="App" style={{ background: 'var(--ts-bg)', minHeight: '100vh', color: 'var(--ts-text)' }}>
+    <div className="App teal-page-bg" style={{ minHeight: '100vh', color: 'var(--ts-text)' }}>
       <a href="#main" className="skip-link">Skip to main content</a>
       <Navbar theme={theme} onToggleTheme={toggleTheme} />
-      <main id="main" role="main" aria-live="polite">
-        <RoutesView />
+      <main id="main" role="main" aria-live="polite" className="glass-section">
+        <div className="glass-content">
+          <RoutesView />
+        </div>
       </main>
     </div>
   );
