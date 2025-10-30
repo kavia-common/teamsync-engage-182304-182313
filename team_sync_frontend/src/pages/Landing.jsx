@@ -4,11 +4,13 @@
  * ...
  * <TeamBondingIllustration maxWidth={680} className="my-8" alt="Team bonding illustration" />
  */
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Container from '../components/common/Container';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import { useStore } from '../state/hooks';
+// Import the illustration via the barrel export to ensure TS/JS interop
+import { TeamBondingIllustration } from "../components/Illustrations";
 
 /**
  * PUBLIC_INTERFACE
@@ -59,6 +61,31 @@ export default function Landing() {
 
   return (
     <div className="hero" role="region" aria-label="TeamSync landing">
+      {/* Illustration showcase near top */}
+      <Container>
+        <div
+          className="center"
+          style={{
+            maxWidth: 640,
+            margin: '24px auto 8px',
+            padding: '0 12px',
+            textAlign: 'center'
+          }}
+          aria-label="Hero illustration container"
+        >
+          <TeamBondingIllustration
+            alt="Colleagues collaborating in a team bonding scene"
+            className="landing-hero__img"
+            maxWidth={640}
+            style={{ width: '100%', height: 'auto' }}
+          />
+          {/* Accessible fallback text if the image fails to load is handled inside the component below when applicable */}
+          <noscript>
+            <p className="muted">Team bonding illustration (enable JavaScript to view).</p>
+          </noscript>
+        </div>
+      </Container>
+
       <Container>
         <Card className="landing-hero landing-hero--compact enter-hero" aria-label="Intro">
           {/* Header/title and supporting copy */}
