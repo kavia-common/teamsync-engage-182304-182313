@@ -98,14 +98,17 @@ export default function Dashboard() {
     (async () => {
       setLoadingAnalytics(true);
       try {
-        const data = await api.getAnalytics(timeRange);
-        if (mounted) actions.setAnalytics(data);
+        const teamId = state.team?.teamId || state.team?.id || state.team?.name || '';
+        const data = await api.getAnalytics(timeRange, teamId);
+        if (mounted && data) actions.setAnalytics(data);
+      } catch {
+        // handled in api via fallback
       } finally {
         if (mounted) setLoadingAnalytics(false);
       }
     })();
     return () => { mounted = false; };
-  }, [timeRange, actions]);
+  }, [timeRange, actions, state.team]);
 
   // effect: fetch persona (premium shows "AI-powered", free shows preview)
   useEffect(() => {
@@ -113,8 +116,10 @@ export default function Dashboard() {
     (async () => {
       setLoadingPersona(true);
       try {
-        const res = await api.generatePersona(state.team, state.quiz, { useCase: 'dashboard', locale: 'en-US' });
-        if (mounted) actions.setPersona(res);
+        const res = await api.generatePersona(state.team || {}, state.quiz || {}, { useCase: 'dashboard', locale: 'en-US' });
+        if (mounted && res) actions.setPersona(res);
+      } catch {
+        // fallback inside api
       } finally {
         if (mounted) setLoadingPersona(false);
       }
@@ -173,7 +178,7 @@ export default function Dashboard() {
             role="tab"
             aria-selected={timeRange === o}
             className={`btn ${timeRange === o ? '' : 'secondary'}`}
-            onClick={() => actions.setTimeRange(o)}
+            onClick={() => (actions?.setTimeRange ? actions.setTimeRange(o) : null)}
           >
             {o.toUpperCase()}
           </button>
@@ -305,18 +310,20 @@ export default function Dashboard() {
           </div>
           {loadingPersona ? (
             <p className="muted">Generating persona…</p>
+          ) : !personaBlock || !personaBlock.persona ? (
+            <p className="muted">No persona available yet. Share feedback or complete onboarding to unlock insights.</p>
           ) : (
             <>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <strong>{personaBlock.persona?.name || 'Team Persona'}</strong>
                 <span className="btn ghost" aria-hidden>🧭 Tone: {(personaBlock.persona?.tone || []).join(', ') || 'playful'}</span>
               </div>
-              <p className="muted mt-2">{personaBlock.persona?.summary}</p>
+              <p className="muted mt-2">{personaBlock.persona?.summary || '—'}</p>
               {/* Hero alignment breakdown (badges) */}
               <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} aria-label="Hero alignment breakdown">
                 {(personaBlock.breakdown || []).slice(0, 4).map(h => (
                   <span key={h.hero} className="btn secondary" title="Hero alignment share">
-                    🛡 {h.hero}: {Math.round(h.pct * 100)}%
+                    🛡 {h.hero}: {Math.round((h.pct || 0) * 100)}%
                   </span>
                 ))}
               </div>
@@ -340,6 +347,8 @@ export default function Dashboard() {
           {PremiumBanner}
           {loadingAnalytics ? (
             <p className="muted">Loading analytics…</p>
+          ) : !analytics ? (
+            <p className="muted">Analytics unavailable. We’ll show local estimates once feedback is added.</p>
           ) : (
             <>
               {/* Metric hints (aria-describedby) */}

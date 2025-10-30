@@ -10,29 +10,32 @@ const BASE_URL =
   (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE) ||
   'http://localhost:4000';
 
-// Helper to POST JSON with timeout and parse JSON response
-async function postJson(path, body) {
+// Helper to perform fetch with timeout and parse JSON
+async function fetchJson(path, options = {}) {
   const controller = new AbortController();
-  // safety timeout to avoid hanging UI; backend attempt should be quick
   const timeout = setTimeout(() => controller.abort(), 8000);
-
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body || {}),
+      ...options,
       signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
     });
-
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }
-    // handle empty body safely
     const text = await res.text();
     return text ? JSON.parse(text) : null;
   } finally {
     clearTimeout(timeout);
   }
+}
+
+// Helper to POST JSON
+function postJson(path, body) {
+  return fetchJson(path, { method: 'POST', body: JSON.stringify(body || {}) });
 }
 
 const api = {
@@ -44,7 +47,6 @@ const api = {
       if (!Array.isArray(data)) throw new Error('Invalid response');
       return data;
     } catch (e) {
-      // Fallback to mock on any network/HTTP/parse error
       return mockApi.getRecommendations(payload);
     }
   },
@@ -74,9 +76,19 @@ const api = {
   },
 
   // PUBLIC_INTERFACE
-  async getAnalytics(range = '4w') {
+  async getAnalytics(range = '4w', teamId) {
+    // Prefer explicit teamId; allow undefined to fall back to mock
+    if (!teamId) {
+      try {
+        return await mockApi.getAnalytics(range);
+      } catch {
+        // continue to backend attempt with no teamId to surface error
+      }
+    }
     try {
-      const data = await postJson('/api/analytics', { range });
+      // Backend expects GET /api/analytics?teamId=&range=
+      const q = new URLSearchParams({ teamId: String(teamId || ''), range: String(range || '4w') }).toString();
+      const data = await fetchJson(`/api/analytics?${q}`, { method: 'GET' });
       if (!data || !data.success) throw new Error('Invalid analytics');
       return { ...data, source: 'backend' };
     } catch (e) {
@@ -86,8 +98,16 @@ const api = {
 
   // PUBLIC_INTERFACE
   async generatePersona(team, quiz, context = { useCase: 'dashboard', locale: 'en-US' }) {
+    // Prefer teamId for backend persona endpoint shape
+    const teamId = team?.teamId || team?.id || team?.name || '';
+    if (!teamId) {
+      // fallback to mock if we cannot identify a team
+      return mockApi.generatePersona(team, quiz);
+    }
     try {
-      const data = await postJson('/api/persona/generate', { team, quiz, context });
+      // Backend expects GET /api/persona?teamId=
+      const q = new URLSearchParams({ teamId: String(teamId) }).toString();
+      const data = await fetchJson(`/api/persona?${q}`, { method: 'GET' });
       if (!data || !data.persona) throw new Error('Invalid persona');
       return { ...data, source: data.source || 'backend' };
     } catch (e) {
