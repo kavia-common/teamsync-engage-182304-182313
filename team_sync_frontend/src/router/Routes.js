@@ -6,10 +6,11 @@ import Recommendations from '../pages/Recommendations';
 import Dashboard from '../pages/Dashboard';
 import Signup from '../pages/Signup';
 import Signin from '../pages/Signin';
+import PlanSelection from '../pages/PlanSelection';
 
 /**
  * A super-light hash router to avoid adding react-router-dom dependency.
- * Supports: #/, #/signup, #/signin, #/onboarding, #/quiz, #/recommendations, #/dashboard, #/pricing (anchor handled)
+ * Supports: #/, #/signup, #/signin, #/plan, #/onboarding, #/quiz, #/recommendations, #/dashboard, #/pricing (anchor handled)
  */
 function useHashLocation() {
   const [hash, setHash] = useState(window.location.hash || '#/');
@@ -108,6 +109,8 @@ export default function RoutesView() {
         return <Signup />;
       case '/signin':
         return <Signin />;
+      case '/plan':
+        return <PlanSelection />;
       case '/onboarding':
         return <Onboarding params={params} />;
       case '/quiz':
