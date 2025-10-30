@@ -122,6 +122,26 @@ const api = {
     }
   },
 
+  // --- AI ---
+
+  // PUBLIC_INTERFACE
+  async postAIRecommendations(payload) {
+    // Calls backend AI endpoint; falls back to mock recommendations if backend is unavailable.
+    try {
+      const data = await postJson('/api/ai/recommendations', payload);
+      if (!data || !Array.isArray(data.ideas)) throw new Error('Invalid AI response');
+      return { ...data, source: data.source || 'openai' };
+    } catch (e) {
+      // Fallback: use existing getRecommendations mock to avoid blocking UX
+      const ideas = await mockApi.getRecommendations(payload);
+      return {
+        ideas: Array.isArray(ideas) ? ideas : [],
+        source: 'fallback',
+        model: 'rules-v1'
+      };
+    }
+  },
+
   // --- Gamification ---
 
   // PUBLIC_INTERFACE

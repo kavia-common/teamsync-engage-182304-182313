@@ -63,6 +63,54 @@ export default function Recommendations() {
     return () => { mounted = false; };
   }, [payload, refreshKey]);
 
+  // AI state
+  const [ai, setAi] = useState({ ideas: [], source: '', model: '', usage: null, error: null });
+  const [aiLoading, setAiLoading] = useState(false);
+  const [showReasoning, setShowReasoning] = useState({}); // id -> bool
+
+  async function generateAI() {
+    setAiLoading(true);
+    try {
+      const payloadAI = {
+        team: state.team || {},
+        quiz: state.quiz || {},
+        department: state.team?.department || '',
+        constraints: { limit: 5, mode: state.team?.workMode || 'hybrid' }
+      };
+      const res = await api.postAIRecommendations(payloadAI);
+      setAi(res);
+      // Merge AI ideas into current list with de-dup by title
+      const existing = Array.isArray(recs) ? recs : [];
+      const aiIdeas = (res.ideas || []).map((x) => ({
+        id: x.id || `ai-${Math.random().toString(36).slice(2, 8)}`,
+        title: x.title,
+        description: x.description,
+        duration: x.duration || 30,
+        tags: x.tags || [],
+        heroAlignment: x.heroAlignment || 'Ally',
+        departmentScope: x.departmentScope || [],
+        departmentExclusive: false,
+        suggestedSize: `${Math.max(2, (state.team?.size || 2) - 1)}-${(state.team?.size || 6) + 2}`,
+        budget: 'medium',
+        _ai: { source: res.source, fit_score: typeof x.fit_score === 'number' ? x.fit_score : 0.5, reasoning: x.reasoning || '' }
+      }));
+      const titles = new Set(existing.map((e) => (e.title || '').toLowerCase()));
+      const merged = [...existing, ...aiIdeas.filter((i) => !titles.has((i.title || '').toLowerCase()))];
+      setRecs(merged);
+      if (res.error) {
+        // Non-blocking toast substitute
+        // eslint-disable-next-line no-console
+        console.warn('AI provider error (fallback used):', res.error);
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('AI generation failed:', e?.message || e);
+      setAi({ ideas: [], source: 'fallback', model: 'rules-v1', error: { message: String(e) } });
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
   const filtered = useMemo(() => {
     if (segment !== 'department') return recs;
     return recs.filter(r => r.placeholder || r.departmentExclusive || (r.departmentScope || []).includes(dept));
@@ -229,6 +277,17 @@ export default function Recommendations() {
         </p>
         <SegmentControl />
         <div id="sr-live" aria-live="polite" className="sr-only" />
+        <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button onClick={generateAI} disabled={aiLoading} title="Use AI to generate tailored ideas">
+            {aiLoading ? 'Generating…' : 'AI Generate'}
+          </Button>
+          {ai?.source && (
+            <span className="muted">
+              Source: {ai.source} {ai.model ? `(${ai.model})` : ''}{' '}
+              {ai.usage?.latency_ms ? `· ${ai.usage.latency_ms}ms` : ''}
+            </span>
+          )}
+        </div>
       </div>
 
       {loading && <Card aria-busy="true">Loading recommendations…</Card>}
@@ -278,6 +337,29 @@ export default function Recommendations() {
               </div>
 
               <p className="muted mt-2">{rec.description}</p>
+
+              {/* AI badges and fit score */}
+              {rec._ai && (
+                <div className="mt-2" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span className="btn ghost" title={`Source: ${rec._ai.source}`}>🤖 {rec._ai.source}</span>
+                  <span className="btn ghost" title="Fit score from 0 to 1">🎯 {Number(rec._ai.fit_score).toFixed(2)}</span>
+                  {rec._ai.reasoning && (
+                    <button
+                      className="btn secondary"
+                      onClick={() => setShowReasoning((m) => ({ ...m, [rec.id]: !m[rec.id] }))}
+                      aria-expanded={!!showReasoning[rec.id]}
+                      aria-controls={`rsn-${rec.id}`}
+                    >
+                      {showReasoning[rec.id] ? 'Hide Why' : 'Why this?'}
+                    </button>
+                  )}
+                </div>
+              )}
+              {rec._ai?.reasoning && showReasoning[rec.id] && (
+                <div id={`rsn-${rec.id}`} className="mt-2" style={{ background: 'rgba(37,99,235,0.06)', padding: 12, borderRadius: 12 }}>
+                  <p className="muted" style={{ margin: 0 }}>{rec._ai.reasoning}</p>
+                </div>
+              )}
 
               {/* Meta row */}
               <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
