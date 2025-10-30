@@ -3,11 +3,10 @@ import './App.css';
 import './index.css';
 import RoutesView from './router/Routes';
 import Navbar from './components/common/Navbar';
-import { StoreProvider } from './state/store';
 
 /**
  * App entry applies the Ocean Professional theme using CSS variables,
- * renders the Navbar and current route view, and provides global store.
+ * renders the Navbar and current route view.
  */
 function App() {
   const [theme, setTheme] = useState('light');
@@ -45,15 +44,13 @@ function App() {
   const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
 
   return (
-    <StoreProvider>
-      <div className="App" style={{ background: 'var(--ts-bg)', minHeight: '100vh' }}>
-        <a href="#main" className="skip-link">Skip to main content</a>
-        <Navbar theme={theme} onToggleTheme={toggleTheme} />
-        <main id="main" role="main" aria-live="polite">
-          <RoutesView />
-        </main>
-      </div>
-    </StoreProvider>
+    <div className="App" style={{ background: 'var(--ts-bg)', minHeight: '100vh' }}>
+      <a href="#main" className="skip-link">Skip to main content</a>
+      <Navbar theme={theme} onToggleTheme={toggleTheme} />
+      <main id="main" role="main" aria-live="polite">
+        <RoutesView />
+      </main>
+    </div>
   );
 }
 

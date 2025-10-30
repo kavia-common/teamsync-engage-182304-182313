@@ -17,6 +17,7 @@ export default function Quiz() {
       budget: state.quiz.budget ?? 'medium',
       duration: state.quiz.duration ?? '60',
       interests: state.quiz.interests ?? ['games'],
+      collaboration: state.quiz.collaboration ?? 3
     }),
     [state.quiz]
   );
@@ -25,6 +26,7 @@ export default function Quiz() {
   const [budget, setBudget] = useState(initial.budget);
   const [duration, setDuration] = useState(initial.duration);
   const [interests, setInterests] = useState(initial.interests);
+  const [collaboration, setCollaboration] = useState(initial.collaboration);
   const [saving, setSaving] = useState(false);
 
   const toggleInterest = (key) => {
@@ -101,10 +103,8 @@ export default function Quiz() {
   const handleSubmit = async () => {
     setSaving(true);
     try {
-      await actions.setQuiz({ energy, budget, duration, interests });
+      await actions.setQuiz({ energy, budget, duration, interests, collaboration });
       sparkConfetti();
-      // playful toast-like feedback via alert as we keep dependencies minimal
-      // i18n-friendly: short sentence, emoji optional
       alert('Quiz saved! Recommendations loading… 🎉');
       window.location.hash = '#/recommendations';
     } finally {
@@ -164,6 +164,20 @@ export default function Quiz() {
                 </button>
               ))}
             </div>
+          </div>
+          <div>
+            <label className="label" htmlFor="collab">How collaborative? (1 = solo, 5 = highly collaborative)</label>
+            <input
+              id="collab"
+              className="input"
+              type="range"
+              min={1}
+              max={5}
+              step={1}
+              value={collaboration}
+              onChange={(e) => setCollaboration(Number(e.target.value))}
+            />
+            <div className="muted">Current: {collaboration}</div>
           </div>
         </div>
         <div className="mt-4" style={{ display: 'flex', gap: 12 }}>

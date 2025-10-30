@@ -1,2 +1,8 @@
-State layer: use StoreProvider in App, and use useStore() from state/hooks to access { state, actions }.
+State layer: Zustand-based store. Use useStore() from state/hooks to access { state, actions }.
+State shape:
+- team: { name, size, department, mode }
+- quiz: { energy, budget, duration, interests, collaboration }
+- saved: Activity[]
+- feedback: { id, activityId, activityTitle, value, comment?, rating? }[]
+
 Actions: setTeam, setQuiz, saveRecommendation, giveFeedback.

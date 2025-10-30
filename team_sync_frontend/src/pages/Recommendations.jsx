@@ -104,6 +104,12 @@ export default function Recommendations() {
     );
   };
 
+  const tryAnother = () => {
+    // Simple reshuffle: trigger a refetch by tweaking quiz interests ordering
+    const reordered = [...(state.quiz.interests || [])].sort(() => Math.random() - 0.5);
+    actions.setQuiz({ interests: reordered });
+  };
+
   return (
     <Container>
       <div className="mb-4">
@@ -157,9 +163,12 @@ export default function Recommendations() {
           ))}
         </div>
       )}
-      <div className="mt-6" style={{ display: 'flex', gap: 12 }}>
+      <div className="mt-6" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <Button variant="secondary" onClick={() => (window.location.hash = '#/quiz')} title="Adjust your quiz answers">
           Back
+        </Button>
+        <Button onClick={tryAnother} title="See another set based on your profile">
+          Try Another Set
         </Button>
         <Button onClick={() => (window.location.hash = '#/dashboard')} title="Review saved picks and feedback">
           Go to Dashboard

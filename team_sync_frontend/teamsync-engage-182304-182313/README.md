@@ -15,7 +15,7 @@ App overview:
 - Hash-based routing (no router dependency): #/, #/onboarding, #/quiz, #/recommendations, #/dashboard
 - Pages: Landing, Onboarding, Quiz, Recommendations, Dashboard
 - Shared components: Navbar, Container, Card, Button, Progress
-- Global state: Context + Reducer (StoreProvider)
+- Global state: Zustand store (src/state/store.zustand.js) exposed via useStore()
 - Services: src/services/api.js with mockApi fallback
 - Mock data: src/mock
 - Theme: Ocean Professional (blue & amber accents), responsive and accessible

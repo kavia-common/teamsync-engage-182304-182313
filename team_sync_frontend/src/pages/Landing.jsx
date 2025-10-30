@@ -12,12 +12,11 @@ export default function Landing() {
     <div className="hero">
       <div className="hero-inner">
         <div>
-          <h1 className="h1" title="Unleash your inner Avengers 🦸‍♀️">
-            Find the perfect team activity in minutes.
+          <h1 className="h1" title="Team time, simplified">
+            Plan engaging team activities in just a few clicks.
           </h1>
           <p className="muted mb-4">
-            {/* i18n-friendly: keep sentence structure simple, use straight quotes */}
-            TeamSync learns your team’s style, size, and vibe to suggest curated activities that spark connection.
+            TeamSync learns your team’s size, department, and work mode to suggest curated activities that spark connection.
           </p>
           <p
             className="muted"
@@ -32,17 +31,17 @@ export default function Landing() {
               href="#/onboarding"
               className="btn"
               aria-label="Start onboarding"
-              title="Unleash your inner Avengers 🦸‍♀️ — assemble your team basics"
+              title="Set team basics — it only takes a minute"
             >
-              Get Started
+              Start Onboarding
             </a>
             <a
-              href="#/quiz"
+              href="#/onboarding"
               className="btn secondary"
-              aria-label="Take the quiz"
-              title="Your squad’s got The Office energy 🎬 — prove it in 5 clicks"
+              aria-label="Begin"
+              title="Begin the guided flow"
             >
-              Take the Quiz
+              Begin
             </a>
           </div>
           <p className="muted mt-3" aria-label="Theme note">
