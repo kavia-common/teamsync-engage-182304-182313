@@ -21,10 +21,9 @@ import { useStore } from '../state/hooks';
 export default function Landing() {
   const { state, actions } = useStore();
 
-  // Optional hero image hook: external Freepik illustration for now.
-  // Replace with local asset path later if needed (e.g., '/assets/hero-illustration.png').
-  const HERO_IMAGE =
-    'https://img.freepik.com/free-vector/teamwork-people-with-puzzle-pieces_23-2148536406.jpg?size=1024&ext=jpg&ga=GA1.1.1228589952.1712870400&semt=ais_hybrid'; // from: https://www.freepik.com/free-vector/teamwork-people-with-puzzle-pieces_5686193.htm
+  // Optional hero image hook: now using local optimized asset.
+  // Local asset path: '/assets/hero-illustration.webp'
+  const HERO_IMAGE = '/assets/hero-illustration.webp';
   const HERO_ALT =
     'Team collaborating with colorful puzzle pieces, representing team building.';
 
@@ -73,7 +72,6 @@ export default function Landing() {
                 height={768}
                 loading="lazy"
                 decoding="async"
-                referrerPolicy="no-referrer"
               />
             ) : (
               <div
@@ -110,7 +108,8 @@ export default function Landing() {
             title="Freepik teamwork illustration"
           >
             Freepik
-          </a>
+          </a>{' '}
+          (locally optimized copy used)
         </p>
       </Container>
 
