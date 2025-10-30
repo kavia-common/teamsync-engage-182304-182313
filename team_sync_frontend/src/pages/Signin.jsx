@@ -51,8 +51,12 @@ export default function Signin() {
         email: email.trim(),
         teamName: 'Your team',
       });
-      // Route to dashboard as requested
-      window.location.hash = '#/dashboard';
+      // Route to dashboard as requested and prevent back nav to auth
+      try {
+        window.history.replaceState(null, '', '#/dashboard');
+      } catch {
+        window.location.hash = '#/dashboard';
+      }
     } finally {
       setSubmitting(false);
     }

@@ -15,7 +15,7 @@ export default function Navbar({ theme, onToggleTheme }) {
   const btnRef = useRef(null);
   const menuRef = useRef(null);
 
-  const name = user?.name?.trim();
+  const name = (user && typeof user === 'object' && typeof user.name === 'string') ? user.name.trim() : '';
 
   // Close on outside click
   useEffect(() => {

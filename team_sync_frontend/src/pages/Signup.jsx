@@ -53,8 +53,12 @@ export default function Signup() {
         // Default teamName mirrors Onboarding "Team name" once provided; set a provisional value for greeting
         teamName: 'Your team',
       });
-      // Proceed to plan selection then later to onboarding/quiz; greeting appears immediately
-      window.location.hash = '#/plan';
+      // Proceed to dashboard for a simpler post-auth path and prevent back nav to auth
+      try {
+        window.history.replaceState(null, '', '#/dashboard');
+      } catch {
+        window.location.hash = '#/dashboard';
+      }
     } finally {
       setSubmitting(false);
     }

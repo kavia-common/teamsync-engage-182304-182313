@@ -8,6 +8,7 @@ import Signup from '../pages/Signup';
 import Signin from '../pages/Signin';
 import PlanSelection from '../pages/PlanSelection';
 import Profile from '../pages/Profile';
+import { useAuthStore } from '../state/authStore';
 
 /**
  * A super-light hash router to avoid adding react-router-dom dependency.
@@ -41,12 +42,55 @@ function parseRoute(hash) {
 
 /**
  * PUBLIC_INTERFACE
+ * Small helper to hydrate auth state synchronously from localStorage.
+ * Returns { ready, isAuthed } to avoid initial flicker on first render.
+ */
+function useAuthReady() {
+  const getUser = useAuthStore((s) => s.getUser);
+  const isSignedInFn = useAuthStore((s) => s.isSignedIn);
+  const [ready, setReady] = useState(false);
+  const [isAuthed, setAuthed] = useState(false);
+
+  useEffect(() => {
+    try {
+      const u = getUser?.();
+      setAuthed(!!(u && (u.email || u.name)));
+      // expose team id for downstream services
+      if (typeof window !== 'undefined') {
+        window.__TS_TEAM_ID__ = u?.teamName || '';
+      }
+    } catch {
+      /* ignore */
+    } finally {
+      // allow a tiny tick so Navbar can read store before first route paint
+      const t = setTimeout(() => setReady(true), 10);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // also react to later auth store changes
+  useEffect(() => {
+    const check = () => {
+      try { setAuthed(!!isSignedInFn()); } catch { /* noop */ }
+    };
+    const i = setInterval(check, 250);
+    return () => clearInterval(i);
+  }, [isSignedInFn]);
+
+  return { ready, isAuthed };
+}
+
+/**
+ * PUBLIC_INTERFACE
  * Renders the view based on current hash path with subtle fade transitions.
+ * Adds simple auth route-guards and a micro-skeleton while hydrating.
  */
 export default function RoutesView() {
   const [hash] = useHashLocation();
-
   const { path, params } = useMemo(() => parseRoute(hash), [hash]);
+
+  const { ready, isAuthed } = useAuthReady();
 
   // scroll to pricing anchor when route is '#/pricing'
   useEffect(() => {
@@ -102,8 +146,34 @@ export default function RoutesView() {
     return () => clearTimeout(timeoutRef.current);
   }, [path, prefersReduced]);
 
+  // Simple guards: block until auth is hydrated to avoid flicker
+  const guardedPath = useMemo(() => {
+    if (!ready) return 'loading';
+    // If user is authenticated, redirect /signin and /signup to /dashboard
+    if (isAuthed && (path === '/signin' || path === '/signup')) {
+      // replace history (hash) to prevent back navigation to auth
+      try { window.history.replaceState(null, '', '#/dashboard'); } catch { window.location.hash = '#/dashboard'; }
+      return '/dashboard';
+    }
+    // If not authenticated, redirect protected pages to /signin
+    const protectedPaths = ['/profile', '/dashboard', '/onboarding', '/quiz', '/recommendations', '/plan'];
+    if (!isAuthed && protectedPaths.includes(path)) {
+      try { window.history.replaceState(null, '', '#/signin'); } catch { window.location.hash = '#/signin'; }
+      return '/signin';
+    }
+    return path;
+  }, [ready, isAuthed, path]);
+
   function getView(p) {
     switch (p) {
+      case 'loading':
+        return (
+          <div className="ts-container" aria-busy="true" aria-live="polite">
+            <div className="ts-card" style={{ padding: 18 }}>
+              <div className="muted">Loading…</div>
+            </div>
+          </div>
+        );
       case '/':
         return <Landing />;
       case '/signup':
@@ -127,7 +197,7 @@ export default function RoutesView() {
     }
   }
 
-  const view = getView(path);
+  const view = getView(guardedPath);
   const className =
     prefersReduced
       ? ''

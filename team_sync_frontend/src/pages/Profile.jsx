@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import Container from '../components/common/Container';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -16,16 +16,28 @@ export default function Profile() {
   const user = useAuthStore((s) => s.user);
   const isSignedIn = useAuthStore((s) => s.isSignedIn)();
 
-  const name = (user?.name || '').trim() || '—';
+  // Compute derived values up front (no hooks) to keep order stable
+  const _nameRaw = (user?.name || '').trim();
+  const initials = (() => {
+    const parts = _nameRaw ? _nameRaw.split(/\s+/) : [];
+    const a = (parts[0] || 'U')[0] || 'U';
+    const b = (parts[1] || '')[0] || '';
+    return (a + b).toUpperCase();
+  })();
+
+  // If not signed in, redirect to /signin gracefully
+  if (!isSignedIn) {
+    try {
+      window.history.replaceState(null, '', '#/signin');
+    } catch {
+      window.location.hash = '#/signin';
+    }
+    return null;
+  }
+
+  const name = _nameRaw || '—';
   const email = (user?.email || '').trim() || '—';
   const teamName = (user?.teamName || '').trim() || 'Your team';
-
-  const initials = useMemo(() => {
-    const n = String(user?.name || '').trim();
-    if (!n) return 'U';
-    const parts = n.split(/\s+/);
-    return ((parts[0] || 'U')[0] + (parts[1] || '')[0]).toUpperCase();
-  }, [user?.name]);
 
   return (
     <Container>
