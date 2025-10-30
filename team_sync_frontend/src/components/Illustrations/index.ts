@@ -1,0 +1,1 @@
+export { TeamBondingIllustration } from "./TeamBondingIllustration";

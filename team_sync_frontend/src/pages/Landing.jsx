@@ -1,3 +1,9 @@
+/**
+ * Example usage:
+ * import { TeamBondingIllustration } from "@/components/Illustrations";
+ * ...
+ * <TeamBondingIllustration maxWidth={680} className="my-8" alt="Team bonding illustration" />
+ */
 import React, { useEffect } from 'react';
 import Container from '../components/common/Container';
 import Card from '../components/common/Card';
