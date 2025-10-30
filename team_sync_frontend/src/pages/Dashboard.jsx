@@ -168,11 +168,7 @@ export default function Dashboard() {
     }
   };
 
-
   // Fetch a fresh recommendation set then navigate to /recommendations
-  // Quick glance: latest saved item info (department + hero)
-  const latestSaved = saved && saved.length ? saved[saved.length - 1] : null;
-
   const handleGenerateNew = useCallback(async () => {
     setGenerating(true);
     try {
@@ -182,26 +178,6 @@ export default function Dashboard() {
       setGenerating(false);
     }
   }, [state.team, state.quiz]);
-
-  // Render a small Saved Preview block
-  function SavedPreview() {
-    if (!latestSaved) return null;
-    return (
-      <div className="mt-2" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span className="muted" style={{ fontSize: 12 }}>Last saved:</span>
-        <span className="btn ghost" title="Saved activity title">🎯 {latestSaved.title || 'Saved item'}</span>
-        {latestSaved._savedDept ? (
-          <span className="btn secondary" title="Department">🏷 {latestSaved._savedDept}</span>
-        ) : null}
-        {latestSaved._heroAlignment || latestSaved.heroAlignment ? (
-          <span className="btn ghost" title="Hero alignment">🛡 {latestSaved._heroAlignment || latestSaved.heroAlignment}</span>
-        ) : null}
-        {latestSaved._ai?.fit_score ? (
-          <span className="btn ghost" title="AI Fit score">🎯 {(Number(latestSaved._ai.fit_score) || 0).toFixed(2)}</span>
-        ) : null}
-      </div>
-    );
-  }
 
   // Range control
   function TimeRange() {
@@ -446,91 +422,78 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Team Summary + Saved */}
-      <div className="ts-row cols-2">
+      {/* Team Summary & Saved combined - simplified to avoid parallel small cards */}
+      <div className="mt-4">
         <Card>
-          <h2 className="h2">Team summary</h2>
-          <p className="muted">{teamSummary}</p>
-          <TrendChart />
-          <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Button onClick={handleGenerateNew} disabled={generating} aria-label="Generate new recommendations">
-              {generating ? 'Generating…' : 'Generate New Activity'}
-            </Button>
-            <Button variant="secondary" onClick={() => (window.location.hash = '#/recommendations')} aria-label="Go to recommendations">
-              View Recommendations
-            </Button>
-          </div>
-        </Card>
+          <div className="ts-row cols-2">
+            <div>
+              <h2 className="h2">Team summary</h2>
+              <p className="muted">{teamSummary}</p>
+              <TrendChart />
+              <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <Button onClick={handleGenerateNew} disabled={generating} aria-label="Generate new recommendations">
+                  {generating ? 'Generating…' : 'Generate New Activity'}
+                </Button>
+                <Button variant="secondary" onClick={() => (window.location.hash = '#/recommendations')} aria-label="Go to recommendations">
+                  View Recommendations
+                </Button>
+              </div>
+            </div>
 
-        <Card>
-          <h2 className="h2">Saved activities</h2>
-          <div className="muted" style={{ fontSize: 12 }}>
-            {state.team?.department ? `Department: ${state.team.department}` : 'Department: —'}
-          </div>
-          {saved.length === 0 && (
-            <p className="muted" title="Save picks from the recommendations">
-              Nothing saved yet — future you will thank present you 😉
-            </p>
-          )}
-          <ul aria-label="Saved activities list">
-            {saved.map((s) => (
-              <li key={s.id} className="mt-2">
-                <strong>{s.title}</strong> — {s.duration}m • {s.budget} • {s.suggestedSize}
-                {s._heroAlignment ? (
-                  <span title="Hero alignment" className="btn ghost" style={{ marginLeft: 8 }}>
-                    🛡 {s._heroAlignment}
-                  </span>
-                ) : null}
-                {s.departmentExclusive ? (
-                  <span title="Department exclusive" className="btn warning" style={{ marginLeft: 8 }}>
-                    Dept‑Exclusive
-                  </span>
-                ) : null}
-                {Array.isArray(s.departmentScope) && s.departmentScope.length > 0 && !s.departmentExclusive ? (
-                  <span title="Relevant departments" className="btn secondary" style={{ marginLeft: 8 }}>
-                    🏷 {s.departmentScope.join(', ')}
-                  </span>
-                ) : null}
-                {s._savedDept ? (
-                  <span title="Saved under department" className="btn secondary" style={{ marginLeft: 8 }}>
-                    Dept: {s._savedDept}
-                  </span>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4">
-            <Button onClick={() => (window.location.hash = '#/recommendations')}>Find more</Button>
+            <div>
+              <h2 className="h2">Saved activities</h2>
+              <div className="muted" style={{ fontSize: 12 }}>
+                {state.team?.department ? `Department: ${state.team.department}` : 'Department: —'}
+              </div>
+              {saved.length === 0 && (
+                <p className="muted" title="Save picks from the recommendations">
+                  Nothing saved yet — future you will thank present you 😉
+                </p>
+              )}
+              <ul aria-label="Saved activities list">
+                {saved.map((s) => (
+                  <li key={s.id} className="mt-2">
+                    <strong>{s.title}</strong> — {s.duration}m • {s.budget} • {s.suggestedSize}
+                    {s._heroAlignment ? (
+                      <span title="Hero alignment" className="btn ghost" style={{ marginLeft: 8 }}>
+                        🛡 {s._heroAlignment}
+                      </span>
+                    ) : null}
+                    {s.departmentExclusive ? (
+                      <span title="Department exclusive" className="btn warning" style={{ marginLeft: 8 }}>
+                        Dept‒Exclusive
+                      </span>
+                    ) : null}
+                    {Array.isArray(s.departmentScope) && s.departmentScope.length > 0 && !s.departmentExclusive ? (
+                      <span title="Relevant departments" className="btn secondary" style={{ marginLeft: 8 }}>
+                        🏷 {s.departmentScope.join(', ')}
+                      </span>
+                    ) : null}
+                    {s._savedDept ? (
+                      <span title="Saved under department" className="btn secondary" style={{ marginLeft: 8 }}>
+                        Dept: {s._savedDept}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4">
+                <Button onClick={() => (window.location.hash = '#/recommendations')}>Find more</Button>
+              </div>
+            </div>
           </div>
         </Card>
       </div>
 
-      {/* Gamification + Recent Feedback */}
-      <div className="ts-row cols-2 mt-4">
+      {/* Gamification section only - remove adjacent small card */}
+      <div className="mt-4">
         <Card>
           <GamificationPanel teamId={teamId} />
         </Card>
-
-        <Card>
-          <h2 className="h2">Recent feedback</h2>
-          {feedback.length === 0 && (
-            <p className="muted" title="Like or dislike recommendations to improve your feed">
-              No feedback yet — your hot takes make our picks smarter 🔥
-            </p>
-          )}
-          <ul aria-label="Recent feedback list">
-            {feedback.slice(-6).reverse().map((f, idx) => (
-              <li key={idx} className="mt-2">
-                <span aria-hidden>{f.value === 'like' ? '👍' : '👎'}</span> {f.activityTitle}{' '}
-                {f.rating ? `• ${f.rating}/5` : ''} {f.comment ? `— “${f.comment}”` : ''}
-              </li>
-            ))}
-          </ul>
-        </Card>
       </div>
 
-      {/* Feedback form */}
-      <div className="ts-row cols-2 mt-4">
+      {/* Feedback form - single column to avoid empty gaps */}
+      <div className="mt-4">
         <Card>
           <h2 className="h2">Share feedback</h2>
           <form onSubmit={handleFeedbackSubmit}>
@@ -568,9 +531,6 @@ export default function Dashboard() {
             </div>
           </form>
         </Card>
-
-        {/* spacer for future widgets */}
-        <div style={{ display: 'none' }} />
       </div>
     </Container>
   );
@@ -703,7 +663,7 @@ function GamificationPanel({ teamId }) {
                 style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                 title={b.description || b.title || b.badgeId || b.id}
               >
-                <span aria-hidden>{badgeIcons[b.id] || badgeIcons[b.badgeId] || '🏅'}</span>
+                <span aria-hidden>{badgeIcons[b.id] || badgeIcons[b.badgeId] || '🎅'}</span>
                 <strong>{b.title || b.badgeId || b.id}</strong>
               </div>
               <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>

@@ -161,7 +161,7 @@ a:hover { text-decoration: underline; }
 .ts-row {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 14px; /* slightly tighter to avoid visible voids when fewer cards */
 }
 @media (min-width: 768px) {
   .ts-row.cols-2 { grid-template-columns: repeat(2, 1fr); }

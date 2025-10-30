@@ -74,7 +74,6 @@ export default function PlanSelection() {
           </ul>
           <div className="mt-4" style={{ display: 'flex', gap: 8 }}>
             <Button className="warning" onClick={() => handleChoose('pro')} aria-label="Choose Pro plan">Choose Pro</Button>
-            <Button variant="secondary" onClick={() => handleChoose('free')} aria-label="Skip and use Free">Start Free</Button>
           </div>
         </Card>
       </div>

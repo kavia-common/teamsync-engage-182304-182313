@@ -186,7 +186,7 @@ export default function Landing() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                 <div>
                   <h3 className="h2" style={{ marginBottom: 4 }}>Pro / Business</h3>
-                  <div className="muted" aria-label="Price">$15–25 <span className="muted">/ user / month</span></div>
+                  <div className="muted" aria-label="Price">$20 <span className="muted">/ user / month</span></div>
                 </div>
                 <span className="btn secondary" aria-label="Selection after sign-in" title="Choose after sign-in">
                   Select after sign-in
@@ -202,7 +202,6 @@ export default function Landing() {
               </ul>
               <div className="mt-4" style={{ marginTop: 'auto', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <Button onClick={handleStartNow} aria-label="Sign in to upgrade">Sign in to upgrade</Button>
-                <Button variant="secondary" onClick={scrollToPricing} aria-label="Explore pricing details">Details</Button>
               </div>
             </Card>
           </div>
