@@ -67,6 +67,7 @@ export default function Recommendations() {
   const [ai, setAi] = useState({ ideas: [], source: '', model: '', usage: null, error: null });
   const [aiLoading, setAiLoading] = useState(false);
   const [showReasoning, setShowReasoning] = useState({}); // id -> bool
+  const [debugOverlay, setDebugOverlay] = useState(false); // toggles network/debug view
 
   async function generateAI() {
     setAiLoading(true);
@@ -83,23 +84,30 @@ export default function Recommendations() {
       const existing = Array.isArray(recs) ? recs : [];
       const aiIdeas = (res.ideas || []).map((x) => {
         const scope = Array.isArray(x.departmentScope) ? x.departmentScope : [];
-        const exclusive = scope.length === 1 && (!!(state.team?.department) && scope[0] === state.team.department);
+        const dpt = (state.team?.department || '').trim();
+        const exclusive = scope.length === 1 && !!dpt && scope[0] === dpt;
+        const fit = typeof x.fit_score === 'number'
+          ? (x.fit_score > 1 ? Math.max(0, Math.min(1, x.fit_score / 100)) : x.fit_score)
+          : 0.5;
+        const tags = Array.isArray(x.tags) ? x.tags.map((t) => String(t).toLowerCase()) : [];
         return ({
           id: x.id || `ai-${Math.random().toString(36).slice(2, 8)}`,
-          title: x.title,
-          description: x.description,
-          duration: x.duration || 30,
-          tags: x.tags || [],
+          title: String(x.title || '').trim(),
+          description: String(x.description || '').trim(),
+          duration: Number(x.duration || 30),
+          tags,
           heroAlignment: x.heroAlignment || 'Ally',
           departmentScope: scope,
           departmentExclusive: exclusive,
           suggestedSize: `${Math.max(2, (state.team?.size || 2) - 1)}-${(state.team?.size || 6) + 2}`,
           budget: 'medium',
-          _ai: { source: res.source, fit_score: typeof x.fit_score === 'number' ? x.fit_score : 0.5, reasoning: x.reasoning || '' }
+          _ai: { source: res.source || 'openai', fit_score: fit, reasoning: x.reasoning || '' }
         });
       });
-      const titles = new Set(existing.map((e) => (e.title || '').toLowerCase()));
-      const merged = [...existing, ...aiIdeas.filter((i) => !titles.has((i.title || '').toLowerCase()))];
+      const titles = new Set(existing.map((e) => (e.title || '').toLowerCase().trim()));
+      const merged = [...existing, ...aiIdeas.filter((i) => !titles.has((i.title || '').toLowerCase().trim()))];
+      // sort by AI fit_score when available, falling back to keep original order
+      merged.sort((a, b) => (Number(b._ai?.fit_score || 0) - Number(a._ai?.fit_score || 0)));
       setRecs(merged);
       if (res.error) {
         // Non-blocking toast substitute
@@ -285,6 +293,9 @@ export default function Recommendations() {
           <Button onClick={generateAI} disabled={aiLoading} title="Use AI to generate tailored ideas">
             {aiLoading ? 'Generating…' : 'AI Generate'}
           </Button>
+          <Button variant="ghost" onClick={() => setDebugOverlay((v) => !v)} title="Toggle debug overlay">
+            {debugOverlay ? 'Hide Debug' : 'Show Debug'}
+          </Button>
           {ai?.source && (
             <span className="muted">
               Source: {ai.source} {ai.model ? `(${ai.model})` : ''}{' '}
@@ -292,6 +303,19 @@ export default function Recommendations() {
             </span>
           )}
         </div>
+        {debugOverlay && ai?.source && (
+          <div className="mt-2" style={{ fontSize: 12, background: 'rgba(0,0,0,0.04)', padding: 12, borderRadius: 10 }}>
+            <div><strong>AI Debug</strong></div>
+            <div>source: {ai.source} | model: {ai.model || '(n/a)'} | ideas: {Array.isArray(ai.ideas) ? ai.ideas.length : 0}</div>
+            {Array.isArray(ai.ideas) && ai.ideas.slice(0, 5).map((x, idx) => (
+              <div key={idx} style={{ marginTop: 4 }}>
+                #{idx + 1} · fit={typeof x.fit_score === 'number' ? (x.fit_score > 1 ? (x.fit_score/100).toFixed(2) : x.fit_score.toFixed(2)) : '—'}
+                {' '}title="{String(x.title || '').slice(0, 60)}"
+                {' '}deptScope={[...(Array.isArray(x.departmentScope) ? x.departmentScope : [])].join(',')}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {loading && <Card aria-busy="true">Loading recommendations…</Card>}
@@ -345,8 +369,8 @@ export default function Recommendations() {
               {/* AI badges and fit score */}
               {rec._ai && (
                 <div className="mt-2" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <span className="btn ghost" title={`Source: ${rec._ai.source}`}>🤖 {rec._ai.source}</span>
-                  <span className="btn ghost" title="Fit score from 0 to 1">🎯 {Number(rec._ai.fit_score).toFixed(2)}</span>
+                  <span className="btn ghost" title={`AI Source: ${rec._ai.source}`}>🤖 {rec._ai.source}</span>
+                  <span className="btn ghost" title="AI Fit score (0 to 1)">🎯 {Number(rec._ai.fit_score).toFixed(2)}</span>
                   {rec._ai.reasoning && (
                     <button
                       className="btn secondary"
