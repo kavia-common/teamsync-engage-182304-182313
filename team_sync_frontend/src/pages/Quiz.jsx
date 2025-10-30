@@ -35,6 +35,9 @@ export default function Quiz() {
     setSaving(true);
     try {
       await actions.setQuiz({ energy, budget, duration, interests });
+      // playful toast-like feedback via alert as we keep dependencies minimal
+      // i18n-friendly: short sentence, emoji optional
+      alert('Quiz saved! Recommendations loading… 🎉');
       window.location.hash = '#/recommendations';
     } finally {
       setSaving(false);

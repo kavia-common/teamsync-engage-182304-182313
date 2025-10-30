@@ -12,18 +12,44 @@ export default function Landing() {
     <div className="hero">
       <div className="hero-inner">
         <div>
-          <h1 className="h1">Find the perfect team activity in minutes.</h1>
+          <h1 className="h1" title="Unleash your inner Avengers 🦸‍♀️">
+            Find the perfect team activity in minutes.
+          </h1>
           <p className="muted mb-4">
+            {/* i18n-friendly: keep sentence structure simple, use straight quotes */}
             TeamSync learns your team’s style, size, and vibe to suggest curated activities that spark connection.
           </p>
-          <p className="muted" style={{ fontStyle: 'italic', marginTop: -6 }}>Psst — it only takes 2 minutes ✨ We’ll bring the fun.</p>
+          <p
+            className="muted"
+            style={{ fontStyle: 'italic', marginTop: -6 }}
+            aria-live="polite"
+            title="Your squad’s got The Office energy 🎬 (and we’re here for it)"
+          >
+            Psst — it only takes 2 minutes ✨ We’ll bring the fun.
+          </p>
           <div className="grid-gap-12" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <a href="#/onboarding" className="btn" aria-label="Start onboarding">Get Started</a>
-            <a href="#/quiz" className="btn secondary" aria-label="Take the quiz">Take the Quiz</a>
+            <a
+              href="#/onboarding"
+              className="btn"
+              aria-label="Start onboarding"
+              title="Unleash your inner Avengers 🦸‍♀️ — assemble your team basics"
+            >
+              Get Started
+            </a>
+            <a
+              href="#/quiz"
+              className="btn secondary"
+              aria-label="Take the quiz"
+              title="Your squad’s got The Office energy 🎬 — prove it in 5 clicks"
+            >
+              Take the Quiz
+            </a>
           </div>
-          <p className="muted mt-3">Ocean Professional theme • Modern • Fast</p>
+          <p className="muted mt-3" aria-label="Theme note">
+            Ocean Professional theme • Modern • Fast • A sprinkle of fun ✨
+          </p>
         </div>
-        <Card>
+        <Card aria-label="How it works">
           <h2 className="h2">How it works</h2>
           <ol className="muted">
             <li className="mt-2">1. Quick onboarding: tell us about your team</li>
@@ -32,7 +58,13 @@ export default function Landing() {
             <li className="mt-2">4. Feedback: we learn and improve over time</li>
           </ol>
           <div className="mt-4">
-            <Button onClick={() => (window.location.hash = '#/onboarding')}>Start Now</Button>
+            <Button
+              onClick={() => (window.location.hash = '#/onboarding')}
+              aria-label="Start onboarding now"
+              title="Ready when you are 🚀"
+            >
+              Start Now
+            </Button>
           </div>
         </Card>
       </div>
@@ -40,15 +72,21 @@ export default function Landing() {
         <div className="ts-row cols-3 mt-6">
           <Card>
             <h3 className="h2">Smart</h3>
-            <p className="muted">Lightweight recommendation logic with continuous learning.</p>
+            <p className="muted" title="We learn from your likes and dislikes">
+              Lightweight recommendation logic with continuous learning.
+            </p>
           </Card>
           <Card>
             <h3 className="h2">Flexible</h3>
-            <p className="muted">Works for remote, hybrid, and in-person teams of any size.</p>
+            <p className="muted" title="Remote, hybrid, in-person — your call">
+              Works for remote, hybrid, and in-person teams of any size.
+            </p>
           </Card>
           <Card>
             <h3 className="h2">Fun</h3>
-            <p className="muted">Modern UI that’s friendly and accessible for everyone.</p>
+            <p className="muted" title="Tasteful confetti included 🎉">
+              Modern UI that’s friendly and accessible for everyone.
+            </p>
           </Card>
         </div>
       </Container>

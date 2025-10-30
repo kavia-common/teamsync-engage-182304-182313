@@ -23,7 +23,11 @@ export default function Dashboard() {
       <div className="ts-row cols-2">
         <Card>
           <h2 className="h2">Saved activities</h2>
-          {saved.length === 0 && <p className="muted">No saved items yet.</p>}
+          {saved.length === 0 && (
+            <p className="muted" title="Save picks from the recommendations">
+              Nothing saved yet — future you will thank present you 😉
+            </p>
+          )}
           <ul>
             {saved.map((s) => (
               <li key={s.id} className="mt-2">
@@ -38,7 +42,11 @@ export default function Dashboard() {
 
         <Card>
           <h2 className="h2">Recent feedback</h2>
-          {feedback.length === 0 && <p className="muted">No feedback yet.</p>}
+          {feedback.length === 0 && (
+            <p className="muted" title="Like or dislike recommendations to improve your feed">
+              No feedback yet — your hot takes make our picks smarter 🔥
+            </p>
+          )}
           <ul>
             {feedback.slice(-6).reverse().map((f, idx) => (
               <li key={idx} className="mt-2">
