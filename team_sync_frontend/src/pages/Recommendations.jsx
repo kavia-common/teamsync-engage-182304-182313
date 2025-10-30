@@ -13,11 +13,11 @@ import { generateIdeas as mockGenerateIdeas } from '../mock/mockAI';
  * hero alignment label, and playful microcopy. Maintains accessibility.
  * Integrates gamification: awards on save/feedback and refreshes global gamification state.
  *
- * AI Generate button tries backend first and silently falls back to mock AI on error/non-200.
+ * AI Generate button uses mock AI by default and only tries backend when a hidden flag (?ai=backend) is present.
  * Merges results with the existing list, dedupes by title, sorts by fit_score desc.
  * Shows badges for source (mock-ai) and AI reasoning.
  *
- * TODO: Restore pure backend flow when /api/ai/recommendations is healthy.
+ * TODO: Restore backend-first flow when /api/ai/recommendations is healthy.
  */
 export default function Recommendations() {
   const { state, actions } = useStore();
@@ -112,47 +112,56 @@ export default function Recommendations() {
         department: state.team?.department || '',
         constraints: { limit: 5, mode: state.team?.workMode || 'hybrid' }
       };
-      // Try backend first via service
-      // TODO: Restore pure backend flow when /api/ai/recommendations is healthy
+      // Determine mode: default to mock; allow backend via hidden toggle (?ai=backend)
+      // TODO: Restore backend-first flow when /api/ai/recommendations is healthy
+      const params = new URLSearchParams((typeof window !== 'undefined' && (window.location.search || '')) || '');
+      const useBackend = String(params.get('ai') || '').toLowerCase() === 'backend';
+
       const start = Date.now();
-      let res = null;
-      try {
-        res = await api.postAIRecommendations(payloadAI);
-      } catch (e) {
-        // ignore; will fallback to mock below
+      let ideas = [];
+      let source = 'mock-ai';
+      let model = 'mock-v1';
+      let usage = null;
+      let backendError = null;
+
+      if (useBackend) {
+        try {
+          const res = await api.postAIRecommendations(payloadAI);
+          if (Array.isArray(res?.ideas) && res.ideas.length > 0) {
+            source = res?.source || 'backend';
+            model = res?.model || model;
+            usage = res?.usage || null;
+            ideas = res.ideas.map((x, idx) => {
+              const scope = Array.isArray(x.departmentScope) ? x.departmentScope.map(s => String(s).trim()) : [];
+              const dpt = String(state.team?.department || '').trim();
+              const exclusive = scope.length === 1 && !!dpt && scope[0].toLowerCase() === dpt.toLowerCase();
+              const fit = Number.isFinite(Number(x.fit_score))
+                ? Number(x.fit_score)
+                : 0.7;
+              return {
+                id: x.id || `ai-${idx}-${Math.random().toString(36).slice(2, 8)}`,
+                title: String(x.title || '').trim(),
+                description: String(x.description || '').trim(),
+                duration: Number(x.duration || 30),
+                tags: Array.isArray(x.tags) ? x.tags.map(t => String(t).toLowerCase()) : [],
+                heroAlignment: x.heroAlignment || 'Ally',
+                departmentScope: scope,
+                departmentExclusive: exclusive,
+                suggestedSize: `${Math.max(2, (state.team?.size || 2) - 1)}-${(state.team?.size || 6) + 2}`,
+                budget: 'medium',
+                _ai: { source: source || 'openai', model: model || '', fit_score: fit, reasoning: x.reasoning || '' }
+              };
+            });
+          } else {
+            backendError = res?.error || 'empty';
+          }
+        } catch (e) {
+          backendError = e?.message || 'backend-failed';
+        }
       }
 
-      let ideas = [];
-      let source = res?.source || 'mock-ai';
-      let model = res?.model || 'mock-v1';
-      let usage = res?.usage || null;
-
-      if (Array.isArray(res?.ideas) && res.ideas.length > 0) {
-        // Normalize backend ideas to our display schema
-        ideas = res.ideas.map((x, idx) => {
-          const scope = Array.isArray(x.departmentScope) ? x.departmentScope.map(s => String(s).trim()) : [];
-          const dpt = String(state.team?.department || '').trim();
-          const exclusive = scope.length === 1 && !!dpt && scope[0].toLowerCase() === dpt.toLowerCase();
-          const fit = Number.isFinite(Number(x.fit_score))
-            ? Number(x.fit_score)
-            : Number.isFinite(Number(res?.fit_score)) ? Number(res.fit_score) : 0.7;
-
-          return {
-            id: x.id || `ai-${idx}-${Math.random().toString(36).slice(2, 8)}`,
-            title: String(x.title || '').trim(),
-            description: String(x.description || '').trim(),
-            duration: Number(x.duration || 30),
-            tags: Array.isArray(x.tags) ? x.tags.map(t => String(t).toLowerCase()) : [],
-            heroAlignment: x.heroAlignment || 'Ally',
-            departmentScope: scope,
-            departmentExclusive: exclusive,
-            suggestedSize: `${Math.max(2, (state.team?.size || 2) - 1)}-${(state.team?.size || 6) + 2}`,
-            budget: 'medium',
-            _ai: { source: source || 'openai', model: model || '', fit_score: fit, reasoning: x.reasoning || '' }
-          };
-        });
-      } else {
-        // Silent fallback to mock AI results
+      if (!useBackend || ideas.length === 0) {
+        // Default path or backend failed: use mock generator
         const mockIdeas = await mockGenerateIdeas(state.team || {}, state.quiz || {}, state.team?.department || 'General');
         source = 'mock-ai';
         model = 'mock-v1';
@@ -175,6 +184,11 @@ export default function Recommendations() {
             _ai: { source, model, fit_score: fit, reasoning: x.reasoning || '' }
           };
         });
+
+        if (backendError) {
+          // eslint-disable-next-line no-console
+          console.warn('Backend AI failed; served mock instead:', backendError);
+        }
       }
 
       const existing = Array.isArray(recs) ? recs : [];
@@ -182,17 +196,11 @@ export default function Recommendations() {
       setRecs(merged);
 
       const latency_ms = Date.now() - start;
-      setAi({ ideas, source, model, usage: { ...(usage || {}), latency_ms }, error: res?.error || null });
-
-      if (res?.error) {
-        // Non-blocking toast substitute
-        // eslint-disable-next-line no-console
-        console.warn('AI provider error (fallback used):', res.error);
-      }
+      setAi({ ideas, source, model, usage: { ...(usage || {}), latency_ms }, error: backendError || null });
     } catch (e) {
+      // Final safety: ensure mock ideas render if anything above throws
       // eslint-disable-next-line no-console
-      console.warn('AI generation failed, using mock ideas:', e?.message || e);
-      // Final fallback path if anything above throws
+      console.warn('AI generation error; using mock fallback:', e?.message || e);
       const mockIdeas = await mockGenerateIdeas(state.team || {}, state.quiz || {}, state.team?.department || 'General');
       const ideas = mockIdeas.map((x, idx) => {
         const scope = Array.isArray(x.departmentScope) ? [x.departmentScope] : [];
