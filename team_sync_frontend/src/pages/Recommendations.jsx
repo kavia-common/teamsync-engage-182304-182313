@@ -26,6 +26,13 @@ export default function Recommendations() {
   // derive payload; keep stable reference with useMemo
   const payload = useMemo(() => ({ team: state.team, quiz: state.quiz }), [state.team, state.quiz]);
 
+  // Surface teamId for API.saveRecommendation mapping (non-invasive)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__TS_TEAM_ID__ = teamId || '';
+    }
+  }, [teamId]);
+
   useEffect(() => {
     let mounted = true;
     setLoading(true);

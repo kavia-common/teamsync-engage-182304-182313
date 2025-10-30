@@ -48,11 +48,37 @@ function postJson(path, body) {
 const api = {
   // PUBLIC_INTERFACE
   async getRecommendations(payload) {
+    // payload may contain { team, quiz, limit }; backend only requires teamId and optional limit
     try {
-      // expect backend endpoint: POST /api/recommendations -> [Activity]
-      const data = await postJson('/api/recommendations', payload);
-      if (!Array.isArray(data)) throw new Error('Invalid response');
-      return data;
+      const teamId =
+        payload?.team?.teamId || payload?.team?.id || payload?.team?.name || '';
+      const limit = Math.max(
+        3,
+        Math.min(5, Number(payload?.limit || 5) || 5)
+      );
+      if (!teamId) throw new Error('Missing teamId');
+      const q = new URLSearchParams({ teamId: String(teamId), limit: String(limit) }).toString();
+      // Backend: GET /api/recommendations?teamId=&limit=
+      const data = await fetchJson(`/api/recommendations?${q}`, { method: 'GET' });
+      // Expected shape: { teamId, recommendations: [{ activity, score }] }
+      const list = Array.isArray(data?.recommendations)
+        ? data.recommendations.map((r) => ({
+            id: r.activity?.id || `rec-${Math.random().toString(36).slice(2, 8)}`,
+            title: r.activity?.title || 'Activity',
+            description:
+              r.activity?.description ||
+              `Great for ${r.activity?.mode || 'hybrid'} teams`,
+            duration: Number(r.activity?.duration || 30),
+            tags: Array.isArray(r.activity?.tags) ? r.activity.tags : [],
+            suggestedSize: r.activity?.suggestedSize || '',
+            budget: r.activity?.budget || 'medium',
+            departmentExclusive: false,
+            departmentScope: [],
+            heroAlignment: 'Ally',
+            _score: Number(r.score || 0),
+          }))
+        : [];
+      return list;
     } catch (e) {
       return mockApi.getRecommendations(payload);
     }
@@ -61,9 +87,18 @@ const api = {
   // PUBLIC_INTERFACE
   async saveRecommendation(item) {
     try {
-      // expect backend endpoint: POST /api/recommendations/save -> { ok: true }
-      const data = await postJson('/api/recommendations/save', item);
-      if (!data || data.ok !== true) throw new Error('Invalid response');
+      // Backend: POST /api/save with { teamId, activityId }
+      const teamId =
+        item?.teamId ||
+        item?._teamId ||
+        (typeof window !== 'undefined' && window.__TS_TEAM_ID__) ||
+        undefined;
+      const payload = {
+        teamId,
+        activityId: item?.id,
+      };
+      const data = await postJson('/api/save', payload);
+      if (!data || data.success !== true) throw new Error('Invalid response');
       return data;
     } catch (e) {
       return mockApi.saveRecommendation(item);
