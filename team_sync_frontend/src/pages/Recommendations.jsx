@@ -436,7 +436,7 @@ export default function Recommendations() {
               )}
             </div>
             {debugOverlay && ai?.source && (
-              <div className="mt-2" style={{ fontSize: 12, background: 'var(--ts-surface)', border: '1px solid var(--ts-border)', padding: 12, borderRadius: 12, boxShadow: 'var(--ts-shadow-sm)', color: 'var(--ts-text)' }}>
+              <div className="mt-2" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)', background: 'var(--ts-surface)', border: '1px solid var(--ts-border)', padding: 12, borderRadius: 12, boxShadow: 'var(--ts-shadow-sm)', color: 'var(--ts-text)' }}>
                 <div><strong>AI Debug</strong></div>
                 <div>source: {ai.source} | model: {ai.model || '(n/a)'} | ideas: {Array.isArray(ai.ideas) ? ai.ideas.length : 0}</div>
                 {Array.isArray(ai.ideas) && ai.ideas.slice(0, 5).map((x, idx) => {
@@ -531,7 +531,7 @@ export default function Recommendations() {
                   )}
                   {rec._ai?.reasoning && showReasoning[rec.id] && (
                     <div id={`rsn-${rec.id}`} className="mt-2" style={{ background: 'var(--ts-surface)', border: '1px solid var(--ts-border)', padding: 12, borderRadius: 12, boxShadow: 'var(--ts-shadow-sm)' }}>
-                      <p className="muted" style={{ margin: 0, color: 'var(--ts-text-muted)' }}>{rec._ai.reasoning}</p>
+                      <p className="muted" style={{ margin: 0, color: 'var(--ts-text-muted)', fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)' }}>{rec._ai.reasoning}</p>
                     </div>
                   )}
 

@@ -111,7 +111,9 @@ export default function Signin() {
                 border: '1px solid var(--ts-border)',
                 borderRadius: 12,
                 padding: '8px 10px',
-                boxShadow: 'var(--ts-shadow-sm)'
+                boxShadow: 'var(--ts-shadow-sm)',
+                fontSize: 'var(--font-p)',
+                lineHeight: 'var(--lh-normal)'
               }}
             >
               {toast.message}
@@ -193,7 +195,7 @@ export default function Signin() {
             </div>
 
             {/* Live inline rules (help text) */}
-            <ul id={helpId} className="muted mt-2 list-reset" aria-live="polite">
+            <ul id={helpId} className="muted mt-2 list-reset" aria-live="polite" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)' }}>
               <li aria-checked={pwHasMin} role="checkbox">
                 <span aria-hidden style={{ marginRight: 6 }}>{pwHasMin ? '✔️' : '◻️'}</span>
                 At least 6 characters
@@ -218,7 +220,9 @@ export default function Signin() {
                   border: '1px solid var(--ts-border)',
                   borderRadius: 12,
                   boxShadow: 'var(--ts-shadow-sm)',
-                  padding: '8px 10px'
+                  padding: '8px 10px',
+                  fontSize: 'var(--font-small)',
+                  lineHeight: 'var(--lh-normal)'
                 }}
               >
                 Tip: Use a mix of words and numbers you’ll remember, and avoid reusing passwords.

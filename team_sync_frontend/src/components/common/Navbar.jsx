@@ -128,7 +128,8 @@ export default function Navbar({ theme, onToggleTheme }) {
                       background: 'linear-gradient(135deg, var(--ts-secondary), var(--ts-primary))',
                       color: '#041318',
                       fontWeight: 800,
-                      fontSize: 12,
+                      fontSize: 'var(--font-small)',
+                      lineHeight: 'var(--lh-tight)',
                     }}
                   >
                     {userInitials}

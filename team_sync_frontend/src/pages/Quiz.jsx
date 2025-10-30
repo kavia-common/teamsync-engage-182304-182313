@@ -276,7 +276,7 @@ export default function Quiz({ params = {} }) {
                   aria-valuemax={180}
                   aria-valuenow={duration}
                 />
-                <div className="muted">Current: {duration} min</div>
+                <div className="muted" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)' }}>Current: {duration} min</div>
               </div>
 
               {/* Q4: Interests (compact chip toggles) */}
@@ -313,7 +313,7 @@ export default function Quiz({ params = {} }) {
                   aria-valuemax={5}
                   aria-valuenow={collaboration}
                 />
-                <div className="muted">Current: {collaboration}</div>
+                <div className="muted" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)' }}>Current: {collaboration}</div>
               </div>
             </div>
 

@@ -112,7 +112,9 @@ export default function Signup() {
                 border: '1px solid var(--ts-border)',
                 borderRadius: 12,
                 padding: '8px 10px',
-                boxShadow: 'var(--ts-shadow-sm)'
+                boxShadow: 'var(--ts-shadow-sm)',
+                fontSize: 'var(--font-p)',
+                lineHeight: 'var(--lh-normal)'
               }}
             >
               {toast.message}
@@ -214,7 +216,7 @@ export default function Signup() {
             </div>
 
             {/* Live inline rules (help text) */}
-            <ul id={helpId} className="muted mt-2 list-reset" aria-live="polite">
+            <ul id={helpId} className="muted mt-2 list-reset" aria-live="polite" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)' }}>
               <li aria-checked={pwHasMin} role="checkbox">
                 <span aria-hidden style={{ marginRight: 6 }}>{pwHasMin ? '✔️' : '◻️'}</span>
                 At least 8 characters
@@ -239,7 +241,9 @@ export default function Signup() {
                   border: '1px solid var(--ts-border)',
                   borderRadius: 12,
                   boxShadow: 'var(--ts-shadow-sm)',
-                  padding: '8px 10px'
+                  padding: '8px 10px',
+                  fontSize: 'var(--font-small)',
+                  lineHeight: 'var(--lh-normal)'
                 }}
               >
                 Tip: Use a unique passphrase with numbers (e.g., three random words + a memorable number).

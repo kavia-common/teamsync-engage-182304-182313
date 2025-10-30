@@ -150,7 +150,7 @@ export default function RecommendationDetailsModal({
 
   const Body = (
     <div className="modal-body" id="rec-modal-desc">
-      <p className="muted" style={{ fontSize: 16 }}>
+      <p className="muted" style={{ fontSize: 'var(--font-p)', lineHeight: 'var(--lh-normal)', margin: 0 }}>
         {item?.description || 'No description provided.'}
       </p>
 
@@ -294,7 +294,8 @@ export default function RecommendationDetailsModal({
             className="mt-2"
             aria-live="polite"
             style={{
-              fontSize: 13,
+              fontSize: 'var(--font-small)',
+              lineHeight: 'var(--lh-normal)',
               color: 'var(--ts-text-muted)'
             }}
           >

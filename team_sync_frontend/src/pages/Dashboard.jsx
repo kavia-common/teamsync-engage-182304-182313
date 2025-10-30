@@ -220,7 +220,7 @@ export default function Dashboard() {
       const ChartImpl = AreaChart || LineChart;
       return (
         <div className="mt-3" style={{ height: 260 }}>
-          <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Weekly engagement trend</div>
+          <div className="muted" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)', marginBottom: 4 }}>Weekly engagement trend</div>
           <ResponsiveContainer width="100%" height="100%">
             <ChartImpl data={trendBuckets}>
               {CartesianGrid ? <CartesianGrid strokeDasharray="3 3" stroke="var(--ts-border)" /> : null}
@@ -251,7 +251,7 @@ export default function Dashboard() {
     // Fallback: simple inline bars
     return (
       <div className="mt-3" style={{ height: 220 }}>
-        <div className="muted mb-2">Weekly engagement (fallback)</div>
+        <div className="muted mb-2" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)' }}>Weekly engagement (fallback)</div>
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${trendBuckets.length || 6}, 1fr)`, gap: 8, alignItems: 'end', height: 180 }}>
           {trendBuckets.map((b) => {
             const lh = Math.min(100, b.likes * 16);
@@ -262,7 +262,7 @@ export default function Dashboard() {
                   <div style={{ height: `${lh}%`, background: 'var(--ts-primary)', borderRadius: 8, boxShadow: '0 1px 0 rgba(0,0,0,0.15)' }} />
                   <div style={{ height: `${dh}%`, background: 'var(--ts-error)', borderRadius: 8, boxShadow: '0 1px 0 rgba(0,0,0,0.15)' }} />
                 </div>
-                <div className="muted" style={{ fontSize: 12, marginTop: 6, textAlign: 'center', color: 'var(--ts-text-muted)' }}>{b.name}</div>
+                <div className="muted mt-2" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)', textAlign: 'center', color: 'var(--ts-text-muted)' }}>{b.name}</div>
               </div>
             );
           })}
@@ -279,7 +279,7 @@ export default function Dashboard() {
       const BI = BarChart || LineChart;
       return (
         <div className="mt-3" style={{ height: 200 }}>
-          <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Top tag by week</div>
+          <div className="muted" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)', marginBottom: 4 }}>Top tag by week</div>
           <ResponsiveContainer width="100%" height="100%">
             <BI data={data}>
               {CartesianGrid ? <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /> : null}
@@ -597,7 +597,7 @@ export default function Dashboard() {
                     <div>
                       <div className="muted">Completion rate</div>
                       <div
-                        style={{ fontWeight: 800, fontSize: 20 }}
+                        style={{ fontWeight: 800, fontSize: 'var(--font-h3)', lineHeight: 'var(--lh-tight)' }}
                         aria-describedby={HINT_IDS.completion}
                         title="Rated feedback vs saved activities"
                       >
@@ -607,7 +607,7 @@ export default function Dashboard() {
                     <div>
                       <div className="muted">Like ratio</div>
                       <div
-                        style={{ fontWeight: 800, fontSize: 20 }}
+                        style={{ fontWeight: 800, fontSize: 'var(--font-h3)', lineHeight: 'var(--lh-tight)' }}
                         aria-describedby={HINT_IDS.likeRatio}
                         title="Likes ÷ (Likes + Dislikes)"
                       >
@@ -617,7 +617,7 @@ export default function Dashboard() {
                     <div>
                       <div className="muted">Avg rating</div>
                       <div
-                        style={{ fontWeight: 800, fontSize: 20 }}
+                        style={{ fontWeight: 800, fontSize: 'var(--font-h3)', lineHeight: 'var(--lh-tight)' }}
                         aria-describedby={HINT_IDS.avgRating}
                         title="Mean rating; estimated if missing"
                       >
@@ -662,7 +662,7 @@ export default function Dashboard() {
 
                 <div>
                   <h2 className="h2">Saved activities</h2>
-                  <div className="muted" style={{ fontSize: 12 }}>
+                  <div className="muted" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)' }}>
                     {state.team?.department ? `Department: ${state.team.department}` : 'Department: —'}
                   </div>
                   {saved.length === 0 && (
@@ -888,7 +888,7 @@ function GamificationPanel({ teamId }) {
                 <span aria-hidden>{badgeIcons[b.id] || badgeIcons[b.badgeId] || '🎅'}</span>
                 <strong>{b.title || b.badgeId || b.id}</strong>
               </div>
-              <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+              <div className="muted" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)', marginTop: 4 }}>
                 Earned {new Date(b.earnedAt || b.awardedAt || Date.now()).toLocaleString()}
               </div>
             </div>

@@ -69,8 +69,8 @@ export default function Profile() {
             {initials}
           </div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 20 }}>{name}</div>
-            <div className="muted" style={{ fontSize: 14 }}>
+            <div style={{ fontWeight: 800, fontSize: 'var(--font-h3)', lineHeight: 'var(--lh-tight)' }}>{name}</div>
+            <div className="muted" style={{ fontSize: 'var(--font-small)', lineHeight: 'var(--lh-normal)' }}>
               {isSignedIn ? 'Signed in' : 'Signed out'}
             </div>
           </div>
