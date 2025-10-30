@@ -7,6 +7,7 @@ import Dashboard from '../pages/Dashboard';
 import Signup from '../pages/Signup';
 import Signin from '../pages/Signin';
 import PlanSelection from '../pages/PlanSelection';
+import Profile from '../pages/Profile';
 
 /**
  * A super-light hash router to avoid adding react-router-dom dependency.
@@ -119,6 +120,8 @@ export default function RoutesView() {
         return <Recommendations params={params} />;
       case '/dashboard':
         return <Dashboard params={params} />;
+      case '/profile':
+        return <Profile />;
       default:
         return <Landing />;
     }
