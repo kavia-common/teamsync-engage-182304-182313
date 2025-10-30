@@ -73,17 +73,23 @@ export default function Landing() {
 
           {/* Illustration: sits directly below the hero text and above the CTAs */}
           <div className="landing-hero__media" aria-label="Hero illustration container">
-            <TeamBondingIllustration
-              alt="Colleagues collaborating in a team bonding scene"
-              className="landing-hero__img"
-              maxWidth={880}
-              style={{
-                width: '100%',
-                height: 'auto',
-                borderRadius: 20,
-                boxShadow: '0 12px 30px rgba(2, 8, 23, 0.08)',
-              }}
-            />
+            {/* Glassmorphism wrapper for enhanced frosted effect */}
+            <div
+              className="glass-illustration"
+              role="img"
+              aria-label="Frosted surface framing the team bonding illustration"
+            >
+              <TeamBondingIllustration
+                alt="Colleagues collaborating in a team bonding scene"
+                className="landing-hero__img"
+                maxWidth={880}
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: 18,
+                }}
+              />
+            </div>
             <noscript>
               <p className="muted">Team bonding illustration (enable JavaScript to view).</p>
             </noscript>

@@ -424,6 +424,69 @@ main[role="main"] {
   margin-top: 2px; /* reduce spacing above media */
 }
 
+/* Stronger glassmorphism container for the landing illustration */
+.glass-illustration {
+  /* Responsive sizing */
+  max-width: min(880px, 100%);
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 24px); /* safe padding 24–32px overall with child radius */
+  border-radius: 1.25rem; /* 20px */
+
+  /* Elevated glass surface with stronger blur and subtle white gradient overlay */
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.10)),
+    radial-gradient(circle at 20% 10%, rgba(37,99,235,0.10), transparent 55%),
+    radial-gradient(circle at 80% 90%, rgba(245,158,11,0.10), transparent 55%);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+
+  /* Inner + outer definition for glass look */
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow:
+    0 10px 40px rgba(37, 99, 235, 0.20),      /* ocean primary glow */
+    inset 0 1px 0 rgba(255,255,255,0.40);     /* inner highlight */
+
+  /* Ensure good contrast on light background */
+  position: relative;
+  isolation: isolate;
+}
+
+/* Subtle highlight ring on hover/focus for accessibility */
+.glass-illustration:focus,
+.glass-illustration:hover {
+  outline: none;
+  box-shadow:
+    0 12px 46px rgba(37, 99, 235, 0.24),
+    inset 0 1px 0 rgba(255,255,255,0.45),
+    0 0 0 3px rgba(37,99,235,0.20); /* focus ring */
+}
+
+/* Respect reduced motion for hover elevation */
+@media (prefers-reduced-motion: reduce) {
+  .glass-illustration,
+  .glass-illustration:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Dark theme adjustment to maintain non-text contrast */
+:root[data-theme='dark'] .glass-illustration {
+  background:
+    linear-gradient(180deg, rgba(15,23,42,0.60), rgba(15,23,42,0.46)),
+    radial-gradient(circle at 20% 10%, rgba(96,165,250,0.12), transparent 55%),
+    radial-gradient(circle at 80% 90%, rgba(251,191,36,0.12), transparent 55%);
+  border: 1px solid rgba(96,165,250,0.28);
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+/* Ensure inner image corners align with container */
+.glass-illustration .landing-hero__img {
+  border-radius: 1rem; /* 16px to show slight glass rim */
+}
+
 /* Constrain illustration height responsively while keeping aspect ratio */
 .landing-hero__art,
 .landing-hero__img {
