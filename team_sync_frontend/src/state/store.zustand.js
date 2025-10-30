@@ -22,6 +22,11 @@ export const useZStore = create((set, get) => ({
     demo: false,        // demo mode indicator
   },
 
+  // Analytics & persona slices
+  analytics: null, // { success, sentiment, trend, heroes, source }
+  persona: null,   // { persona, breakdown, source }
+  timeRange: '4w', // '4w' | '12w' | 'all'
+
   // PUBLIC_INTERFACE
   setTeam: (team) => set((s) => ({ team: { ...s.team, ...team } })),
 
@@ -34,11 +39,20 @@ export const useZStore = create((set, get) => ({
 
   // PUBLIC_INTERFACE
   giveFeedback: (payload) =>
-    set((s) => ({ feedback: [...s.feedback, { id: `${Date.now()}_${Math.random().toString(36).slice(2)}`, ...payload }] })),
+    set((s) => ({ feedback: [...s.feedback, { id: `${Date.now()}_${Math.random().toString(36).slice(2)}`, createdAt: new Date().toISOString(), ...payload }] })),
 
   // PUBLIC_INTERFACE
   clearRecommendations: () => set(() => ({})), // placeholder for parity
 
   // PUBLIC_INTERFACE
   setPlan: (plan) => set((s) => ({ plan: { ...s.plan, ...plan } })),
+
+  // PUBLIC_INTERFACE
+  setTimeRange: (r) => set(() => ({ timeRange: r })),
+
+  // PUBLIC_INTERFACE
+  setAnalytics: (a) => set(() => ({ analytics: a })),
+
+  // PUBLIC_INTERFACE
+  setPersona: (p) => set(() => ({ persona: p })),
 }));

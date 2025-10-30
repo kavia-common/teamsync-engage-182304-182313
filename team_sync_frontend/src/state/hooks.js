@@ -22,6 +22,9 @@ export function useStore() {
       useZStore.getState().giveFeedback({ activityId, value, activityTitle, comment, rating }),
     // PUBLIC_INTERFACE
     setPlan: useZStore((s) => s.setPlan),
+    setTimeRange: useZStore((s) => s.setTimeRange),
+    setAnalytics: useZStore((s) => s.setAnalytics),
+    setPersona: useZStore((s) => s.setPersona),
   };
   return { state, actions };
 }

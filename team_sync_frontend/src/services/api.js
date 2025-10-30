@@ -71,6 +71,28 @@ const api = {
     } catch (e) {
       return mockApi.giveFeedback(activityId, value);
     }
+  },
+
+  // PUBLIC_INTERFACE
+  async getAnalytics(range = '4w') {
+    try {
+      const data = await postJson('/api/analytics', { range });
+      if (!data || !data.success) throw new Error('Invalid analytics');
+      return { ...data, source: 'backend' };
+    } catch (e) {
+      return mockApi.getAnalytics(range);
+    }
+  },
+
+  // PUBLIC_INTERFACE
+  async generatePersona(team, quiz, context = { useCase: 'dashboard', locale: 'en-US' }) {
+    try {
+      const data = await postJson('/api/persona/generate', { team, quiz, context });
+      if (!data || !data.persona) throw new Error('Invalid persona');
+      return { ...data, source: data.source || 'backend' };
+    } catch (e) {
+      return mockApi.generatePersona(team, quiz);
+    }
   }
 };
 

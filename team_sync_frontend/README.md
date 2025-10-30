@@ -3,7 +3,7 @@
 This is the TeamSync MVP frontend implemented with a dependency-light approach:
 - No router dependency (uses a tiny hash router)
 - Ocean Professional theme with blue/amber accents
-- Pages: Landing, Onboarding, Quiz, Recommendations, Dashboard
+- Pages: Landing, Onboarding, Quiz, Recommendations, Dashboard (with Advanced Analytics, Trends, and Persona)
 - Shared components: Navbar, Container, Card, Button, Progress
 - Global state via simple Context + Reducer
 - Mock API and data with in-memory save/feedback

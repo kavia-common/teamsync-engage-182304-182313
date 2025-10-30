@@ -3,6 +3,21 @@ import { ACTIVITIES } from './mockData';
 let saved = [];
 let feedback = [];
 
+// derive analytics locally from shared arrays
+let __importedDerive = null;
+function getDerivers() {
+  if (!__importedDerive) {
+    try {
+      // dynamic require to avoid circular during build
+      // eslint-disable-next-line global-require
+      __importedDerive = require('../services/analytics');
+    } catch (e) {
+      __importedDerive = {};
+    }
+  }
+  return __importedDerive;
+}
+
 /**
  * Determine a playful hero alignment label for an activity when not provided.
  * Based on tags and department signals.
@@ -122,7 +137,40 @@ const mockApi = {
   getSaved() { return [...saved]; },
 
   // PUBLIC_INTERFACE
-  getFeedback() { return [...feedback]; }
+  getFeedback() { return [...feedback]; },
+
+  // PUBLIC_INTERFACE
+  async getAnalytics(range = '4w') {
+    await wait(120);
+    const { deriveSuccessMetrics, deriveSentimentSummary, deriveTrendBuckets, deriveHeroAlignmentBreakdown } = getDerivers();
+    const success = deriveSuccessMetrics ? deriveSuccessMetrics({ feedback, saved }) : { completionRate: 0, likeRatio: 0, avgRating: 0, totals: { feedback: feedback.length, likes: 0, dislikes: 0, saved: saved.length, rated: 0 } };
+    const sentiment = deriveSentimentSummary ? deriveSentimentSummary({ feedback }) : { sentimentScore: 0, label: 'mixed', mentions: { positive: 0, negative: 0, neutral: feedback.length } };
+    const trend = deriveTrendBuckets ? deriveTrendBuckets({ feedback, range }) : { buckets: [], topTagsTrend: [] };
+    const heroes = deriveHeroAlignmentBreakdown ? deriveHeroAlignmentBreakdown({ saved, feedback }) : [];
+    return { success, sentiment, trend, heroes, source: 'fallback' };
+  },
+
+  // PUBLIC_INTERFACE
+  async generatePersona(team = {}, quiz = {}) {
+    await wait(150);
+    const { derivePersona } = getDerivers();
+    if (derivePersona) {
+      const p = derivePersona({ team, quiz, saved, feedback });
+      return { ...p, source: 'fallback', model: 'rules-v1' };
+    }
+    return {
+      persona: {
+        name: `${(team.department || 'Team')} Persona`,
+        summary: 'Balanced, collaborative, and up for a playful challenge.',
+        tone: ['playful', 'supportive'],
+        motivators: ['connection'],
+        constraints: ['time-bound']
+      },
+      breakdown: [{ hero: 'Ally', pct: 1 }],
+      source: 'fallback',
+      model: 'rules-v1'
+    };
+  }
 };
 
 export default mockApi;
