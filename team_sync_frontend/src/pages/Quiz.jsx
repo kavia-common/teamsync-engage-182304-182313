@@ -7,21 +7,25 @@ import { useStore } from '../state/hooks';
 
 /**
  * PUBLIC_INTERFACE
- * Simple multi-question quiz for preferences and personality.
+ * 5-question quiz with concise radio/slider inputs.
+ * On submit: triggers confetti and navigates to /recommendations.
  */
 export default function Quiz() {
   const { state, actions } = useStore();
+
+  // Initialize from store with safe defaults
   const initial = useMemo(
     () => ({
-      energy: state.quiz.energy ?? 'balanced',
-      budget: state.quiz.budget ?? 'medium',
-      duration: state.quiz.duration ?? '60',
-      interests: state.quiz.interests ?? ['games'],
-      collaboration: state.quiz.collaboration ?? 3
+      energy: state.quiz.energy ?? 'balanced',          // Q1
+      budget: state.quiz.budget ?? 'medium',            // Q2
+      duration: Number(state.quiz.duration ?? 60),      // Q3
+      interests: state.quiz.interests ?? ['games'],     // Q4
+      collaboration: Number(state.quiz.collaboration ?? 3) // Q5
     }),
     [state.quiz]
   );
 
+  // Local form state
   const [energy, setEnergy] = useState(initial.energy);
   const [budget, setBudget] = useState(initial.budget);
   const [duration, setDuration] = useState(initial.duration);
@@ -29,30 +33,41 @@ export default function Quiz() {
   const [collaboration, setCollaboration] = useState(initial.collaboration);
   const [saving, setSaving] = useState(false);
 
+  // Accessible multi-select chips (kept but presented as a controlled set of toggles)
+  const chips = [
+    { key: 'games', label: 'Games' },
+    { key: 'outdoors', label: 'Outdoors' },
+    { key: 'food', label: 'Food' },
+    { key: 'creative', label: 'Creative' },
+    { key: 'wellness', label: 'Wellness' },
+  ];
+
   const toggleInterest = (key) => {
     setInterests((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
   };
 
-  // Lightweight confetti: draws a few particles in a transient overlay canvas.
+  // Confetti respects reduced motion and draws a quick overlay
   function sparkConfetti() {
     const prefersReduced =
       typeof window !== 'undefined' &&
       window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (prefersReduced) return;
+    if (prefersReduced || typeof document === 'undefined') return;
 
     const canvas = document.createElement('canvas');
     canvas.setAttribute('aria-hidden', 'true');
-    canvas.style.position = 'fixed';
-    canvas.style.left = '0';
-    canvas.style.top = '0';
-    canvas.style.pointerEvents = 'none';
-    canvas.style.width = '100vw';
-    canvas.style.height = '100vh';
+    Object.assign(canvas.style, {
+      position: 'fixed',
+      left: '0',
+      top: '0',
+      pointerEvents: 'none',
+      width: '100vw',
+      height: '100vh',
+      zIndex: 9999
+    });
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    canvas.style.zIndex = '9999';
     document.body.appendChild(canvas);
 
     const ctx = canvas.getContext('2d');
@@ -64,16 +79,14 @@ export default function Quiz() {
       r: 2 + Math.random() * 3,
       c: colors[Math.floor(Math.random() * colors.length)],
       vx: -1 + Math.random() * 2,
-      vy: 2 + Math.random() * 2.5,
-      life: 700 + Math.random() * 500
+      vy: 2 + Math.random() * 2.5
     }));
-    let start = performance.now();
+    let frames = 0;
     let raf;
-
-    function step(t) {
-      const elapsed = t - start;
+    function step() {
+      frames += 1;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
+      particles.forEach((p) => {
         p.x += p.vx;
         p.y += p.vy;
         p.vy += 0.02;
@@ -82,76 +95,155 @@ export default function Quiz() {
         ctx.fillStyle = p.c;
         ctx.fill();
       });
-      if (elapsed < 900) {
+      if (frames < 55) {
         raf = requestAnimationFrame(step);
       } else {
         cancelAnimationFrame(raf);
-        document.body.removeChild(canvas);
+        if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
       }
     }
     raf = requestAnimationFrame(step);
-    // Cleanup on resize (rare during the <1s life)
-    const onResize = () => {
-      cancelAnimationFrame(raf);
-      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
-      window.removeEventListener('resize', onResize);
-    };
-    window.addEventListener('resize', onResize);
-    setTimeout(() => window.removeEventListener('resize', onResize), 1200);
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e?.preventDefault?.();
     setSaving(true);
     try {
-      await actions.setQuiz({ energy, budget, duration, interests, collaboration });
+      await actions.setQuiz({
+        energy,
+        budget,
+        duration: String(duration), // persist as string to match store shape
+        interests,
+        collaboration
+      });
       sparkConfetti();
-      alert('Quiz saved! Recommendations loading… 🎉');
+      // Subtle confirmation can be omitted to reduce noise; confetti is the signal.
       window.location.hash = '#/recommendations';
     } finally {
       setSaving(false);
     }
   };
 
-  const chips = [
-    { key: 'games', label: 'Games' },
-    { key: 'outdoors', label: 'Outdoors' },
-    { key: 'food', label: 'Food' },
-    { key: 'creative', label: 'Creative' },
-    { key: 'wellness', label: 'Wellness' },
-  ];
-
   return (
     <Container>
       <div className="mb-4">
         <h1 className="h1">Team Quiz</h1>
-        <p className="muted">A quick pulse on vibe and preferences — we’ll keep it snappy.</p>
+        <p className="muted">Five quick picks to tailor your activities.</p>
       </div>
-      <Card>
-        <Progress value={60} label="Quiz progress" />
+
+      <Card as="form" onSubmit={handleSubmit} noValidate>
+        <Progress value={100} label="Quiz progress" />
+
         <div className="ts-row cols-2 mt-4">
-          <div>
-            <label className="label">Energy level</label>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button className={energy === 'chill' ? '' : 'secondary'} onClick={() => setEnergy('chill')}>Chill</Button>
-              <Button className={energy === 'balanced' ? '' : 'secondary'} onClick={() => setEnergy('balanced')}>Balanced</Button>
-              <Button className={energy === 'high' ? '' : 'secondary'} onClick={() => setEnergy('high')}>High</Button>
+          {/* Q1: Energy (radios) */}
+          <fieldset>
+            <legend className="label">1) Energy</legend>
+            <div role="radiogroup" aria-label="Energy level" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <label className={`btn ${energy === 'chill' ? '' : 'secondary'}`}>
+                <input
+                  type="radio"
+                  name="energy"
+                  value="chill"
+                  checked={energy === 'chill'}
+                  onChange={() => setEnergy('chill')}
+                  aria-label="Chill"
+                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                />
+                Chill
+              </label>
+              <label className={`btn ${energy === 'balanced' ? '' : 'secondary'}`}>
+                <input
+                  type="radio"
+                  name="energy"
+                  value="balanced"
+                  checked={energy === 'balanced'}
+                  onChange={() => setEnergy('balanced')}
+                  aria-label="Balanced"
+                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                />
+                Balanced
+              </label>
+              <label className={`btn ${energy === 'high' ? '' : 'secondary'}`}>
+                <input
+                  type="radio"
+                  name="energy"
+                  value="high"
+                  checked={energy === 'high'}
+                  onChange={() => setEnergy('high')}
+                  aria-label="High"
+                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                />
+                High
+              </label>
             </div>
-          </div>
-          <div>
-            <label className="label">Budget</label>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button className={budget === 'low' ? '' : 'secondary'} onClick={() => setBudget('low')}>Low</Button>
-              <Button className={budget === 'medium' ? '' : 'secondary'} onClick={() => setBudget('medium')}>Medium</Button>
-              <Button className={budget === 'high' ? '' : 'secondary'} onClick={() => setBudget('high')}>High</Button>
+          </fieldset>
+
+          {/* Q2: Budget (radios) */}
+          <fieldset>
+            <legend className="label">2) Budget</legend>
+            <div role="radiogroup" aria-label="Budget" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <label className={`btn ${budget === 'low' ? '' : 'secondary'}`}>
+                <input
+                  type="radio"
+                  name="budget"
+                  value="low"
+                  checked={budget === 'low'}
+                  onChange={() => setBudget('low')}
+                  aria-label="Low"
+                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                />
+                Low
+              </label>
+              <label className={`btn ${budget === 'medium' ? '' : 'secondary'}`}>
+                <input
+                  type="radio"
+                  name="budget"
+                  value="medium"
+                  checked={budget === 'medium'}
+                  onChange={() => setBudget('medium')}
+                  aria-label="Medium"
+                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                />
+                Medium
+              </label>
+              <label className={`btn ${budget === 'high' ? '' : 'secondary'}`}>
+                <input
+                  type="radio"
+                  name="budget"
+                  value="high"
+                  checked={budget === 'high'}
+                  onChange={() => setBudget('high')}
+                  aria-label="High"
+                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                />
+                High
+              </label>
             </div>
-          </div>
+          </fieldset>
+
+          {/* Q3: Duration (slider) */}
           <div>
-            <label className="label" htmlFor="duration">Duration (minutes)</label>
-            <input id="duration" className="input" type="number" min={15} max={240} value={duration} onChange={(e) => setDuration(e.target.value)} />
+            <label className="label" htmlFor="duration">3) Duration (minutes)</label>
+            <input
+              id="duration"
+              className="input"
+              type="range"
+              min={15}
+              max={180}
+              step={15}
+              value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
+              aria-valuemin={15}
+              aria-valuemax={180}
+              aria-valuenow={duration}
+            />
+            <div className="muted">Current: {duration} min</div>
           </div>
+
+          {/* Q4: Interests (compact chip toggles) */}
           <div>
-            <label className="label">Interests</label>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <span className="label" id="interests-label">4) Interests</span>
+            <div aria-labelledby="interests-label" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {chips.map((c) => (
                 <button
                   key={c.key}
@@ -165,8 +257,10 @@ export default function Quiz() {
               ))}
             </div>
           </div>
+
+          {/* Q5: Collaboration (slider) */}
           <div>
-            <label className="label" htmlFor="collab">How collaborative? (1 = solo, 5 = highly collaborative)</label>
+            <label className="label" htmlFor="collab">5) Collaboration (1–5)</label>
             <input
               id="collab"
               className="input"
@@ -176,13 +270,17 @@ export default function Quiz() {
               step={1}
               value={collaboration}
               onChange={(e) => setCollaboration(Number(e.target.value))}
+              aria-valuemin={1}
+              aria-valuemax={5}
+              aria-valuenow={collaboration}
             />
             <div className="muted">Current: {collaboration}</div>
           </div>
         </div>
+
         <div className="mt-4" style={{ display: 'flex', gap: 12 }}>
-          <Button variant="secondary" onClick={() => (window.location.hash = '#/onboarding')}>Back</Button>
-          <Button onClick={handleSubmit} disabled={saving}>{saving ? 'Saving…' : 'See Recommendations'}</Button>
+          <Button variant="secondary" type="button" onClick={() => (window.location.hash = '#/onboarding')}>Back</Button>
+          <Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Submit & See Recommendations'}</Button>
         </div>
       </Card>
     </Container>
