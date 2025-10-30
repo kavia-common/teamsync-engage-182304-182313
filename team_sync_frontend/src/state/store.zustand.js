@@ -16,6 +16,11 @@ export const useZStore = create((set, get) => ({
   quiz: { energy: 'balanced', budget: 'medium', duration: '60', interests: ['games'], collaboration: 3 },
   saved: [],
   feedback: [],
+  // Minimal subscription state used for plan badges and CTA reflection
+  plan: { tier: 'free', // 'free' | 'pro'
+    billing: 'monthly', // reserved for future
+    demo: false,        // demo mode indicator
+  },
 
   // PUBLIC_INTERFACE
   setTeam: (team) => set((s) => ({ team: { ...s.team, ...team } })),
@@ -33,4 +38,7 @@ export const useZStore = create((set, get) => ({
 
   // PUBLIC_INTERFACE
   clearRecommendations: () => set(() => ({})), // placeholder for parity
+
+  // PUBLIC_INTERFACE
+  setPlan: (plan) => set((s) => ({ plan: { ...s.plan, ...plan } })),
 }));

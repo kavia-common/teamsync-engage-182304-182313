@@ -1,49 +1,83 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Container from '../components/common/Container';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import { useStore } from '../state/hooks';
 
 /**
  * PUBLIC_INTERFACE
- * Playful landing page with headline, tagline, and primary CTA to onboarding.
+ * Landing page with top CTA group (Sign in, Demo, Get Started), pricing plans (Free and Pro),
+ * premium feature badges, referral note, and plan selection reflected in global state.
+ * Maintains theme and existing animations.
  */
 export default function Landing() {
+  const { state, actions } = useStore();
+
+  // Auto-detect demo query param and set demo mode + route to onboarding
+  useEffect(() => {
+    const hash = window.location.hash || '';
+    const isDemo = /[?&]demo=1\b/.test(hash);
+    if (isDemo && !state.plan?.demo) {
+      actions.setPlan({ demo: true, tier: 'pro' });
+    }
+  }, [state.plan?.demo, actions]);
+
+  // CTA handlers
+  const goOnboarding = () => (window.location.hash = '#/onboarding');
+  const startDemo = () => {
+    actions.setPlan({ demo: true, tier: 'pro' });
+    window.location.hash = '#/onboarding?demo=1';
+  };
+  const getStartedFree = () => {
+    actions.setPlan({ tier: 'free', demo: false });
+    window.location.hash = '#/onboarding';
+  };
+
+  const selectFree = () => actions.setPlan({ tier: 'free', demo: false });
+  const selectPro = () => actions.setPlan({ tier: 'pro', demo: false });
+
+  const isPro = state.plan?.tier === 'pro';
+  const isFree = state.plan?.tier === 'free';
+
   return (
     <div className="hero">
       <div className="hero-inner">
         <div>
-          {/* Exact requested headline */}
+          {/* Headline and tagline */}
           <h1 className="h1" title="Team time, simplified">
             Plan engaging team activities in just a few clicks.
           </h1>
-
-          {/* Exact requested tagline */}
           <p className="muted mb-4">
             TeamSync learns your team’s size, department, and work mode to suggest curated activities that spark connection.
           </p>
 
-          {/* Primary CTA must route to #/onboarding */}
+          {/* Top CTA group: Sign in (placeholder), Demo, Get Started for Free */}
           <div className="grid-gap-12" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a
-              href="#/onboarding"
-              className="btn"
-              aria-label="Start onboarding"
-              title="Set team basics — it only takes a minute"
-            >
-              Start Onboarding
-            </a>
-            {/* Keep a secondary path to onboarding as an alternative CTA */}
-            <a
-              href="#/onboarding"
+              href="#/sign-in" // placeholder route; not implemented
               className="btn secondary"
-              aria-label="Begin"
-              title="Begin the guided flow"
+              aria-label="Sign in"
+              title="Sign in (placeholder)"
+              onClick={(e) => { e.preventDefault(); alert('Sign-in not enabled in this demo.'); }}
             >
-              Begin
+              Sign in
             </a>
+            <Button className="warning" onClick={startDemo} aria-label="Start demo" title="See it in action (demo mode)">
+              🚀 Demo
+            </Button>
+            <Button onClick={getStartedFree} aria-label="Get started for free" title="Create your first plan free">
+              Get Started for Free
+            </Button>
           </div>
 
-          {/* Supportive microcopy can remain but is not part of the exact tagline requirement */}
+          {/* Selected plan badge */}
+          <div className="mt-3" aria-live="polite">
+            <span className={`btn ${isPro ? 'warning' : 'secondary'}`} title="Current plan">
+              {isPro ? 'Pro/Business Plan Selected' : 'Free Plan Selected'}
+              {state.plan?.demo ? ' • Demo' : ''}
+            </span>
+          </div>
+
           <p className="muted mt-3" aria-label="Theme note">
             Ocean Professional theme • Modern • Fast • A sprinkle of fun ✨
           </p>
@@ -59,7 +93,7 @@ export default function Landing() {
           </ol>
           <div className="mt-4">
             <Button
-              onClick={() => (window.location.hash = '#/onboarding')}
+              onClick={goOnboarding}
               aria-label="Start onboarding now"
               title="Ready when you are 🚀"
             >
@@ -68,7 +102,89 @@ export default function Landing() {
           </div>
         </Card>
       </div>
+
+      {/* Pricing section */}
       <Container>
+        <div className="mt-6">
+          <h2 className="h2 center">Simple pricing</h2>
+          <p className="muted center">Start free. Upgrade anytime for advanced features.</p>
+        </div>
+
+        <div className="ts-row cols-2 mt-4">
+          {/* Free plan */}
+          <Card aria-label="Free plan">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <h3 className="h2">Free</h3>
+              <span className={`btn ${isFree ? '' : 'secondary'}`} aria-label="Selected plan badge">
+                {isFree ? 'Selected' : 'Select'}
+              </span>
+            </div>
+            <p className="muted">Everything you need to get started.</p>
+            <ul className="mt-3" style={{ paddingLeft: 18 }}>
+              <li>Onboarding & team profiling</li>
+              <li>Personality quiz</li>
+              <li>3–5 activity recommendations</li>
+              <li>Basic feedback</li>
+              <li>
+                <span className="btn secondary" title="Premium feature">
+                  AI Analytics (Premium)
+                </span>
+              </li>
+              <li>
+                <span className="btn secondary" title="Premium feature">
+                  Custom Activity Builder (Premium)
+                </span>
+              </li>
+            </ul>
+            <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Button variant={isFree ? 'primary' : 'secondary'} onClick={() => { selectFree(); getStartedFree(); }}>
+                {isFree ? 'Continue Free' : 'Choose Free'}
+              </Button>
+            </div>
+          </Card>
+
+          {/* Pro/Business plan */}
+          <Card aria-label="Pro plan">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <h3 className="h2">Pro / Business</h3>
+              <span className={`btn ${isPro ? '' : 'secondary'}`} aria-label="Selected plan badge">
+                {isPro ? 'Selected' : 'Select'}
+              </span>
+            </div>
+            <p className="muted">$15–25 per user / month</p>
+            <ul className="mt-3" style={{ paddingLeft: 18 }}>
+              <li>Everything in Free</li>
+              <li>
+                <span className="btn warning" title="Premium feature enabled">
+                  AI Analytics
+                </span>
+              </li>
+              <li>
+                <span className="btn warning" title="Premium feature enabled">
+                  Custom Activity Builder
+                </span>
+              </li>
+              <li>Advanced feedback insights</li>
+              <li>Priority support</li>
+            </ul>
+            <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Button onClick={() => { selectPro(); goOnboarding(); }} title="Upgrade and continue">
+                Upgrade & Continue
+              </Button>
+              <Button variant="secondary" onClick={startDemo} title="Try a guided demo">
+                Try Demo
+              </Button>
+            </div>
+          </Card>
+        </div>
+
+        <div className="mt-3">
+          <p className="muted center" title="Referral note">
+            Note: Some activities may include referral fees when purchased through partners. This never affects your price.
+          </p>
+        </div>
+
+        {/* Feature highlights for consistency with theme */}
         <div className="ts-row cols-3 mt-6">
           <Card>
             <h3 className="h2">Smart</h3>

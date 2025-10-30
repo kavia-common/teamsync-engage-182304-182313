@@ -10,6 +10,7 @@ export function useStore() {
     quiz: s.quiz,
     saved: s.saved,
     feedback: s.feedback,
+    plan: s.plan,
   }));
   const actions = {
     setTeam: useZStore((s) => s.setTeam),
@@ -18,7 +19,9 @@ export function useStore() {
     // PUBLIC_INTERFACE
     // Unified feedback method allowing minimal (id,value,title) and extended (comment, rating)
     giveFeedback: (activityId, value, activityTitle = '', comment = '', rating = 0) =>
-      useZStore.getState().giveFeedback({ activityId, value, activityTitle, comment, rating })
+      useZStore.getState().giveFeedback({ activityId, value, activityTitle, comment, rating }),
+    // PUBLIC_INTERFACE
+    setPlan: useZStore((s) => s.setPlan),
   };
   return { state, actions };
 }

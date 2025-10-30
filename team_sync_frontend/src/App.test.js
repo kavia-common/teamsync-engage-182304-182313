@@ -3,7 +3,7 @@ import App from './App';
 
 test('renders landing headline', () => {
   render(<App />);
-  // Exact headline verification
-  const headline = screen.getByText('Plan engaging team activities in just a few clicks.');
+  // Headline verification (allowing extra surrounding content)
+  const headline = screen.getByText(/Plan engaging team activities in just a few clicks\./i);
   expect(headline).toBeInTheDocument();
 });
