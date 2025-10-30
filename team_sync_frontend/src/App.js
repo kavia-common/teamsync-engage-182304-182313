@@ -1,48 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
+import './index.css';
+import RoutesView from './router/Routes';
+import Navbar from './components/common/Navbar';
+import { StoreProvider } from './state/store';
 
-// PUBLIC_INTERFACE
+/**
+ * App entry applies the Ocean Professional theme using CSS variables,
+ * renders the Navbar and current route view, and provides global store.
+ */
 function App() {
   const [theme, setTheme] = useState('light');
 
-  // Effect to apply theme to document element
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+  // Ocean Professional palette
+  const oceanVars = useMemo(
+    () => ({
+      '--ts-bg': '#f9fafb',
+      '--ts-surface': '#ffffff',
+      '--ts-text': '#111827',
+      '--ts-text-muted': 'rgba(17,24,39,0.7)',
+      '--ts-primary': '#2563EB',
+      '--ts-secondary': '#F59E0B',
+      '--ts-error': '#EF4444',
+      '--ts-border': '#e5e7eb',
+      '--ts-shadow': '0 10px 20px rgba(0,0,0,0.06)',
+      '--ts-radius': '16px',
+      '--ts-focus': '0 0 0 3px rgba(37,99,235,0.35)'
+    }),
+    []
+  );
 
-  // PUBLIC_INTERFACE
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
-  };
+  useEffect(() => {
+    // apply theme vars to document root
+    const root = document.documentElement;
+    Object.entries(oceanVars).forEach(([k, v]) => root.style.setProperty(k, v));
+    root.setAttribute('data-theme', theme);
+  }, [theme, oceanVars]);
+
+  const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <button 
-          className="theme-toggle" 
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
-        </button>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <StoreProvider>
+      <div className="App" style={{ background: 'var(--ts-bg)', minHeight: '100vh' }}>
+        <a href="#main" className="skip-link">Skip to main content</a>
+        <Navbar theme={theme} onToggleTheme={toggleTheme} />
+        <main id="main" aria-live="polite">
+          <RoutesView />
+        </main>
+      </div>
+    </StoreProvider>
   );
 }
 
