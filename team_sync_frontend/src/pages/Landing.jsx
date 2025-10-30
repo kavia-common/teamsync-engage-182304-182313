@@ -6,9 +6,9 @@ import { useStore } from '../state/hooks';
 
 /**
  * PUBLIC_INTERFACE
- * Landing page with top CTA group (Sign in, Demo, Get Started), pricing plans (Free and Pro),
- * premium feature badges, referral note, and plan selection reflected in global state.
- * Maintains theme and existing animations.
+ * Landing page with primary CTA group (Sign up, Sign in, Demo, Get Started),
+ * simplified "How it works" (Onboarding, Recommendations), pricing, and highlights.
+ * Accessibility friendly; uses rounded-2xl cards, shadows, and teal/purple palette.
  */
 export default function Landing() {
   const { state, actions } = useStore();
@@ -19,7 +19,6 @@ export default function Landing() {
     const isDemo = /[?&]demo=1\b/.test(hash);
     if (isDemo && !state.plan?.demo) {
       actions.setPlan({ demo: true, tier: 'pro' });
-      // normalize route to onboarding with demo flag to begin guided flow
       if (!hash.startsWith('#/onboarding')) {
         window.location.hash = '#/onboarding?demo=1';
       }
@@ -65,26 +64,22 @@ export default function Landing() {
           <h1 className="h1" title="Team time, simplified">
             Plan engaging team activities in just a few clicks.
           </h1>
-          <p className="muted mb-4">
+          <p className="muted">
             TeamSync learns your team’s size, department, and work mode to suggest curated activities that spark connection.
           </p>
 
-          {/* Top CTA group: Sign in (placeholder), Demo, Get Started for Free */}
-          <div className="grid-gap-12" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <a
-              href="#/sign-in" // placeholder route; not implemented
-              className="btn secondary"
-              aria-label="Sign in"
-              title="Sign in (placeholder)"
-              onClick={(e) => { e.preventDefault(); alert('Sign-in not enabled in this demo.'); }}
-            >
-              Sign in
-            </a>
+          {/* Primary CTA group directly beneath hero text */}
+          <div className="grid-gap-12 mt-3" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }} aria-label="Primary actions">
+            {/* Sign up and Sign in link to placeholder hash routes if unimplemented */}
+            <a href="#/signup" className="btn" aria-label="Sign up">Sign up</a>
+            <a href="#/signin" className="btn secondary" aria-label="Sign in">Sign in</a>
+
+            {/* Keep Demo and Get Started links intact */}
             <Button className="warning" onClick={startDemo} aria-label="Start demo" title="See it in action (demo mode)">
               🚀 Demo
             </Button>
             <Button onClick={getStartedFree} aria-label="Get started for free" title="Create your first plan free">
-              Get Started for Free
+              Get Started
             </Button>
             <Button variant="ghost" onClick={scrollToPricing} aria-label="Jump to pricing">
               View Pricing
@@ -104,13 +99,24 @@ export default function Landing() {
           </p>
         </div>
 
+        {/* Simplified How it works: 2 steps with themed icons */}
         <Card aria-label="How it works">
           <h2 className="h2">How it works</h2>
-          <ol className="muted">
-            <li className="mt-2">1. Quick onboarding: tell us about your team</li>
-            <li className="mt-2">2. Personality quiz: playful and insightful</li>
-            <li className="mt-2">3. Recommendations: 3–5 tailored picks</li>
-            <li className="mt-2">4. Feedback: we learn and improve over time</li>
+          <ol className="list-reset" aria-label="Two step flow">
+            <li className="mt-2" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <span aria-hidden className="btn secondary" title="Onboarding">🧭</span>
+              <div>
+                <strong>Onboarding</strong>
+                <div className="muted">Tell us about your team — size, department, and work mode.</div>
+              </div>
+            </li>
+            <li className="mt-2" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <span aria-hidden className="btn secondary" title="Recommendations">🤖</span>
+              <div>
+                <strong>Recommendations</strong>
+                <div className="muted">Get 3–5 curated activities matched to your team’s vibe.</div>
+              </div>
+            </li>
           </ol>
           <div className="mt-4">
             <Button
