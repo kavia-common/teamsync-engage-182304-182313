@@ -1,21 +1,12 @@
 import React from 'react';
 import Button from './Button';
-import { useStore } from '../../state/hooks';
 
 /**
  * PUBLIC_INTERFACE
- * Navbar simplified to show only the TeamSync primary CTA and Theme toggle.
- * Preserves theme toggle behavior and Ocean Professional styling.
+ * Navbar shows brand and Theme toggle only.
+ * Removes TeamSync CTA as requested.
  */
 export default function Navbar({ theme, onToggleTheme }) {
-  const { state } = useStore();
-
-  // PUBLIC_INTERFACE
-  // Primary CTA click: start TeamSync by navigating to sign-up first.
-  const handleStart = () => {
-    window.location.hash = '#/signup';
-  };
-
   return (
     <header className="navbar" role="banner">
       <div className="navbar-inner">
@@ -25,9 +16,6 @@ export default function Navbar({ theme, onToggleTheme }) {
         </a>
         <nav aria-label="Primary">
           <div className="nav-actions">
-            <Button onClick={handleStart} aria-label="Start TeamSync" title="Start TeamSync">
-              TeamSync
-            </Button>
             <Button
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
               onClick={onToggleTheme}

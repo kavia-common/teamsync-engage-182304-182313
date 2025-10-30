@@ -11,40 +11,35 @@ import Navbar from './components/common/Navbar';
 function App() {
   const [theme, setTheme] = useState('light');
 
-  // Brand Refresh palette
-  const oceanVars = useMemo(
-    () => ({
-      '--ts-bg': '#F8FAFC',
-      '--ts-surface': '#ffffff',
-      '--ts-text': '#1E293B',
-      '--ts-text-muted': 'rgba(30,41,59,0.72)',
-      '--ts-primary': '#2BD9C9',
-      '--ts-primary-600': '#22c9ba',
-      '--ts-primary-700': '#19b5a7',
-      '--ts-secondary': '#7D83FF',
-      '--ts-secondary-600': '#6b72ff',
-      '--ts-error': '#EF4444',
-      '--ts-border': '#e6e8ec',
-      '--ts-shadow-sm': '0 4px 12px rgba(2, 8, 23, 0.06)',
-      '--ts-shadow': '0 12px 30px rgba(2, 8, 23, 0.08)',
-      '--ts-radius': '16px',
-      '--ts-radius-2xl': '20px',
-      '--ts-focus': '0 0 0 3px rgba(43,217,201,0.35)'
-    }),
-    []
-  );
-
+  // initialize from localStorage or prefers-color-scheme once
   useEffect(() => {
-    // apply theme vars to document root
+    try {
+      const saved = localStorage.getItem('ts-theme');
+      if (saved === 'light' || saved === 'dark') {
+        setTheme(saved);
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setTheme('dark');
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  // Apply theme data attribute for CSS variables to take effect
+  useEffect(() => {
     const root = document.documentElement;
-    Object.entries(oceanVars).forEach(([k, v]) => root.style.setProperty(k, v));
     root.setAttribute('data-theme', theme);
-  }, [theme, oceanVars]);
+    try {
+      localStorage.setItem('ts-theme', theme);
+    } catch {
+      // ignore storage errors
+    }
+  }, [theme]);
 
   const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
 
   return (
-    <div className="App" style={{ background: 'var(--ts-bg)', minHeight: '100vh' }}>
+    <div className="App" style={{ background: 'var(--ts-bg)', minHeight: '100vh', color: 'var(--ts-text)' }}>
       <a href="#main" className="skip-link">Skip to main content</a>
       <Navbar theme={theme} onToggleTheme={toggleTheme} />
       <main id="main" role="main" aria-live="polite">
