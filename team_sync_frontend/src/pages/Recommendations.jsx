@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Container from '../components/common/Container';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -8,29 +8,51 @@ import api from '../services/api';
 /**
  * PUBLIC_INTERFACE
  * Displays 3–5 recommended activities with actions to save and give feedback.
+ * Ensures tags are visible, Save calls both API and store, and "Try Another Set" refreshes items.
  */
 export default function Recommendations() {
   const { state, actions } = useStore();
   const [loading, setLoading] = useState(true);
   const [recs, setRecs] = useState([]);
   const [error, setError] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0); // bump to force refetch
+
+  // derive payload; keep stable reference with useMemo
+  const payload = useMemo(() => ({ team: state.team, quiz: state.quiz }), [state.team, state.quiz]);
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
     setError('');
     api
-      .getRecommendations({ team: state.team, quiz: state.quiz })
-      .then((r) => mounted && setRecs(r))
+      .getRecommendations(payload)
+      .then((r) => {
+        if (!mounted) return;
+        // Constrain to 3–5 cards (mock returns up to 5 already)
+        const limited = Array.isArray(r) ? r.slice(0, Math.max(3, Math.min(5, r.length))) : [];
+        setRecs(limited);
+      })
       .catch(() => mounted && setError('Failed to load recommendations.'))
       .finally(() => mounted && setLoading(false));
     return () => {
       mounted = false;
     };
-  }, [state.team, state.quiz]);
+  }, [payload, refreshKey]);
 
   const handleSave = async (item) => {
-    await actions.saveRecommendation(item);
+    // persist via API (with mock fallback), then update local store
+    try {
+      await api.saveRecommendation(item);
+    } catch {
+      // no-op; service already falls back to mock
+    } finally {
+      actions.saveRecommendation(item);
+      // announce to SR users
+      if (typeof window !== 'undefined') {
+        const live = document.getElementById('sr-live');
+        if (live) live.textContent = `${item.title} saved`;
+      }
+    }
   };
 
   // Lightweight confetti helper
@@ -105,9 +127,8 @@ export default function Recommendations() {
   };
 
   const tryAnother = () => {
-    // Simple reshuffle: trigger a refetch by tweaking quiz interests ordering
-    const reordered = [...(state.quiz.interests || [])].sort(() => Math.random() - 0.5);
-    actions.setQuiz({ interests: reordered });
+    // Trigger a different set by bumping refreshKey to refetch.
+    setRefreshKey((k) => k + 1);
   };
 
   return (
@@ -117,6 +138,7 @@ export default function Recommendations() {
         <p className="muted">
           Based on your team profile and quiz results — handpicked just for you.
         </p>
+        <div id="sr-live" aria-live="polite" className="sr-only" style={{ position: 'absolute', left: -9999 }} />
       </div>
 
       {loading && <Card aria-busy="true">Loading recommendations…</Card>}
@@ -143,11 +165,25 @@ export default function Recommendations() {
             <Card key={rec.id}>
               <h3 className="h2" title="Team-boosting activity">{rec.title}</h3>
               <p className="muted">{rec.description}</p>
+
+              {/* Meta row */}
               <div className="mt-3" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <span className="btn secondary" aria-hidden title="Duration">⏱ {rec.duration}m</span>
                 <span className="btn secondary" aria-hidden title="Suggested team size">👥 {rec.suggestedSize}</span>
                 <span className="btn secondary" aria-hidden title="Budget level">💸 {rec.budget}</span>
               </div>
+
+              {/* Tags visible as chips for scannability */}
+              {Array.isArray(rec.tags) && rec.tags.length > 0 && (
+                <div className="mt-3" aria-label="Tags" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {rec.tags.slice(0, 6).map((t) => (
+                    <span key={t} className="btn ghost" aria-hidden>
+                      #{t}
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Button onClick={() => handleSave(rec)} aria-label={`Save ${rec.title}`} title="Save for later">
                   Save
