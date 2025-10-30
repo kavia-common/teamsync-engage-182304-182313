@@ -21,9 +21,12 @@ import { useStore } from '../state/hooks';
 export default function Landing() {
   const { state, actions } = useStore();
 
-  // Optional hero image hook: supply a valid path to replace the CSS art.
-  // Keep null/empty to use the styled illustration block.
-  const HERO_IMAGE = ''; // e.g., '/assets/hero-illustration.png'
+  // Optional hero image hook: external Freepik illustration for now.
+  // Replace with local asset path later if needed (e.g., '/assets/hero-illustration.png').
+  const HERO_IMAGE =
+    'https://img.freepik.com/free-vector/teamwork-people-with-puzzle-pieces_23-2148536406.jpg?size=1024&ext=jpg&ga=GA1.1.1228589952.1712870400&semt=ais_hybrid'; // from: https://www.freepik.com/free-vector/teamwork-people-with-puzzle-pieces_5686193.htm
+  const HERO_ALT =
+    'Team collaborating with colorful puzzle pieces, representing team building.';
 
   useEffect(() => {
     const hash = window.location.hash || '';
@@ -59,15 +62,18 @@ export default function Landing() {
             </p>
           </div>
 
-          {/* Illustration area (placeholder div or optional image) */}
-          <div className="landing-hero__media" aria-hidden>
+          {/* Illustration area */}
+          <div className="landing-hero__media">
             {HERO_IMAGE ? (
               <img
                 src={HERO_IMAGE}
-                alt="Abstract illustration of teammates collaborating"
+                alt={HERO_ALT}
                 className="landing-hero__img"
-                loading="eager"
+                width={1024}
+                height={768}
+                loading="lazy"
                 decoding="async"
+                referrerPolicy="no-referrer"
               />
             ) : (
               <div
@@ -90,6 +96,22 @@ export default function Landing() {
             Ocean Professional theme • Modern • Fast • A sprinkle of fun ✨
           </p>
         </Card>
+      </Container>
+
+      {/* Asset attribution (required by Freepik when using free assets) */}
+      <Container>
+        <p className="muted center attribution-note">
+          Illustration by{' '}
+          <a
+            href="https://www.freepik.com/free-vector/teamwork-people-with-puzzle-pieces_5686193.htm"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Freepik teamwork illustration attribution link"
+            title="Freepik teamwork illustration"
+          >
+            Freepik
+          </a>
+        </p>
       </Container>
 
       {/* How it works: two steps directly below hero */}

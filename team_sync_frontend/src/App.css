@@ -358,7 +358,7 @@ main[role="main"] {
     radial-gradient(circle at 30% 30%, rgba(125,131,255,.25), transparent 55%),
     radial-gradient(circle at 70% 60%, rgba(43,217,201,.28), transparent 55%),
     linear-gradient(180deg, #fff, #f8fafc);
-  object-fit: cover; /* for image */
+  object-fit: contain; /* show full illustration without cropping */
   object-position: center;
   display: block;
 }
@@ -393,7 +393,7 @@ main[role="main"] {
   }
   .landing-hero__art,
   .landing-hero__img {
-    max-height: clamp(170px, 28vh, 220px); /* small/medium screens */
+    max-height: clamp(170px, 26vh, 210px); /* tighten slightly */
   }
 }
 
@@ -410,7 +410,7 @@ main[role="main"] {
   .landing-hero__art,
   .landing-hero__img {
     aspect-ratio: 4/3;
-    max-height: clamp(190px, 26vh, 260px); /* md/desktop target 220–280px */
+    max-height: clamp(190px, 22vh, 240px); /* compact desktop */
     transform: none; /* remove offset to reduce vertical footprint */
   }
 }
@@ -565,4 +565,14 @@ main[role="main"] {
   list-style: none;
   padding-left: 0;
   margin: 0;
+}
+
+/* Attribution note under hero */
+.attribution-note {
+  font-size: 12px;
+  margin-top: 8px;
+}
+.attribution-note a {
+  color: var(--ts-text-muted);
+  text-decoration: underline;
 }
