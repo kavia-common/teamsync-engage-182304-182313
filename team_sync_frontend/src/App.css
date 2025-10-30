@@ -698,6 +698,12 @@ main[role="main"] {
   border-color: rgba(125, 131, 255, 0.22);
 }
 
+/* Dark mode: ensure Pro/Business AI feature text is white within plan selection to meet contrast */
+:root[data-theme='dark'] .plan-selection .ai-badge,
+:root[data-theme='dark'] .plan-selection .ai-badge.ai-badge--ghost {
+  color: #ffffff;
+}
+
 .ai-badge:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(125, 131, 255, 0.28);

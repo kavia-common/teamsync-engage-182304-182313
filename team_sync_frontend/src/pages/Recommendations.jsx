@@ -53,9 +53,9 @@ export default function Recommendations() {
         if (!mounted) return;
         const list = Array.isArray(r) ? r : [];
 
-        // Constrain to 3–5 cards; ensure at least 3 with placeholders
-        const limited = list.slice(0, Math.max(3, Math.min(5, list.length)));
-        const minCount = 3;
+        // Constrain to 4–5 cards; ensure at least 4 with placeholders (rare fallback)
+        const limited = list.slice(0, Math.max(4, Math.min(5, list.length)));
+        const minCount = 4;
         let base = limited;
         if (limited.length < minCount) {
           const placeholders = Array.from({ length: minCount - limited.length }).map((_, i) => ({

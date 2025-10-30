@@ -33,7 +33,12 @@ function deriveHero(a) {
 }
 
 /**
- * Score activities with department and quiz features, ensuring at least one department-exclusive.
+ * Score activities with department and quiz features,
+ * and produce an ordered list that aims for:
+ * - At least 4 items total
+ * - Prefer 2 department-exclusive (when available)
+ * - Prefer 2 general/common (non-exclusive and not department-scoped)
+ * Fall back gracefully by filling with department-relevant or other high scores.
  */
 function scoreActivities({ team, quiz }) {
   // Normalize department names to match mock data canonical values
@@ -76,64 +81,54 @@ function scoreActivities({ team, quiz }) {
     return { ...a, score: s };
   }).sort((x, y) => y.score - x.score);
 
-  // Ensure at least two department-exclusive items if available
-  const exclusives = scored.filter(a => Array.isArray(a.exclusiveDepartments) && a.exclusiveDepartments.includes(dept));
-  const nonExclusiveRanked = scored.filter(a => !(Array.isArray(a.exclusiveDepartments) && a.exclusiveDepartments.includes(dept)));
+  // Pools
+  const isExclusive = (a) => Array.isArray(a.exclusiveDepartments) && a.exclusiveDepartments.includes(dept);
+  const isDeptRelevant = (a) => Array.isArray(a.departments) && a.departments.includes(dept);
+  const isCommon = (a) => !isExclusive(a) && (!Array.isArray(a.departments) || a.departments.length === 0);
 
-  const result = [];
-  if (exclusives.length >= 2) {
-    result.push(exclusives[0], exclusives[1]);
-  } else if (exclusives.length === 1) {
-    result.push(exclusives[0]);
-    // Try to add a department-relevant (non-exclusive) item as second priority
-    const deptRelevant = nonExclusiveRanked.find(a => (a.departments || []).includes(dept));
-    if (deptRelevant) result.push(deptRelevant);
-  } else {
-    // No exclusives: add top dept-relevant item if present; otherwise top general
-    const deptRelevant = nonExclusiveRanked.find(a => (a.departments || []).includes(dept));
-    result.push(deptRelevant || scored[0]);
+  const exclusives = scored.filter(isExclusive);
+  const commons = scored.filter(isCommon);
+  const deptRelevantNonExclusive = scored.filter((a) => !isExclusive(a) && isDeptRelevant(a));
+  const others = scored.filter((a) => !isExclusive(a) && !isDeptRelevant(a) && !isCommon(a));
+
+  // Build ordered list:
+  // 1) Up to 2 exclusives
+  const pick = [];
+  exclusives.slice(0, 2).forEach((a) => pick.push(a));
+
+  // 2) Up to 2 commons
+  commons.slice(0, 2).forEach((a) => {
+    if (!pick.find((p) => p.id === a.id)) pick.push(a);
+  });
+
+  // If still less than 4, fill with dept-relevant non-exclusive first
+  if (pick.length < 4) {
+    for (const a of deptRelevantNonExclusive) {
+      if (pick.length >= 4) break;
+      if (!pick.find((p) => p.id === a.id)) pick.push(a);
+    }
   }
 
-  // Fill remaining 1–3 items with high scores prioritizing dept relevance
-  const pool = scored.filter(a => !result.find(r => r.id === a.id));
-  const prioritized = [
-    ...pool.filter(a => (a.departments || []).includes(dept)).slice(0, 3),
-    ...pool.filter(a => !(a.departments || []).includes(dept)).slice(0, 4),
-  ];
+  // If still less than 4, fill with remaining high-score others or commons
+  if (pick.length < 4) {
+    const filler = scored.filter((a) => !pick.find((p) => p.id === a.id));
+    for (const a of filler) {
+      if (pick.length >= 4) break;
+      pick.push(a);
+    }
+  }
 
-  // target length between 3 and 5
-  const needed = Math.max(3 - result.length, 0);
-  const desired = Math.max(3, Math.min(5, result.length + prioritized.length));
-  const finalList = [...result, ...prioritized].slice(0, desired).map(a => ({
+  // Cap to 5 total, keep current ordering (exclusives -> commons -> others by score)
+  const final = pick.slice(0, 5).map((a) => ({
     ...a,
     heroAlignment: deriveHero(a),
-    departmentExclusive: Array.isArray(a.exclusiveDepartments) && a.exclusiveDepartments.includes(dept),
-    departmentScope: (Array.isArray(a.exclusiveDepartments) && a.exclusiveDepartments.length)
-      ? a.exclusiveDepartments
+    departmentExclusive: isExclusive(a),
+    departmentScope: isExclusive(a)
+      ? (Array.isArray(a.exclusiveDepartments) ? a.exclusiveDepartments : [])
       : (Array.isArray(a.departments) ? a.departments : [])
   }));
 
-  // Safety: if we still have fewer than 2 exclusives but they exist in the catalog for this dept, try to add second one
-  if (exclusives.length >= 2) {
-    // already satisfied
-    return finalList;
-  }
-  if (exclusives.length === 1) {
-    const hasOne = finalList.some(x => x.id === exclusives[0].id);
-    if (hasOne) {
-      const second = exclusives.find(x => x.id !== exclusives[0].id);
-      if (second && !finalList.find(x => x.id === second.id)) {
-        finalList.splice(Math.min(1, finalList.length), 0, {
-          ...second,
-          heroAlignment: deriveHero(second),
-          departmentExclusive: true,
-          departmentScope: second.exclusiveDepartments
-        });
-        return finalList.slice(0, 5);
-      }
-    }
-  }
-  return finalList;
+  return final;
 }
 
 const wait = (ms) => new Promise((res) => setTimeout(res, ms));

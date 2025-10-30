@@ -30,7 +30,7 @@ export default function PlanSelection() {
   );
 
   return (
-    <Container>
+    <Container className="plan-selection">
       <div className="mb-4">
         <h1 className="h1">Choose your plan</h1>
         <p className="muted">You can start free and upgrade anytime. Current: <strong>{isPro ? 'Pro' : 'Free'}</strong></p>
