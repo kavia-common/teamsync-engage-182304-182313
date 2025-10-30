@@ -31,10 +31,78 @@ export default function Quiz() {
     setInterests((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
   };
 
+  // Lightweight confetti: draws a few particles in a transient overlay canvas.
+  function sparkConfetti() {
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReduced) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('aria-hidden', 'true');
+    canvas.style.position = 'fixed';
+    canvas.style.left = '0';
+    canvas.style.top = '0';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.zIndex = '9999';
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    const colors = ['#2BD9C9', '#7D83FF', '#34d399', '#f59e0b'];
+    const count = Math.min(90, Math.floor((window.innerWidth + window.innerHeight) / 24));
+    const particles = Array.from({ length: count }).map(() => ({
+      x: Math.random() * canvas.width,
+      y: -10 - Math.random() * 40,
+      r: 2 + Math.random() * 3,
+      c: colors[Math.floor(Math.random() * colors.length)],
+      vx: -1 + Math.random() * 2,
+      vy: 2 + Math.random() * 2.5,
+      life: 700 + Math.random() * 500
+    }));
+    let start = performance.now();
+    let raf;
+
+    function step(t) {
+      const elapsed = t - start;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.02;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.c;
+        ctx.fill();
+      });
+      if (elapsed < 900) {
+        raf = requestAnimationFrame(step);
+      } else {
+        cancelAnimationFrame(raf);
+        document.body.removeChild(canvas);
+      }
+    }
+    raf = requestAnimationFrame(step);
+    // Cleanup on resize (rare during the <1s life)
+    const onResize = () => {
+      cancelAnimationFrame(raf);
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      window.removeEventListener('resize', onResize);
+    };
+    window.addEventListener('resize', onResize);
+    setTimeout(() => window.removeEventListener('resize', onResize), 1200);
+  }
+
   const handleSubmit = async () => {
     setSaving(true);
     try {
       await actions.setQuiz({ energy, budget, duration, interests });
+      sparkConfetti();
       // playful toast-like feedback via alert as we keep dependencies minimal
       // i18n-friendly: short sentence, emoji optional
       alert('Quiz saved! Recommendations loading… 🎉');

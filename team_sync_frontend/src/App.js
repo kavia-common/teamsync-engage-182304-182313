@@ -49,7 +49,7 @@ function App() {
       <div className="App" style={{ background: 'var(--ts-bg)', minHeight: '100vh' }}>
         <a href="#main" className="skip-link">Skip to main content</a>
         <Navbar theme={theme} onToggleTheme={toggleTheme} />
-        <main id="main" aria-live="polite">
+        <main id="main" role="main" aria-live="polite">
           <RoutesView />
         </main>
       </div>

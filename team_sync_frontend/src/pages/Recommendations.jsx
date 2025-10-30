@@ -33,9 +33,70 @@ export default function Recommendations() {
     await actions.saveRecommendation(item);
   };
 
+  // Lightweight confetti helper
+  function sparkConfettiLight() {
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReduced || typeof document === 'undefined') return;
+
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('aria-hidden', 'true');
+    Object.assign(canvas.style, {
+      position: 'fixed',
+      left: '0',
+      top: '0',
+      pointerEvents: 'none',
+      width: '100vw',
+      height: '100vh',
+      zIndex: 9999
+    });
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    const colors = ['#2BD9C9', '#7D83FF', '#f59e0b'];
+    const count = Math.min(40, Math.floor((window.innerWidth + window.innerHeight) / 40));
+    const particles = Array.from({ length: count }).map(() => ({
+      x: canvas.width / 2 + (Math.random() - 0.5) * 120,
+      y: canvas.height / 3,
+      r: 2 + Math.random() * 2.2,
+      c: colors[Math.floor(Math.random() * colors.length)],
+      vx: -2 + Math.random() * 4,
+      vy: -1 + Math.random() * 1.5,
+    }));
+    let frames = 0;
+    let raf;
+    function step() {
+      frames += 1;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy + 0.6;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.c;
+        ctx.fill();
+      });
+      if (frames < 45) {
+        raf = requestAnimationFrame(step);
+      } else {
+        cancelAnimationFrame(raf);
+        if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      }
+    }
+    raf = requestAnimationFrame(step);
+  }
+
   const handleFeedback = async (item, value) => {
     await actions.giveFeedback(item.id, value, item.title);
     // playful microcopy
+    if (value === 'like') {
+      sparkConfettiLight();
+    }
     alert(
       value === 'like'
         ? 'Nice! We’ll sprinkle more like that 🎉'
