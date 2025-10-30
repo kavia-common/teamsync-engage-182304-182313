@@ -174,7 +174,20 @@ export default function Dashboard() {
     setGenerating(true);
     try {
       await api.getRecommendations({ team: state.team, quiz: state.quiz });
-      window.location.hash = '#/recommendations';
+      // announce success in live region
+      const live = document.getElementById('sr-live-dashboard');
+      if (live) {
+        live.textContent = 'New recommendations generated.';
+        setTimeout(() => { if (live) live.textContent = ''; }, 1200);
+      }
+      // Navigate with refresh flag so Recommendations page can force refetch if needed
+      window.location.hash = '#/recommendations?refresh=1';
+    } catch (e) {
+      const live = document.getElementById('sr-live-dashboard');
+      if (live) {
+        live.textContent = 'Failed to generate. Using last best set.';
+        setTimeout(() => { if (live) live.textContent = ''; }, 1400);
+      }
     } finally {
       setGenerating(false);
     }
@@ -304,11 +317,12 @@ export default function Dashboard() {
     </div>
   ) : null;
 
+  // Read live-auth data directly from persisted auth store to avoid stale copies
   const authUser = useAuthStore((s) => s.user);
   const setAuthUser = useAuthStore((s) => s.setUser);
   const userName = (authUser?.name || '').trim();
 
-  // Inline team name editing state
+  // Inline team name editing state: always derive from auth store for the header
   const effectiveTeamName = (authUser?.teamName || state.team?.name || 'Your team').trim() || 'Your team';
   const [editing, setEditing] = useState(false);
   const [teamInput, setTeamInput] = useState(effectiveTeamName);
@@ -317,7 +331,7 @@ export default function Dashboard() {
   const inputRef = React.useRef(null);
   const editButtonRef = React.useRef(null);
 
-  // Keep input in sync when auth store changes and not actively editing
+  // Keep input in sync with auth store changes when not actively editing (prevents stale local state)
   useEffect(() => {
     if (!editing) {
       setTeamInput(effectiveTeamName);
@@ -426,6 +440,23 @@ export default function Dashboard() {
               >
                 ✏️ Edit
               </button>
+              <button
+                type="button"
+                className="btn"
+                aria-label="Edit team details"
+                title="Edit Team Details"
+                onClick={() => {
+                  // Navigate to Profile where team details can be edited (reuse existing logic)
+                  window.location.hash = '#/profile#/team';
+                  const live = document.getElementById('sr-live-dashboard');
+                  if (live) {
+                    live.textContent = 'Opening team details.';
+                    setTimeout(() => { if (live) live.textContent = ''; }, 900);
+                  }
+                }}
+              >
+                Edit Team Details
+              </button>
             </>
           ) : (
             <div
@@ -473,13 +504,16 @@ export default function Dashboard() {
           </div>
         )}
         {statusMsg && !error && (
-          <div className="muted" style={{ color: 'var(--ts-secondary)', marginTop: 6 }}>
+          <div className="muted" style={{ color: 'var(--ts-secondary, #F59E0B)', marginTop: 6 }}>
             {statusMsg}
           </div>
         )}
         <p className="muted" style={{ marginTop: 6 }}>
           {userName ? `Signed in as ${userName}.` : 'Signed in.'} Here’s your team summary and recent engagement.
         </p>
+        <div className="muted" style={{ fontSize: 12, marginTop: 4 }}>
+          Tip: Use “✏️ Edit” to rename your team inline or “Edit Team Details” to manage it from your profile.
+        </div>
         <div id="sr-live-dashboard" aria-live="polite" className="sr-only" />
       </div>
 
@@ -603,8 +637,8 @@ export default function Dashboard() {
               <p className="muted">{teamSummary}</p>
               <TrendChart />
               <div className="mt-4" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <Button onClick={handleGenerateNew} disabled={generating} aria-label="Generate new recommendations">
-                  {generating ? 'Generating…' : 'Generate New Activity'}
+                <Button onClick={handleGenerateNew} disabled={generating} aria-label="Generate new recommendations now">
+                  {generating ? 'Generating…' : 'Generate New Recommendations'}
                 </Button>
                 <Button variant="secondary" onClick={() => (window.location.hash = '#/recommendations')} aria-label="Go to recommendations">
                   View Recommendations
