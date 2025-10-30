@@ -81,19 +81,23 @@ export default function Recommendations() {
       setAi(res);
       // Merge AI ideas into current list with de-dup by title
       const existing = Array.isArray(recs) ? recs : [];
-      const aiIdeas = (res.ideas || []).map((x) => ({
-        id: x.id || `ai-${Math.random().toString(36).slice(2, 8)}`,
-        title: x.title,
-        description: x.description,
-        duration: x.duration || 30,
-        tags: x.tags || [],
-        heroAlignment: x.heroAlignment || 'Ally',
-        departmentScope: x.departmentScope || [],
-        departmentExclusive: false,
-        suggestedSize: `${Math.max(2, (state.team?.size || 2) - 1)}-${(state.team?.size || 6) + 2}`,
-        budget: 'medium',
-        _ai: { source: res.source, fit_score: typeof x.fit_score === 'number' ? x.fit_score : 0.5, reasoning: x.reasoning || '' }
-      }));
+      const aiIdeas = (res.ideas || []).map((x) => {
+        const scope = Array.isArray(x.departmentScope) ? x.departmentScope : [];
+        const exclusive = scope.length === 1 && (!!(state.team?.department) && scope[0] === state.team.department);
+        return ({
+          id: x.id || `ai-${Math.random().toString(36).slice(2, 8)}`,
+          title: x.title,
+          description: x.description,
+          duration: x.duration || 30,
+          tags: x.tags || [],
+          heroAlignment: x.heroAlignment || 'Ally',
+          departmentScope: scope,
+          departmentExclusive: exclusive,
+          suggestedSize: `${Math.max(2, (state.team?.size || 2) - 1)}-${(state.team?.size || 6) + 2}`,
+          budget: 'medium',
+          _ai: { source: res.source, fit_score: typeof x.fit_score === 'number' ? x.fit_score : 0.5, reasoning: x.reasoning || '' }
+        });
+      });
       const titles = new Set(existing.map((e) => (e.title || '').toLowerCase()));
       const merged = [...existing, ...aiIdeas.filter((i) => !titles.has((i.title || '').toLowerCase()))];
       setRecs(merged);
