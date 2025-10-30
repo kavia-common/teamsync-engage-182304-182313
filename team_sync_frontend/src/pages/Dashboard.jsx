@@ -440,6 +440,9 @@ export default function Dashboard() {
 
         <Card>
           <h2 className="h2">Saved activities</h2>
+          <div className="muted" style={{ fontSize: 12 }}>
+            {state.team?.department ? `Department: ${state.team.department}` : 'Department: —'}
+          </div>
           {saved.length === 0 && (
             <p className="muted" title="Save picks from the recommendations">
               Nothing saved yet — future you will thank present you 😉
