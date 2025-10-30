@@ -166,8 +166,8 @@ export default function RecommendationDetailsModal({
             className="btn ghost"
             title={`AI Source: ${item._ai.source}`}
             style={{
-              background: item._ai.source === 'mock-ai' ? 'rgba(245,158,11,0.15)' : undefined,
-              color: item._ai.source === 'mock-ai' ? '#92400e' : undefined
+              background: item._ai.source === 'mock-ai' ? 'color-mix(in srgb, var(--ts-secondary), transparent 80%)' : undefined,
+              color: 'var(--ts-text)'
             }}
           >
             🤖 {item._ai.source}
@@ -189,8 +189,8 @@ export default function RecommendationDetailsModal({
       {item?._ai?.reasoning ? (
         <>
           <div className="mt-3 muted" style={{ fontWeight: 600 }}>Why this pick</div>
-          <div className="mt-2" style={{ background: 'rgba(37,99,235,0.06)', padding: 12, borderRadius: 12 }}>
-            <p className="muted" style={{ margin: 0 }}>{item._ai.reasoning}</p>
+          <div className="mt-2" style={{ background: 'var(--ts-surface)', border: '1px solid var(--ts-border)', padding: 12, borderRadius: 12, boxShadow: 'var(--ts-shadow-sm)' }}>
+            <p className="muted" style={{ margin: 0, color: 'var(--ts-text-muted)' }}>{item._ai.reasoning}</p>
           </div>
         </>
       ) : null}

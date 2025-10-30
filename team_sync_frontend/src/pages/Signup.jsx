@@ -93,7 +93,8 @@ export default function Signup() {
               aria-live="polite"
               className="muted"
               style={{
-                background: '#fff',
+                background: 'var(--ts-surface)',
+                color: 'var(--ts-text)',
                 border: '1px solid var(--ts-border)',
                 borderRadius: 12,
                 padding: '8px 10px',
@@ -219,7 +220,8 @@ export default function Signup() {
                 role="note"
                 className="muted mt-2"
                 style={{
-                  background: '#fff',
+                  background: 'var(--ts-surface)',
+                  color: 'var(--ts-text)',
                   border: '1px solid var(--ts-border)',
                   borderRadius: 12,
                   boxShadow: 'var(--ts-shadow-sm)',

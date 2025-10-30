@@ -40,12 +40,12 @@ const HINT_IDS = {
 // Render compact sentiment chip from score/label
 function SentimentChip({ score = 0, label = 'mixed' }) {
   const bg =
-    label === 'positive' ? 'rgba(43,217,201,0.14)'
-    : label === 'negative' ? 'rgba(239,68,68,0.14)'
-    : 'rgba(148,163,184,0.14)';
+    label === 'positive' ? 'color-mix(in srgb, var(--ts-primary), transparent 84%)'
+    : label === 'negative' ? 'color-mix(in srgb, var(--ts-error), transparent 84%)'
+    : 'color-mix(in srgb, var(--ts-text), transparent 86%)';
   const icon = label === 'positive' ? '😊' : label === 'negative' ? '☹️' : '😐';
   return (
-    <span className="btn secondary" style={{ background: bg, borderColor: bg, color: '#0b0f2a' }} title={`Sentiment: ${label} (${(score*100).toFixed(0)}%)`}>
+    <span className="btn secondary" style={{ background: bg, borderColor: bg, color: 'var(--ts-text)' }} title={`Sentiment: ${label} (${(score*100).toFixed(0)}%)`}>
       {icon} {label.charAt(0).toUpperCase()+label.slice(1)}
     </span>
   );
@@ -209,7 +209,7 @@ export default function Dashboard() {
           <div className="muted" style={{ fontSize: 12, marginBottom: 4 }}>Weekly engagement trend</div>
           <ResponsiveContainer width="100%" height="100%">
             <ChartImpl data={trendBuckets}>
-              {CartesianGrid ? <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" /> : null}
+              {CartesianGrid ? <CartesianGrid strokeDasharray="3 3" stroke="var(--ts-border)" /> : null}
               {XAxis ? <XAxis dataKey="name" label={{ value: 'Week', position: 'insideBottom', offset: -4 }} /> : null}
               {YAxis ? <YAxis allowDecimals={false} label={{ value: 'Count', angle: -90, position: 'insideLeft' }} /> : null}
               {Tooltip ? <Tooltip /> : null}
@@ -245,10 +245,10 @@ export default function Dashboard() {
             return (
               <div key={b.name} aria-label={`${b.name} likes ${b.likes} dislikes ${b.dislikes}`} title={`${b.name}: 👍${b.likes} 👎${b.dislikes}`}>
                 <div style={{ display: 'grid', gap: 4 }}>
-                  <div style={{ height: `${lh}%`, background: 'var(--ts-primary)', borderRadius: 8 }} />
-                  <div style={{ height: `${dh}%`, background: 'var(--ts-error)', borderRadius: 8 }} />
+                  <div style={{ height: `${lh}%`, background: 'var(--ts-primary)', borderRadius: 8, boxShadow: '0 1px 0 rgba(0,0,0,0.15)' }} />
+                  <div style={{ height: `${dh}%`, background: 'var(--ts-error)', borderRadius: 8, boxShadow: '0 1px 0 rgba(0,0,0,0.15)' }} />
                 </div>
-                <div className="muted" style={{ fontSize: 12, marginTop: 6, textAlign: 'center' }}>{b.name}</div>
+                <div className="muted" style={{ fontSize: 12, marginTop: 6, textAlign: 'center', color: 'var(--ts-text-muted)' }}>{b.name}</div>
               </div>
             );
           })}

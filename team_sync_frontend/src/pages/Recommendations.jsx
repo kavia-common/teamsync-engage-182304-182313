@@ -432,7 +432,7 @@ export default function Recommendations() {
           )}
         </div>
         {debugOverlay && ai?.source && (
-          <div className="mt-2" style={{ fontSize: 12, background: 'rgba(0,0,0,0.04)', padding: 12, borderRadius: 10 }}>
+          <div className="mt-2" style={{ fontSize: 12, background: 'var(--ts-surface)', border: '1px solid var(--ts-border)', padding: 12, borderRadius: 12, boxShadow: 'var(--ts-shadow-sm)', color: 'var(--ts-text)' }}>
             <div><strong>AI Debug</strong></div>
             <div>source: {ai.source} | model: {ai.model || '(n/a)'} | ideas: {Array.isArray(ai.ideas) ? ai.ideas.length : 0}</div>
             {Array.isArray(ai.ideas) && ai.ideas.slice(0, 5).map((x, idx) => {
@@ -498,8 +498,8 @@ export default function Recommendations() {
                     className="btn ghost"
                     title={`AI Source: ${rec._ai.source}`}
                     style={{
-                      background: rec._ai.source === 'mock-ai' ? 'rgba(245,158,11,0.15)' : undefined,
-                      color: rec._ai.source === 'mock-ai' ? '#92400e' : undefined
+                      background: rec._ai.source === 'mock-ai' ? 'color-mix(in srgb, var(--ts-secondary), transparent 80%)' : undefined,
+                      color: 'var(--ts-text)'
                     }}
                   >
                     🤖 {rec._ai.source}
@@ -526,8 +526,8 @@ export default function Recommendations() {
                 </div>
               )}
               {rec._ai?.reasoning && showReasoning[rec.id] && (
-                <div id={`rsn-${rec.id}`} className="mt-2" style={{ background: 'rgba(37,99,235,0.06)', padding: 12, borderRadius: 12 }}>
-                  <p className="muted" style={{ margin: 0 }}>{rec._ai.reasoning}</p>
+                <div id={`rsn-${rec.id}`} className="mt-2" style={{ background: 'var(--ts-surface)', border: '1px solid var(--ts-border)', padding: 12, borderRadius: 12, boxShadow: 'var(--ts-shadow-sm)' }}>
+                  <p className="muted" style={{ margin: 0, color: 'var(--ts-text-muted)' }}>{rec._ai.reasoning}</p>
                 </div>
               )}
 

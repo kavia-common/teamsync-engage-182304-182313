@@ -77,7 +77,7 @@ export default function Landing() {
                 onError={(e) => {
                   // graceful fallback to themed gradient if image fails
                   e.currentTarget.style.background =
-                    'radial-gradient(circle at 30% 30%, rgba(125,131,255,.25), transparent 55%), radial-gradient(circle at 70% 60%, rgba(43,217,201,.28), transparent 55%), linear-gradient(180deg, #fff, #f8fafc)';
+                    'radial-gradient(circle at 30% 30%, rgba(125,131,255,.25), transparent 55%), radial-gradient(circle at 70% 60%, rgba(43,217,201,.28), transparent 55%), linear-gradient(180deg, var(--ts-surface), var(--ts-bg))';
                   e.currentTarget.style.objectFit = 'contain';
                   e.currentTarget.src = '';
                   e.currentTarget.setAttribute('aria-hidden', 'true');
