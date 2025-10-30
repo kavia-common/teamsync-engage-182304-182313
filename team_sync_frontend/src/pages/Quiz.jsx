@@ -53,7 +53,7 @@ export default function Quiz() {
     <Container>
       <div className="mb-4">
         <h1 className="h1">Team Quiz</h1>
-        <p className="muted">A quick pulse on vibe and preferences.</p>
+        <p className="muted">A quick pulse on vibe and preferences — we’ll keep it snappy.</p>
       </div>
       <Card>
         <Progress value={60} label="Quiz progress" />

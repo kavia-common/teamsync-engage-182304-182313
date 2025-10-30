@@ -1,16 +1,41 @@
-/* Ocean Professional theme base + component utilities */
+/* Brand Refresh theme base + component utilities */
+/* Fonts: Satoshi (primary) and Outfit (headings) via import */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+/* Variables */
 :root {
-  --ts-bg: #f9fafb;
+  /* Palette */
+  --ts-primary: #2BD9C9;
+  --ts-primary-600: #22c9ba;
+  --ts-primary-700: #19b5a7;
+  --ts-secondary: #7D83FF;
+  --ts-secondary-600: #6b72ff;
+  --ts-bg: #F8FAFC;
   --ts-surface: #ffffff;
-  --ts-text: #111827;
-  --ts-text-muted: rgba(17,24,39,0.7);
-  --ts-primary: #2563EB;
-  --ts-secondary: #F59E0B;
+  --ts-text: #1E293B;
+  --ts-text-muted: rgba(30,41,59,0.72);
   --ts-error: #EF4444;
-  --ts-border: #e5e7eb;
-  --ts-shadow: 0 10px 20px rgba(0,0,0,0.06);
+  --ts-border: #e6e8ec;
+
+  /* Effects */
+  --ts-shadow-sm: 0 4px 12px rgba(2, 8, 23, 0.06);
+  --ts-shadow: 0 12px 30px rgba(2, 8, 23, 0.08);
+  --ts-glass: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.55));
+  --ts-glass-border: rgba(255,255,255,0.6);
+
+  /* Radius */
   --ts-radius: 16px;
-  --ts-focus: 0 0 0 3px rgba(37,99,235,0.35);
+  --ts-radius-2xl: 20px;
+
+  /* Focus */
+  --ts-focus: 0 0 0 3px rgba(43,217,201,0.35);
+
+  /* Gradients */
+  --ts-hero-gradient:
+    radial-gradient(1200px 500px at 0% -10%, rgba(125,131,255,0.18), transparent 60%),
+    radial-gradient(1000px 450px at 100% -20%, rgba(43,217,201,0.22), transparent 55%),
+    linear-gradient(180deg, #F8FAFC, #F8FAFC);
 }
 
 * { box-sizing: border-box; }
@@ -19,10 +44,12 @@ body {
   margin: 0;
   background: var(--ts-bg);
   color: var(--ts-text);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  font-family: "Satoshi", "Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-a { color: var(--ts-primary); text-decoration: none; }
+a { color: var(--ts-secondary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 .App { min-height: 100vh; }
@@ -35,7 +62,7 @@ a:hover { text-decoration: underline; }
 }
 .skip-link:focus {
   left: 16px; top: 16px; width: auto; height: auto;
-  background: var(--ts-primary); color: white; padding: 8px 12px; border-radius: 8px;
+  background: var(--ts-primary); color: #052a2a; padding: 8px 12px; border-radius: 10px;
 }
 
 /* Layout helpers */
@@ -54,39 +81,65 @@ a:hover { text-decoration: underline; }
   .ts-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* Card */
+/* Card with 2xl radius and glassy background */
 .ts-card {
-  background: var(--ts-surface);
-  border: 1px solid var(--ts-border);
-  border-radius: var(--ts-radius);
+  background: var(--ts-glass);
+  border: 1px solid var(--ts-glass-border);
+  border-radius: var(--ts-radius-2xl);
   box-shadow: var(--ts-shadow);
   padding: 20px;
+  backdrop-filter: saturate(140%) blur(8px);
+  transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.ts-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(2,8,23,0.10);
+  border-color: rgba(255,255,255,0.8);
 }
 
 /* Buttons */
 .btn {
   appearance: none;
   border: 1px solid transparent;
-  border-radius: 12px;
-  padding: 10px 16px;
+  border-radius: 16px;
+  padding: 11px 18px;
   background: var(--ts-primary);
-  color: white;
-  font-weight: 600;
+  color: #052a2a;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform .1s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
-  box-shadow: 0 6px 14px rgba(37,99,235,0.18);
+  transition: transform .12s ease, box-shadow .22s ease, background .22s ease, border-color .22s ease, color .22s ease;
+  box-shadow: 0 10px 22px rgba(43,217,201,0.22);
 }
-.btn:hover { transform: translateY(-1px); }
+.btn:hover { transform: translateY(-2px); background: var(--ts-primary-600); }
 .btn:focus { outline: none; box-shadow: var(--ts-focus); }
 .btn:disabled { opacity: .6; cursor: not-allowed; }
-.btn.secondary { background: #fff; color: var(--ts-text); border-color: var(--ts-border); }
-.btn.warning { background: var(--ts-secondary); color: #1f2937; }
-.btn.ghost { background: transparent; color: var(--ts-primary); border-color: var(--ts-primary); }
+
+.btn.secondary {
+  background: #fff;
+  color: var(--ts-text);
+  border-color: var(--ts-border);
+  box-shadow: var(--ts-shadow-sm);
+}
+.btn.secondary:hover { background: #f8fafc; }
+
+.btn.warning {
+  background: var(--ts-secondary);
+  color: #0b0f2a;
+  box-shadow: 0 10px 22px rgba(125,131,255,0.22);
+}
+.btn.warning:hover { background: var(--ts-secondary-600); }
+
+.btn.ghost {
+  background: transparent;
+  color: var(--ts-secondary);
+  border-color: var(--ts-secondary);
+}
+.btn.ghost:hover { background: rgba(125,131,255,0.08); }
 
 /* Progress */
 .ts-progress {
   width: 100%;
-  background: #eef2ff;
+  background: rgba(125,131,255,0.12);
   border-radius: 9999px;
   height: 10px;
   overflow: hidden;
@@ -94,39 +147,48 @@ a:hover { text-decoration: underline; }
 }
 .ts-progress > .bar {
   height: 100%;
-  background: linear-gradient(90deg, #60a5fa, #2563EB);
+  background: linear-gradient(90deg, var(--ts-secondary), var(--ts-primary));
   transition: width .3s ease;
 }
 
-/* Navbar */
+/* Navbar with glassy gradient */
 .navbar {
   position: sticky; top: 0; z-index: 10;
-  background: linear-gradient(to right, rgba(37,99,235,0.07), rgba(249,250,251,0.8));
-  backdrop-filter: blur(6px);
+  background:
+    linear-gradient(to right, rgba(125,131,255,0.07), rgba(248,250,252,0.85));
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--ts-border);
 }
 .navbar-inner {
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; padding: 12px 24px; max-width: 1100px; margin: 0 auto;
 }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--ts-text); }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--ts-text); font-family: "Outfit", "Satoshi", system-ui, -apple-system, Segoe UI, Roboto, Arial; letter-spacing: 0.2px; }
 .brand-badge {
-  width: 34px; height: 34px; display: inline-grid; place-items: center;
-  background: radial-gradient(circle at 30% 30%, #60a5fa, #2563EB);
-  color: white; border-radius: 10px; box-shadow: 0 8px 18px rgba(37,99,235,.25);
-  font-size: 18px;
+  width: 36px; height: 36px; display: inline-grid; place-items: center;
+  background: radial-gradient(circle at 30% 30%, var(--ts-secondary), var(--ts-primary));
+  color: #041318; border-radius: 12px; box-shadow: 0 10px 24px rgba(125,131,255,.25);
+  font-size: 18px; font-weight: 800;
 }
 .nav-actions { display: flex; align-items: center; gap: 10px; }
 
-/* Headings */
-.h1 { font-size: clamp(28px, 5vw, 40px); margin: 0 0 8px; font-weight: 800; }
+/* Headings use Outfit */
+.h1, .h2 {
+  font-family: "Outfit", "Satoshi", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  letter-spacing: 0.1px;
+}
+.h1 { font-size: clamp(30px, 5vw, 44px); margin: 0 0 8px; font-weight: 800; }
 .h2 { font-size: clamp(20px, 3.6vw, 28px); margin: 0 0 8px; font-weight: 700; }
 .muted { color: var(--ts-text-muted); }
 
 /* Forms */
 .input, .select, .textarea {
-  width: 100%; padding: 10px 12px; border-radius: 12px;
+  width: 100%; padding: 11px 13px; border-radius: 14px;
   border: 1px solid var(--ts-border); background: #fff; color: var(--ts-text);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.input:focus, .select:focus, .textarea:focus {
+  outline: none; border-color: var(--ts-secondary); box-shadow: 0 0 0 3px rgba(125,131,255,0.25);
 }
 .label { display: block; font-weight: 600; margin-bottom: 6px; }
 
@@ -141,12 +203,10 @@ a:hover { text-decoration: underline; }
 .center { text-align: center; }
 .grid-gap-12 { gap: 12px; }
 
-/* Landing hero */
+/* Landing hero with glassy gradient and playful microcopy space */
 .hero {
-  padding: 56px 24px;
-  background:
-     radial-gradient(1000px 400px at 10% -20%, rgba(37,99,235,.12), transparent 60%),
-     radial-gradient(600px 300px at 90% -10%, rgba(245,158,11,.12), transparent 50%);
+  padding: 64px 24px;
+  background: var(--ts-hero-gradient);
 }
 .hero-inner {
   max-width: 980px; margin: 0 auto;

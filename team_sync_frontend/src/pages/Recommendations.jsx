@@ -42,7 +42,7 @@ export default function Recommendations() {
     <Container>
       <div className="mb-4">
         <h1 className="h1">Recommendations</h1>
-        <p className="muted">Based on your team profile and quiz results.</p>
+        <p className="muted">Based on your team profile and quiz results — handpicked just for you.</p>
       </div>
 
       {loading && <Card>Loading recommendations…</Card>}

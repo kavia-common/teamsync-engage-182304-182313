@@ -17,7 +17,7 @@ export default function Dashboard() {
     <Container>
       <div className="mb-4">
         <h1 className="h1">Dashboard</h1>
-        <p className="muted">Welcome, {state.team.name || 'team'}. Here’s what we’ve learned.</p>
+        <p className="muted">Welcome, {state.team.name || 'team'}. Here’s what we’ve learned so far.</p>
       </div>
 
       <div className="ts-row cols-2">

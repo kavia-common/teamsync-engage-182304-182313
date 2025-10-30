@@ -12,20 +12,20 @@ import { StoreProvider } from './state/store';
 function App() {
   const [theme, setTheme] = useState('light');
 
-  // Ocean Professional palette
+  // Brand Refresh palette
   const oceanVars = useMemo(
     () => ({
-      '--ts-bg': '#f9fafb',
+      '--ts-bg': '#F8FAFC',
       '--ts-surface': '#ffffff',
-      '--ts-text': '#111827',
-      '--ts-text-muted': 'rgba(17,24,39,0.7)',
-      '--ts-primary': '#2563EB',
-      '--ts-secondary': '#F59E0B',
+      '--ts-text': '#1E293B',
+      '--ts-text-muted': 'rgba(30,41,59,0.72)',
+      '--ts-primary': '#2BD9C9',
+      '--ts-secondary': '#7D83FF',
       '--ts-error': '#EF4444',
-      '--ts-border': '#e5e7eb',
-      '--ts-shadow': '0 10px 20px rgba(0,0,0,0.06)',
+      '--ts-border': '#e6e8ec',
+      '--ts-shadow': '0 12px 30px rgba(2, 8, 23, 0.08)',
       '--ts-radius': '16px',
-      '--ts-focus': '0 0 0 3px rgba(37,99,235,0.35)'
+      '--ts-focus': '0 0 0 3px rgba(43,217,201,0.35)'
     }),
     []
   );
