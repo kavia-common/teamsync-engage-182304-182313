@@ -43,6 +43,20 @@ export default function Landing() {
   const isPro = state.plan?.tier === 'pro';
   const isFree = state.plan?.tier === 'free';
 
+  // helpers for checkmark lists
+  const Check = ({ gated = false, children, label }) => (
+    <li role="listitem" aria-label={label || (typeof children === 'string' ? children : undefined)} className="mt-2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span aria-hidden>{gated ? '🔒' : '✔️'}</span>
+      <span className={gated ? 'muted' : ''}>{children}</span>
+    </li>
+  );
+
+  // pricing CTA anchor scroll helper
+  const scrollToPricing = () => {
+    const el = document.getElementById('pricing');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div className="hero">
       <div className="hero-inner">
@@ -71,6 +85,9 @@ export default function Landing() {
             </Button>
             <Button onClick={getStartedFree} aria-label="Get started for free" title="Create your first plan free">
               Get Started for Free
+            </Button>
+            <Button variant="ghost" onClick={scrollToPricing} aria-label="Jump to pricing">
+              View Pricing
             </Button>
           </div>
 
@@ -109,84 +126,93 @@ export default function Landing() {
 
       {/* Pricing section */}
       <Container>
-        <div className="mt-6">
-          <h2 className="h2 center">Simple pricing</h2>
-          <p className="muted center">Start free. Upgrade anytime for advanced features.</p>
-        </div>
+        <section id="pricing" aria-labelledby="pricing-heading" role="region" style={{ scrollMarginTop: 80 }}>
+          <div className="mt-6 center">
+            <h2 className="h2" id="pricing-heading">Simple pricing</h2>
+            <p className="muted">Start free. Upgrade anytime for advanced features.</p>
+          </div>
 
-        <div className="ts-row cols-2 mt-4">
-          {/* Free plan */}
-          <Card aria-label="Free plan">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <h3 className="h2">Free</h3>
-              <span className={`btn ${isFree ? '' : 'secondary'}`} aria-label="Selected plan badge">
-                {isFree ? 'Selected' : 'Select'}
-              </span>
-            </div>
-            <p className="muted">Everything you need to get started.</p>
-            <ul className="mt-3" style={{ paddingLeft: 18 }}>
-              <li>Onboarding & team profiling</li>
-              <li>Personality quiz</li>
-              <li>3–5 activity recommendations</li>
-              <li>Basic feedback</li>
-              <li>
-                <span className="btn secondary" title="Premium feature">
-                  AI Analytics (Premium)
+          {/* Responsive two-card grid */}
+          <div className="ts-row cols-2 mt-4" role="list" aria-label="Plan options" style={{ alignItems: 'stretch' }}>
+            {/* Free plan */}
+            <Card aria-label="Free plan" role="listitem" style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                <div>
+                  <h3 className="h2" style={{ marginBottom: 4 }}>Free</h3>
+                  <div className="muted" aria-label="Price">$0 <span className="muted">/ user / month</span></div>
+                </div>
+                <span
+                  className={`btn ${isFree ? '' : 'secondary'}`}
+                  aria-label={isFree ? 'Free plan selected' : 'Select Free plan'}
+                  aria-pressed={isFree}
+                >
+                  {isFree ? 'Selected' : 'Select'}
                 </span>
-              </li>
-              <li>
-                <span className="btn secondary" title="Premium feature">
-                  Custom Activity Builder (Premium)
-                </span>
-              </li>
-            </ul>
-            <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button variant={isFree ? 'primary' : 'secondary'} onClick={() => { selectFree(); getStartedFree(); }}>
-                {isFree ? 'Continue Free' : 'Choose Free'}
-              </Button>
-            </div>
-          </Card>
+              </div>
+              <p className="muted" style={{ marginTop: 8 }}>Everything you need to get started.</p>
 
-          {/* Pro/Business plan */}
-          <Card aria-label="Pro plan">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <h3 className="h2">Pro / Business</h3>
-              <span className={`btn ${isPro ? '' : 'secondary'}`} aria-label="Selected plan badge">
-                {isPro ? 'Selected' : 'Select'}
-              </span>
-            </div>
-            <p className="muted">$15–25 per user / month</p>
-            <ul className="mt-3" style={{ paddingLeft: 18 }}>
-              <li>Everything in Free</li>
-              <li>
-                <span className="btn warning" title="Premium feature enabled">
-                  AI Analytics
-                </span>
-              </li>
-              <li>
-                <span className="btn warning" title="Premium feature enabled">
-                  Custom Activity Builder
-                </span>
-              </li>
-              <li>Advanced feedback insights</li>
-              <li>Priority support</li>
-            </ul>
-            <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button onClick={() => { selectPro(); goOnboarding(); }} title="Upgrade and continue">
-                Upgrade & Continue
-              </Button>
-              <Button variant="secondary" onClick={startDemo} title="Try a guided demo">
-                Try Demo
-              </Button>
-            </div>
-          </Card>
-        </div>
+              <ul className="mt-3" role="list" aria-label="Free plan features" style={{ paddingLeft: 4, listStyle: 'none', margin: 0 }}>
+                <Check label="Onboarding and team profiling">Onboarding & team profiling</Check>
+                <Check label="Personality quiz">Personality quiz</Check>
+                <Check label="3 to 5 activity recommendations">3–5 activity recommendations</Check>
+                <Check label="Basic feedback">Basic feedback</Check>
+                <Check gated label="AI Analytics (Premium)">AI Analytics <span className="sr-only">(Premium)</span></Check>
+                <Check gated label="Custom Activity Builder (Premium)">Custom Activity Builder <span className="sr-only">(Premium)</span></Check>
+              </ul>
 
-        <div className="mt-3">
-          <p className="muted center" title="Referral note">
-            Note: Some activities may include referral fees when purchased through partners. This never affects your price.
-          </p>
-        </div>
+              <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
+                <Button
+                  variant={isFree ? 'primary' : 'secondary'}
+                  onClick={() => { selectFree(); getStartedFree(); }}
+                  aria-label={isFree ? 'Continue with Free plan' : 'Choose Free plan'}
+                >
+                  {isFree ? 'Continue Free' : 'Choose Free'}
+                </Button>
+              </div>
+            </Card>
+
+            {/* Pro/Business plan */}
+            <Card aria-label="Pro plan" role="listitem" style={{ display: 'flex', flexDirection: 'column', borderColor: isPro ? 'var(--ts-secondary)' : undefined }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                <div>
+                  <h3 className="h2" style={{ marginBottom: 4 }}>Pro / Business</h3>
+                  <div className="muted" aria-label="Price">$15–25 <span className="muted">/ user / month</span></div>
+                </div>
+                <span
+                  className={`btn ${isPro ? '' : 'secondary'}`}
+                  aria-label={isPro ? 'Pro plan selected' : 'Select Pro plan'}
+                  aria-pressed={isPro}
+                >
+                  {isPro ? 'Selected' : 'Select'}
+                </span>
+              </div>
+              <p className="muted" style={{ marginTop: 8 }}>Best for growing teams that want advanced insights.</p>
+
+              <ul className="mt-3" role="list" aria-label="Pro plan features" style={{ paddingLeft: 4, listStyle: 'none', margin: 0 }}>
+                <Check label="Everything in Free">Everything in Free</Check>
+                <Check label="AI Analytics"><span className="btn warning" title="Premium feature enabled">AI Analytics</span></Check>
+                <Check label="Custom Activity Builder"><span className="btn warning" title="Premium feature enabled">Custom Activity Builder</span></Check>
+                <Check label="Advanced feedback insights">Advanced feedback insights</Check>
+                <Check label="Priority support">Priority support</Check>
+              </ul>
+
+              <div className="mt-4" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
+                <Button onClick={() => { selectPro(); goOnboarding(); }} title="Upgrade and continue" aria-label="Upgrade to Pro and continue">
+                  Upgrade & Continue
+                </Button>
+                <Button variant="secondary" onClick={startDemo} title="Try a guided demo" aria-label="Try a guided demo">
+                  Try Demo
+                </Button>
+              </div>
+            </Card>
+          </div>
+
+          <div className="mt-3">
+            <p className="muted center" title="Referral note">
+              Note: Some activities may include referral fees when purchased through partners. This never affects your price.
+            </p>
+          </div>
+        </section>
 
         {/* Feature highlights for consistency with theme */}
         <div className="ts-row cols-3 mt-6">

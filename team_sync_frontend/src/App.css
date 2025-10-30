@@ -150,6 +150,8 @@ a:hover { text-decoration: underline; }
   backdrop-filter: saturate(140%) blur(8px);
   transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease;
   will-change: transform;
+  /* Prevent content overlap on sticky navbar contexts */
+  position: relative;
 }
 .ts-card:hover {
   transform: translateY(-2px);
@@ -236,6 +238,10 @@ a:hover { text-decoration: underline; }
 .navbar-inner {
   display: flex; align-items: center; justify-content: space-between;
   gap: 12px; padding: 12px 24px; max-width: 1100px; margin: 0 auto;
+}
+/* offset content to avoid any visual overlap due to sticky header */
+main[role="main"] {
+  padding-top: 2px;
 }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--ts-text); font-family: "Outfit", "Satoshi", system-ui, -apple-system, Segoe UI, Roboto, Arial; letter-spacing: 0.2px; }
 .brand-badge {
@@ -325,4 +331,21 @@ a:hover { text-decoration: underline; }
   background:
     radial-gradient(circle at 20% 20%, rgba(43,217,201,0.3) 0 3px, transparent 3px) 0 0/18px 18px,
     radial-gradient(circle at 80% 30%, rgba(125,131,255,0.3) 0 3px, transparent 3px) 0 0/22px 22px;
+}
+
+/* Pricing helpers */
+.price {
+  font-weight: 800;
+  font-size: 22px;
+}
+.price small {
+  font-weight: 600;
+  color: var(--ts-text-muted);
+}
+
+/* Ensure list reset for icon lists without bullets */
+.list-reset {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
 }
