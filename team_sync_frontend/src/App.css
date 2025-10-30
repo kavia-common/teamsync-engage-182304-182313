@@ -413,14 +413,74 @@ main[role="main"] {
 }
 .nav-actions { display: flex; align-items: center; gap: 10px; }
 
+/* Typography and Vertical Rhythm */
+/* Public scale variables for consistency across the app */
+:root {
+  --font-h1: clamp(30px, 5vw, 40px);
+  --font-h2: clamp(20px, 3.6vw, 26px);
+  --font-h3: 20px;
+  --font-p: 16px;
+  --font-small: 13px;
+
+  --lh-tight: 1.15;
+  --lh-normal: 1.5;
+
+  /* spacing rhythm */
+  --space-1: 6px;
+  --space-2: 10px;
+  --space-3: 14px;
+  --space-4: 18px;
+  --space-5: 24px;
+  --space-6: 32px;
+}
+
 /* Headings use Outfit */
-.h1, .h2 {
+.h1, .h2, .h3 {
   font-family: "Outfit", "Satoshi", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
   letter-spacing: 0.1px;
+  margin-top: 0;
+  color: var(--ts-text);
 }
-.h1 { font-size: clamp(30px, 5vw, 44px); margin: 0 0 8px; font-weight: 800; }
-.h2 { font-size: clamp(20px, 3.6vw, 28px); margin: 0 0 8px; font-weight: 700; }
+.h1 {
+  font-size: var(--font-h1);
+  line-height: var(--lh-tight);
+  margin-bottom: var(--space-2);
+  font-weight: 800;
+}
+.h2 {
+  font-size: var(--font-h2);
+  line-height: var(--lh-tight);
+  margin-bottom: var(--space-2);
+  font-weight: 700;
+}
+.h3 {
+  font-size: var(--font-h3);
+  line-height: var(--lh-tight);
+  margin-bottom: var(--space-2);
+  font-weight: 600;
+}
+p {
+  font-size: var(--font-p);
+  line-height: var(--lh-normal);
+  margin: 0 0 var(--space-2);
+  color: var(--ts-text);
+}
+small, .small {
+  font-size: var(--font-small);
+  line-height: var(--lh-normal);
+}
 .muted { color: var(--ts-text-muted); }
+
+/* Rhythm utilities (apply instead of ad-hoc numbers) */
+.mt-2 { margin-top: var(--space-2); }
+.mt-3 { margin-top: var(--space-3); }
+.mt-4 { margin-top: var(--space-4); }
+.mt-6 { margin-top: var(--space-6); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-6 { margin-bottom: var(--space-6); }
+.center { text-align: center; }
+.grid-gap-12 { gap: 12px; }
 
 /* Forms */
 .input, .select, .textarea {

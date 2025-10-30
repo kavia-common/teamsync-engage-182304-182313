@@ -198,15 +198,16 @@
                      <h3 className="h2" style={{ marginBottom: 4 }}>Pro / Business</h3>
                      <div className="muted" aria-label="Price">$20 <span className="muted">/ user / month</span></div>
                    </div>
+                   {/* Keep neutral selection chip without accent emphasis */}
                    <span className="btn secondary" aria-label="Selection after sign-in" title="Choose after sign-in">
                      Select after sign-in
                    </span>
                  </div>
-                 <p className="muted" style={{ marginTop: 8 }}>Best for growing teams that want advanced insights.</p>
+                 <p className="muted" style={{ marginTop: 'var(--space-2)' }}>Best for growing teams that want advanced insights.</p>
                  <ul className="mt-3 list-reset" aria-label="Pro plan features">
                    <li className="mt-2"><span aria-hidden>✅</span> Everything in Free</li>
-                   <li className="mt-2"><span aria-hidden>✅</span> <span className="ai-badge">AI Analytics</span></li>
-                   <li className="mt-2"><span aria-hidden>✅</span> <span className="ai-badge ai-badge--ghost">Custom Activity Builder</span></li>
+                   <li className="mt-2"><span aria-hidden>✅</span> AI Analytics</li>
+                   <li className="mt-2"><span aria-hidden>✅</span> Custom Activity Builder</li>
                    <li className="mt-2"><span aria-hidden>✅</span> Advanced feedback insights</li>
                    <li className="mt-2"><span aria-hidden>✅</span> Priority support</li>
                  </ul>

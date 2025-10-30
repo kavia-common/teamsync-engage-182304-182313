@@ -63,17 +63,18 @@ export default function PlanSelection() {
               <h2 className="h2" style={{ marginBottom: 4 }}>Pro / Business</h2>
               <div className="price" aria-label="Price">$15–25 <small>/ user / month</small></div>
             </div>
-            <span className="ai-badge" title="Premium feature set">AI‑Powered</span>
+            {/* Remove special highlight chip; keep neutral layout */}
+            <span className="btn secondary" title="Premium feature set">Pro</span>
           </div>
           <ul className="mt-3 list-reset" aria-label="Pro features">
             <Check label="Everything in Free">Everything in Free</Check>
-            <Check label="AI Analytics"><span className="ai-badge">AI Analytics</span></Check>
-            <Check label="Custom Activity Builder"><span className="ai-badge ai-badge--ghost">Custom Activity Builder</span></Check>
+            <Check label="AI Analytics">AI Analytics</Check>
+            <Check label="Custom Activity Builder">Custom Activity Builder</Check>
             <Check label="Advanced feedback insights">Advanced feedback insights</Check>
             <Check label="Priority support">Priority support</Check>
           </ul>
           <div className="mt-4" style={{ display: 'flex', gap: 8 }}>
-            <Button className="warning" onClick={() => handleChoose('pro')} aria-label="Choose Pro plan">Choose Pro</Button>
+            <Button onClick={() => handleChoose('pro')} aria-label="Choose Pro plan">Choose Pro</Button>
           </div>
         </Card>
       </div>

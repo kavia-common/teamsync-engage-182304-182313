@@ -429,7 +429,7 @@ export default function Dashboard() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               {!editing ? (
                 <>
-                  <h1 className="h1" style={{ marginBottom: 6, marginRight: 6 }}>
+                  <h1 className="h1" style={{ marginRight: 6 }}>
                     {`Welcome, ${effectiveTeamName}!`}
                   </h1>
                   <button
