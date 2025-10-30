@@ -94,8 +94,9 @@ export default function Recommendations() {
         const scope = scopeRaw.map((s) => String(s).trim());
         const dpt = String(state.team?.department || '').trim();
         const exclusive = scope.length === 1 && !!dpt && scope[0].toLowerCase() === dpt.toLowerCase();
-        const fit = typeof x.fit_score === 'number'
-          ? Math.max(0, Math.min(1, x.fit_score))
+        const rawFit = Number(x.fit_score);
+        const fit = Number.isFinite(rawFit)
+          ? (rawFit > 1 ? Math.max(0, Math.min(1, rawFit / 100)) : Math.max(0, Math.min(1, rawFit)))
           : 0.5;
         const tags = Array.isArray(x.tags) ? x.tags.map((t) => String(t).toLowerCase()) : [];
         return ({
@@ -109,7 +110,7 @@ export default function Recommendations() {
           departmentExclusive: exclusive,
           suggestedSize: `${Math.max(2, (state.team?.size || 2) - 1)}-${(state.team?.size || 6) + 2}`,
           budget: 'medium',
-          _ai: { source: res.source || 'openai', fit_score: fit, reasoning: x.reasoning || '' }
+          _ai: { source: res.source || 'openai', model: res.model || '', fit_score: fit, reasoning: x.reasoning || '' }
         });
       });
       // Dedupe by normalized title (case/whitespace-insensitive)
