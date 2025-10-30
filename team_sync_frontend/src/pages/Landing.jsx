@@ -51,7 +51,15 @@ export default function Landing() {
     <div className="hero" role="region" aria-label="TeamSync landing">
       <Container>
         <Card className="landing-hero enter-hero" aria-label="Intro">
-          {/* Illustration / visual side */}
+          {/* Header/title and supporting copy */}
+          <div className="landing-hero__content" aria-labelledby="hero-heading">
+            <h1 id="hero-heading" className="h1">Plan engaging team activities in just a few clicks.</h1>
+            <p className="muted" aria-describedby="hero-heading">
+              TeamSync learns your team’s size, department, and work mode to suggest curated activities that spark connection.
+            </p>
+          </div>
+
+          {/* Illustration area (placeholder div or optional image) */}
           <div className="landing-hero__media" aria-hidden>
             {HERO_IMAGE ? (
               <img
@@ -70,24 +78,17 @@ export default function Landing() {
             )}
           </div>
 
-          {/* Text / CTA side */}
-          <div className="landing-hero__content">
-            <h1 className="h1">Plan engaging team activities in just a few clicks.</h1>
-            <p className="muted">
-              TeamSync learns your team’s size, department, and work mode to suggest curated activities that spark connection.
-            </p>
-
-            <div className="hero-ctas">
-              <Button onClick={handleStartNow} aria-label="Start now and sign in" title="Start now">
-                Start Now
-              </Button>
-              <Button variant="ghost" onClick={scrollToPricing} aria-label="View pricing plans">View Pricing</Button>
-            </div>
-
-            <p className="muted mt-3" aria-label="Theme note">
-              Ocean Professional theme • Modern • Fast • A sprinkle of fun ✨
-            </p>
+          {/* CTA row */}
+          <div className="hero-ctas" role="group" aria-label="Primary actions">
+            <Button onClick={handleStartNow} aria-label="Start now and sign in" title="Start now">
+              Start Now
+            </Button>
+            <Button variant="ghost" onClick={scrollToPricing} aria-label="View pricing plans">View Pricing</Button>
           </div>
+
+          <p className="muted mt-3" aria-label="Theme note">
+            Ocean Professional theme • Modern • Fast • A sprinkle of fun ✨
+          </p>
         </Card>
       </Container>
 

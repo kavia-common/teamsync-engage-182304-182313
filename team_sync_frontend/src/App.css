@@ -313,12 +313,14 @@ main[role="main"] {
   background: var(--ts-hero-gradient);
 }
 
-/* New horizontal main card layout */
+/* New vertical main card layout (mobile-first) */
 .landing-hero {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 20px;
-  align-items: center;
+  grid-template-rows: auto auto auto; /* content, illustration, ctas */
+  gap: 14px;
+  align-items: start;
+  justify-items: start;
   padding: 16px; /* inner breathing room on small screens */
 }
 .landing-hero__media {
@@ -356,7 +358,10 @@ main[role="main"] {
 }
 @media (min-width: 900px) {
   .landing-hero {
-    grid-template-columns: 1.05fr .95fr; /* slight emphasis on media */
+    /* Keep stacked layout but increase spacing and breathing room */
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 18px;
     padding: 24px 28px;
   }
   .landing-hero__art,
@@ -366,7 +371,9 @@ main[role="main"] {
 }
 @media (min-width: 1200px) {
   .landing-hero {
-    grid-template-columns: 1.1fr .9fr;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 20px;
     padding: 28px 32px;
   }
 }
